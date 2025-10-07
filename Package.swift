@@ -1,22 +1,27 @@
 // swift-tools-version: 6.2
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "AviationMaths",
+    platforms: [.macOS(.v11), .iOS(.v13)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "AviationMaths",
             targets: ["AviationMaths"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/florianreinhart/Geodesy", .upToNextMajor(from: "0.2.2")),
+        .package(url: "https://github.com/ngageoint/mgrs-ios.git", from: "2.0.0"),
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "AviationMaths"
+            name: "AviationMaths",
+            dependencies: [
+               .product(name: "Geodesy", package: "Geodesy"),
+               .product(name: "MGRS", package: "mgrs-ios"),
+           ]
         ),
         .testTarget(
             name: "AviationMathsTests",
