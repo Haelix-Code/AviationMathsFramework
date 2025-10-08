@@ -1,6 +1,10 @@
 import Foundation
 
-public extension Measurement<UnitLength> {
+public extension Measurement where UnitType == UnitLength {
+    init(feet value: Double) { self.init(value: value, unit: .feet) }
+    
+    init(meters value: Double) { self.init(value: value, unit: .meters) }
+    
     var feet: Double {
         self.converted(to: .feet).value
     }

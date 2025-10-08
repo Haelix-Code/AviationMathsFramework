@@ -41,12 +41,12 @@ public struct ISA {
     // MARK: - Initializers
 
     public init(altitude: Measurement<UnitLength>,
-                deltaISA: Measurement<UnitTemperature> = .init(value: 0, unit: .kelvin)) {
-        let altitudeMeters = altitude.converted(to: .meters).value
+                deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)) {
+        let altitudeMeters = altitude.meters
         
         if altitudeMeters < -5000 {
 //            print("⚠️ ISA Warning: Altitude \(altitudeMeters)m is below valid range. Clamping to -5,000m.")
-            self.altitude = .init(value: -5000, unit: .meters)
+            self.altitude = .init(meters: -5000)
         } else if altitudeMeters > Self.modelUpperLimit.meters {
 //            print("⚠️ ISA Warning: Altitude \(altitudeMeters)m exceeds model validity (20,000m). Results may be inaccurate.")
             self.altitude = altitude
@@ -59,15 +59,15 @@ public struct ISA {
     
     public init(altitudeMeters: Double, deltaISA: Double = 0) {
         self.init(
-            altitude: .init(value: altitudeMeters, unit: .meters),
-            deltaISA: .init(value: deltaISA, unit: .kelvin)
+            altitude: .init(meters: altitudeMeters),
+            deltaISA: .init(kelvin: deltaISA)
         )
     }
     
     public init(altitudeFeet: Double, deltaISA: Double = 0) {
         self.init(
-            altitude: .init(value: altitudeFeet, unit: .feet),
-            deltaISA: .init(value: deltaISA, unit: .kelvin)
+            altitude: .init(feet: altitudeFeet),
+            deltaISA: .init(kelvin: deltaISA)
         )
     }
     
@@ -78,8 +78,8 @@ public struct ISA {
     // MARK: - Computed Properties
     
     public var temperature: Measurement<UnitTemperature> {
-        let altitudeMeters = altitude.converted(to: .meters).value
-        let deltaK = deltaISA.converted(to: .kelvin).value
+        let altitudeMeters = altitude.meters
+        let deltaK = deltaISA.kelvin
         
         let standardTemp: Double
         if altitudeMeters < Self.lowerStratosphereBase.meters {
@@ -91,12 +91,12 @@ public struct ISA {
             standardTemp = Self.tropopauseTemperature
         }
         
-        return .init(value: standardTemp + deltaK, unit: .kelvin)
+        return .init(kelvin: standardTemp + deltaK)
     }
 
     public var pressure: Measurement<UnitPressure> {
-        let altitudeMeters = altitude.converted(to: .meters).value
-        let deltaK = deltaISA.converted(to: .kelvin).value
+        let altitudeMeters = altitude.meters
+        let deltaK = deltaISA.kelvin
         let g = Self.standardGravity.value
         let R = Self.dryAirGasConstant
         
@@ -127,26 +127,26 @@ public struct ISA {
             pressurePa *= exp(exponent)
         }
         
-        return .init(value: pressurePa, unit: .newtonsPerMetersSquared)
+        return .init(pascals: pressurePa)
     }
     
     public var density: Measurement<UnitConcentrationMass> {
-        let pressurePa = pressure.converted(to: .newtonsPerMetersSquared).value
-        let tempK = temperature.converted(to: .kelvin).value
+        let pressurePa = pressure.pascals
+        let tempK = temperature.kelvin
         let rho = pressurePa / (Self.dryAirGasConstant * tempK)
         
         return .init(value: rho, unit: .gramsPerLiter)
     }
     
     public var speedOfSound: Measurement<UnitSpeed> {
-        let tempK = temperature.converted(to: .kelvin).value
+        let tempK = temperature.kelvin
         let speedMS = sqrt(Self.ratioSpecificHeats * Self.dryAirGasConstant * tempK)
         
-        return .init(value: speedMS, unit: .metersPerSecond)
+        return .init(mps: speedMS)
     }
     
     public var lapseRate: Double {
-        let altitudeMeters = altitude.converted(to: .meters).value
+        let altitudeMeters = altitude.meters
         if altitudeMeters > Self.lowerStratosphereBase.meters {
             return Self.lowerStratosphereLapseRate
         } else {
@@ -161,28 +161,28 @@ public struct ISA {
 extension ISA {
     public static func temperature(
         at altitude: Measurement<UnitLength>,
-        deltaISA: Measurement<UnitTemperature> = .init(value: 0, unit: .kelvin)
+        deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)
     ) -> Measurement<UnitTemperature> {
         return ISA(altitude: altitude, deltaISA: deltaISA).temperature
     }
 
     public static func pressure(
         at altitude: Measurement<UnitLength>,
-        deltaISA: Measurement<UnitTemperature> = .init(value: 0, unit: .kelvin)
+        deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)
     ) -> Measurement<UnitPressure> {
         return ISA(altitude: altitude, deltaISA: deltaISA).pressure
     }
     
     public static func density(
         at altitude: Measurement<UnitLength>,
-        deltaISA: Measurement<UnitTemperature> = .init(value: 0, unit: .kelvin)
+        deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)
     ) -> Measurement<UnitConcentrationMass> {
         return ISA(altitude: altitude, deltaISA: deltaISA).density
     }
     
     public static func speedOfSound(
         at altitude: Measurement<UnitLength>,
-        deltaISA: Measurement<UnitTemperature> = .init(value: 0, unit: .kelvin)
+        deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)
     ) -> Measurement<UnitSpeed> {
         return ISA(altitude: altitude, deltaISA: deltaISA).speedOfSound
     }
@@ -191,5 +191,4 @@ extension ISA {
         at altitude: Measurement<UnitLength>) -> Double {
             return ISA(altitude: altitude).lapseRate
         }
-    
 }

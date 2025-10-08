@@ -7,7 +7,7 @@ enum BarometricEquations {
         pressure: Double,
         referencePressure: Double,
         temperature: Double = ISA.seaLevelTemperature.kelvin,
-        lapseRate: Double = ISA.lapseRate(at: .init(value: 0, unit: .meters))
+        lapseRate: Double = ISA.lapseRate(at: .init(meters: 0))
     ) -> Double {
         let pressureRatio = pressure / referencePressure
         let exponent = (lapseRate * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
@@ -18,14 +18,13 @@ enum BarometricEquations {
     /// Convert altitude to pressure using barometric formula
     /// Formula: P = P_ref × [1 - (L·h/T₀)]^(g₀/(R·L))
     static func pressureFromAltitude(
-        altitude: Double,
-        referencePressure: Double,
-        temperature: Double = ISA.seaLevelTemperature.kelvin,
-        lapseRate: Double = ISA.lapseRate(at: .init(value: 0, unit: .meters))
+        altitude: Measurement<UnitLength>,
+        referencePressure: Measurement<UnitPressure>,
+        temperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
+        lapseRate: Double = ISA.lapseRate(at: .init(meters: 0))
     ) -> Double {
-        let exponent = ISA.standardGravity.metersPerSecondSquared / (lapseRate * ISA.dryAirGasConstant)
-        let temperatureRatio = 1 - (lapseRate * altitude / temperature)
-        
-        return referencePressure * pow(temperatureRatio, exponent)
+        let exponent = ISA.standardGravity.metersPerSecondSquared / (lapseRate.magnitude * ISA.dryAirGasConstant)
+        let temperatureRatio = (temperature.kelvin - lapseRate.magnitude * altitude.meters) / temperature.kelvin
+        return referencePressure.pascals * pow(temperatureRatio, exponent)
     }
 }
