@@ -2,8 +2,9 @@ import Foundation
 
 /// International Standard Atmosphere (ISA) model for aviation calculations.
 ///
-/// Implements the ICAO Standard Atmosphere for altitudes from 0 to 20,000 meters,
+/// Implements the ICAO Standard Atmosphere (ISO 2533:1975) for altitudes from 0 to 20,000 meters,
 /// covering the troposphere (0-11km) and lower stratosphere (11-20km).
+/// All units used in calculations are SI.
 public struct ISA {
     
     // MARK: - Physical Constants
@@ -30,7 +31,7 @@ public struct ISA {
     private static let troposphereLapseRate: Double = -0.0065
     private static let lowerStratosphereLapseRate: Double = 0.0
     private static let tropopauseTemperature: Double =
-        seaLevelTemperature.value + troposphereLapseRate * (lowerStratosphereBase - troposphereBase)
+    seaLevelTemperature.value + troposphereLapseRate * (lowerStratosphereBase.meters - troposphereBase.meters)
     
     // MARK: - Instance Properties
     
@@ -46,7 +47,7 @@ public struct ISA {
         if altitudeMeters < -5000 {
 //            print("⚠️ ISA Warning: Altitude \(altitudeMeters)m is below valid range. Clamping to -5,000m.")
             self.altitude = .init(value: -5000, unit: .meters)
-        } else if altitudeMeters > Self.modelUpperLimit {
+        } else if altitudeMeters > Self.modelUpperLimit.meters {
 //            print("⚠️ ISA Warning: Altitude \(altitudeMeters)m exceeds model validity (20,000m). Results may be inaccurate.")
             self.altitude = altitude
         } else {
@@ -81,7 +82,7 @@ public struct ISA {
         let deltaK = deltaISA.converted(to: .kelvin).value
         
         let standardTemp: Double
-        if altitudeMeters < Self.lowerStratosphereBase {
+        if altitudeMeters < Self.lowerStratosphereBase.meters {
             // Troposphere: T = T₀ + L × h
             standardTemp = Self.seaLevelTemperature.value +
                           Self.troposphereLapseRate * altitudeMeters
@@ -100,12 +101,12 @@ public struct ISA {
         let R = Self.dryAirGasConstant
         
         var pressurePa = Self.seaLevelPressure.value
-        var currentAlt = Self.troposphereBase
+        var currentAlt = Self.troposphereBase.meters
         var currentTemp = Self.seaLevelTemperature.value + deltaK
         
         // Layer 1: Troposphere (0 - 11km)
-        if altitudeMeters > Self.troposphereBase {
-            let topAlt = min(altitudeMeters, Self.lowerStratosphereBase)
+        if altitudeMeters > Self.troposphereBase.meters {
+            let topAlt = min(altitudeMeters, Self.lowerStratosphereBase.meters)
             let deltaH = topAlt - currentAlt
             let L = Self.troposphereLapseRate
             let tempAtTop = currentTemp + L * deltaH
@@ -118,7 +119,7 @@ public struct ISA {
         }
         
         // Layer 2: Lower Stratosphere (11 - 20km)
-        if altitudeMeters > Self.lowerStratosphereBase {
+        if altitudeMeters > Self.lowerStratosphereBase.meters {
             let deltaH = altitudeMeters - currentAlt
             let tempIsothermal = Self.tropopauseTemperature + deltaK
             
@@ -142,6 +143,15 @@ public struct ISA {
         let speedMS = sqrt(Self.ratioSpecificHeats * Self.dryAirGasConstant * tempK)
         
         return .init(value: speedMS, unit: .metersPerSecond)
+    }
+    
+    public var lapseRate: Double {
+        let altitudeMeters = altitude.converted(to: .meters).value
+        if altitudeMeters > Self.lowerStratosphereBase.meters {
+            return Self.lowerStratosphereLapseRate
+        } else {
+            return Self.troposphereLapseRate
+        }
     }
     
 }
@@ -176,4 +186,10 @@ extension ISA {
     ) -> Measurement<UnitSpeed> {
         return ISA(altitude: altitude, deltaISA: deltaISA).speedOfSound
     }
+    
+    public static func lapseRate(
+        at altitude: Measurement<UnitLength>) -> Double {
+            return ISA(altitude: altitude).lapseRate
+        }
+    
 }

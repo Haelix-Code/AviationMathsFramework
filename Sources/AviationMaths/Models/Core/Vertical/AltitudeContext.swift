@@ -10,7 +10,7 @@ public struct AltitudeContext: Sendable {
         groundElevation: Measurement<UnitLength>? = nil,
         qnh: Measurement<UnitPressure>? = nil,
         surfaceTemperature: Measurement<UnitTemperature>? = nil,
-        lapseRate: Double = ISA.lapseRateTroposphere
+        lapseRate: Double = ISA.lapseRate(at: .init(value: 0, unit: .meters))
     ) {
         self.groundElevation = groundElevation
         self.qnh = qnh
@@ -22,6 +22,6 @@ public struct AltitudeContext: Sendable {
         groundElevation: Measurement(value: 0, unit: .meters),
         qnh: Measurement(value: 1013.25, unit: .hectopascals),
         surfaceTemperature: Measurement(value: 15, unit: .celsius),
-        lapseRate: ISA.lapseRateTroposphere
+        lapseRate: ISA.lapseRate(at: .init(value: 0, unit: .meters))
     )
 }

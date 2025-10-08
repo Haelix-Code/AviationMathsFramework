@@ -7,7 +7,7 @@ enum BarometricEquations {
         pressure: Double,
         referencePressure: Double,
         temperature: Double = ISA.seaLevelTemperature.kelvin,
-        lapseRate: Double = ISA.lapseRateTroposphere
+        lapseRate: Double = ISA.lapseRate(at: .init(value: 0, unit: .meters))
     ) -> Double {
         let pressureRatio = pressure / referencePressure
         let exponent = (lapseRate * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
@@ -21,7 +21,7 @@ enum BarometricEquations {
         altitude: Double,
         referencePressure: Double,
         temperature: Double = ISA.seaLevelTemperature.kelvin,
-        lapseRate: Double = ISA.lapseRateTroposphere
+        lapseRate: Double = ISA.lapseRate(at: .init(value: 0, unit: .meters))
     ) -> Double {
         let exponent = ISA.standardGravity.metersPerSecondSquared / (lapseRate * ISA.dryAirGasConstant)
         let temperatureRatio = 1 - (lapseRate * altitude / temperature)
