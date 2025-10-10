@@ -68,7 +68,9 @@ final class UnitAltitudeTests: XCTestCase {
     }
     
     // Test Reference Conversion Methods
-    func testLengthDistances() throws {
-        
+    func testLengthUnits() throws {
+        let altitude = Altitude(meters: 1000, reference: .agl, context: standardContext)
+        XCTAssertEqual(altitude.agl.meters, 1000)
+        XCTAssertEqual(altitude.agl.feet, 3280.84, accuracy: 0.1)
     }
 }
