@@ -2,29 +2,32 @@ import Foundation
 
 enum BarometricEquations {
     /// Convert pressure to altitude using barometric formula
-    /// Formula: h = (T₀/L) × [1 - (P/P_ref)^(R·L/g₀)]
     static func altitudeFromPressure(
-        pressure: Double,
-        referencePressure: Double,
-        temperature: Double = ISA.seaLevelTemperature.kelvin,
+        pressure: Measurement<UnitPressure>,
+        referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
+        temperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
         lapseRate: Double = ISA.lapseRate(at: .init(meters: 0))
-    ) -> Double {
-        let pressureRatio = pressure / referencePressure
-        let exponent = (lapseRate * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
+    ) -> Measurement<UnitLength> {
         
-        return (temperature / lapseRate) * (1 - exp(exponent))
+        let pressureRatio = pressure.pascals / referencePressure.pascals
+        print(pressureRatio)
+        let exponent = (lapseRate.magnitude * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
+        
+        let altitude = ISA.seaLevelTemperature.kelvin / lapseRate.magnitude * (1 - exp(exponent))
+        
+        return .init(meters: altitude)
     }
     
     /// Convert altitude to pressure using barometric formula
-    /// Formula: P = P_ref × [1 - (L·h/T₀)]^(g₀/(R·L))
     static func pressureFromAltitude(
         altitude: Measurement<UnitLength>,
-        referencePressure: Measurement<UnitPressure>,
+        referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
         temperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
         lapseRate: Double = ISA.lapseRate(at: .init(meters: 0))
-    ) -> Double {
+    ) -> Measurement<UnitPressure> {
         let exponent = ISA.standardGravity.metersPerSecondSquared / (lapseRate.magnitude * ISA.dryAirGasConstant)
         let temperatureRatio = (temperature.kelvin - lapseRate.magnitude * altitude.meters) / temperature.kelvin
-        return referencePressure.pascals * pow(temperatureRatio, exponent)
+        let pressureAtAltitude =  referencePressure.pascals * pow(temperatureRatio, exponent)
+        return .init(pascals: pressureAtAltitude)
     }
 }

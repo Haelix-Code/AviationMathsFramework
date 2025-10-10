@@ -5,7 +5,6 @@ public enum VerticalReference: String, Codable, CaseIterable, Sendable {
     case amsl = "AMSL"
     case pressureAltitude = "PA"
     case trueAltitude = "TA"
-    case flightLevel = "FL"
     
     public var abbreviation: String { rawValue }
     
@@ -15,7 +14,6 @@ public enum VerticalReference: String, Codable, CaseIterable, Sendable {
         case .amsl: return "Above Mean Sea Level"
         case .pressureAltitude: return "Pressure Altitude"
         case .trueAltitude: return "True Altitude"
-        case .flightLevel: return "Flight Level"
         }
     }
 }
