@@ -119,6 +119,7 @@ public struct Altitude: Sendable {
             // Pressure -> AMSL altitude (using QNH)
             let amslMeters = BarometricEquations.altitudeFromPressure(
                 pressure: pressureAtPA,
+                referencePressure: qnh
             )
             
             // AMSL -> AGL
@@ -196,5 +197,4 @@ extension Altitude: Comparable {
         lhs.agl.meters < rhs.agl.meters
     }
 }
-
 
