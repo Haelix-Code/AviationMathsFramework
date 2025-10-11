@@ -21,3 +21,9 @@ public extension Measurement where UnitType == UnitLength {
         self.converted(to: .yards).value
     }
 }
+
+public extension Measurement where UnitType == UnitLength {
+    static var surface: Measurement<UnitLength>  {
+        self.init(value: 0, unit: .meters)
+    }
+}

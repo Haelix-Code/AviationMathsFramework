@@ -19,7 +19,7 @@ public struct Altitude: Sendable {
     public init(feet: Double, reference: VerticalReference, context: AltitudeContext) {
         self.init(value: .init(feet: feet), reference: reference, context: context)
     }
-
+    
     
     public var agl: Measurement<UnitLength> {
         if reference == .agl {
@@ -32,128 +32,210 @@ public struct Altitude: Sendable {
         if reference == .amsl {
             return value
         }
-        guard let groundElev = context.groundElevation else {
-            preconditionFailure("Ground elevation required for AMSL conversion")
-        }
-        return .init(meters: agl.meters + groundElev.meters)
+        return convertToAMSL()
     }
     
     public var pa: Measurement<UnitLength> {
         if reference == .pressureAltitude {
             return value
         }
-        guard let groundElev = context.groundElevation,
-              let qnh = context.qnh else {
-            preconditionFailure("Ground elevation and QNH required for pressure altitude conversion")
-        }
-        
-        let aglMeters = agl.meters
-        let amslMeters = aglMeters + groundElev.meters
-        
-        let pressureAtAMSL = BarometricEquations.pressureFromAltitude(
-            altitude: .init(meters: amslMeters),
-            referencePressure: qnh
-        )
-        
-        let paMeters = BarometricEquations.altitudeFromPressure(
-            pressure: pressureAtAMSL
-        )
-        
-        return paMeters
+        return convertToPA()
     }
     
-    /// Get this altitude as True Altitude (corrected for temperature)
-    public var trueAltitude: Measurement<UnitLength> {
-        if reference == .trueAltitude {
+    public var densityAltitude: Measurement<UnitLength> {
+        if reference == .densityAltitude {
             return value
         }
-        guard let groundElev = context.groundElevation,
-              let qnh = context.qnh,
-              let surfaceTemp = context.surfaceTemperature else {
-            preconditionFailure("Ground elevation, QNH, and surface temperature required for true altitude conversion")
+        return convertToDensityAltitude()
+    }
+    
+    
+    private func convertToAGL() -> Measurement<UnitLength> {
+        guard let groundElev = context.groundElevation else {
+            preconditionFailure("Ground elevation required for AGL conversion")
         }
         
-        let aglMeters = agl.meters
-        let dropAltitudeAMSL = aglMeters + groundElev.meters
-        
-        let seaLevelTemperatureK = surfaceTemp.kelvin - (context.lapseRate * groundElev.meters)
-        
-        let pressureAtDropAltitude = BarometricEquations.pressureFromAltitude(
-            altitude: .init(meters: dropAltitudeAMSL),
-            referencePressure: qnh,
-            temperature: .init(kelvin: seaLevelTemperatureK),
-            lapseRate: context.lapseRate
-        )
-        
-        let trueAltMeters = BarometricEquations.altitudeFromPressure(
-            pressure: pressureAtDropAltitude,
-
-        )
-        
-        return trueAltMeters
-    }
-
-    private func convertToAGL() -> Measurement<UnitLength> {
         switch reference {
         case .agl:
             return value
             
         case .amsl:
-            guard let groundElev = context.groundElevation else {
-                preconditionFailure("Ground elevation required for AMSL to AGL conversion")
-            }
-            return .init(meters: value.meters - groundElev.meters)
+            return value - groundElev
             
         case .pressureAltitude:
-            guard let groundElev = context.groundElevation,
-                  let qnh = context.qnh else {
-                preconditionFailure("Ground elevation and QNH required for PA to AGL conversion")
+            // PA → AMSL → AGL
+            let amslValue = convertToAMSL()
+            return amslValue - groundElev
+            
+        case .densityAltitude:
+            // DA → AMSL → AGL
+            let amslValue = convertToAMSL()
+            return amslValue - groundElev
+        }
+    }
+    
+    private func convertToAMSL() -> Measurement<UnitLength> {
+        switch reference {
+        case .agl:
+            guard let groundElev = context.groundElevation else {
+                preconditionFailure("Ground elevation required for AGL → AMSL conversion")
+            }
+            return value + groundElev
+            
+        case .amsl:
+            return value
+            
+        case .pressureAltitude:
+            // PA → AMSL: Standard atmosphere pressure → actual atmosphere altitude
+            guard let qnh = context.qnh else {
+                preconditionFailure("QNH required for PA → AMSL conversion")
             }
             
-            // PA -> pressure using standard pressure
-            let pressureAtPA = BarometricEquations.pressureFromAltitude(
+            // Pressure at this PA in standard atmosphere
+            let pressure = BarometricEquations.pressureFromAltitude(
                 altitude: value,
-                referencePressure: ISA.seaLevelPressure
+                referencePressure: ISA.seaLevelPressure,
+                temperature: ISA.seaLevelTemperature,
+                lapseRate: ISA.lapseRate(at: .surface)
             )
             
-            // Pressure -> AMSL altitude (using QNH)
-            let amslMeters = BarometricEquations.altitudeFromPressure(
-                pressure: pressureAtPA,
-                referencePressure: qnh
-            )
-            
-            // AMSL -> AGL
-            return amslMeters - groundElev
-            
-        case .trueAltitude:
-            guard let groundElev = context.groundElevation,
-                  let qnh = context.qnh,
-                  let surfaceTemp = context.surfaceTemperature else {
-                preconditionFailure("Ground elevation, QNH, and surface temperature required for TA to AGL conversion")
-            }
-            
-            // Calculate sea level temperature
-            let seaLevelTemperatureK = surfaceTemp.kelvin - (context.lapseRate * groundElev.meters)
-            
-            // True altitude -> pressure
-            let pressureAtTrueAltitude = BarometricEquations.pressureFromAltitude(
-                altitude: value,
+            // Altitude in actual atmosphere (with QNH) that has this pressure
+            let seaLevelTemp = context.seaLevelTemperature ?? ISA.seaLevelTemperature
+            return BarometricEquations.altitudeFromPressure(
+                pressure: pressure,
                 referencePressure: qnh,
-                temperature: .init(kelvin: seaLevelTemperatureK),
+                temperature: seaLevelTemp,
                 lapseRate: context.lapseRate
             )
             
-            // Pressure -> AMSL
-            let dropAltitudeAMSL = BarometricEquations.altitudeFromPressure(
-                pressure: pressureAtTrueAltitude,
-                referencePressure: qnh,
-                temperature: .init(kelvin: seaLevelTemperatureK),
+        case .densityAltitude:
+            // DA → AMSL: Temperature-corrected altitude → actual altitude
+            guard let qnh = context.qnh else {
+                preconditionFailure("QNH required for Density Altitude → AMSL conversion")
+            }
+            
+            let seaLevelTemp = context.seaLevelTemperature ?? ISA.seaLevelTemperature
+            
+            // Pressure at this true altitude
+            let pressure = BarometricEquations.pressureFromAltitude(
+                altitude: value,
+                referencePressure: ISA.seaLevelPressure,
+                temperature: seaLevelTemp,
                 lapseRate: context.lapseRate
             )
             
-            // AMSL -> AGL
-            return dropAltitudeAMSL - groundElev
-
+            // AMSL altitude with actual QNH that has this pressure
+            return BarometricEquations.altitudeFromPressure(
+                pressure: pressure,
+                referencePressure: qnh,
+                temperature: seaLevelTemp,
+                lapseRate: context.lapseRate
+            )
+        }
+    }
+    
+    private func convertToPA() -> Measurement<UnitLength> {
+        switch reference {
+        case .agl, .amsl:
+            // AGL/AMSL → AMSL → PA
+            guard let qnh = context.qnh else {
+                preconditionFailure("QNH required for AMSL → PA conversion")
+            }
+            
+            let amslValue = reference == .agl ? convertToAMSL() : value
+            let seaLevelTemp = context.seaLevelTemperature ?? ISA.seaLevelTemperature
+            
+            // Pressure at this AMSL altitude (actual atmosphere)
+            let pressure = BarometricEquations.pressureFromAltitude(
+                altitude: amslValue,
+                referencePressure: qnh,
+                temperature: seaLevelTemp,
+                lapseRate: context.lapseRate
+            )
+            
+            // Altitude in standard atmosphere with this pressure
+            return BarometricEquations.altitudeFromPressure(
+                pressure: pressure,
+                referencePressure: ISA.seaLevelPressure,
+                temperature: ISA.seaLevelTemperature,
+                lapseRate: ISA.lapseRate(at: .surface)
+            )
+            
+        case .pressureAltitude:
+            return value
+            
+        case .densityAltitude:
+            // TA → PA: Both are altitude readings, just with different temperature models
+            // TA uses actual temperature, PA uses standard temperature
+            let seaLevelTemp = context.seaLevelTemperature ?? ISA.seaLevelTemperature
+            
+            // Pressure at this density altitude (using actual temperature)
+            let pressure = BarometricEquations.pressureFromAltitude(
+                altitude: value,
+                referencePressure: ISA.seaLevelPressure,
+                temperature: seaLevelTemp,
+                lapseRate: context.lapseRate
+            )
+            
+            // Altitude in standard atmosphere with this pressure
+            return BarometricEquations.altitudeFromPressure(
+                pressure: pressure,
+                referencePressure: ISA.seaLevelPressure,
+                temperature: ISA.seaLevelTemperature,
+                lapseRate: ISA.lapseRate(at: .surface)
+            )
+        }
+    }
+    
+    private func convertToDensityAltitude() -> Measurement<UnitLength> {
+        // Density altitude requires temperature information
+        guard context.temperatureAtReference != nil else {
+            preconditionFailure("Temperature information required for Density Altitude conversion")
+        }
+        
+        let seaLevelTemp = context.seaLevelTemperature ?? ISA.seaLevelTemperature
+        
+        switch reference {
+        case .agl, .amsl:
+            // AMSL → TA: Apply temperature correction
+            let amslValue = reference == .agl ? convertToAMSL() : value
+            
+            // Pressure at this AMSL altitude (using actual temperature)
+            let pressure = BarometricEquations.pressureFromAltitude(
+                altitude: amslValue,
+                referencePressure: context.qnh ?? ISA.seaLevelPressure,
+                temperature: seaLevelTemp,
+                lapseRate: context.lapseRate
+            )
+            
+            // True altitude in standard pressure (with actual temperature)
+            return BarometricEquations.altitudeFromPressure(
+                pressure: pressure,
+                referencePressure: ISA.seaLevelPressure,
+                temperature: seaLevelTemp,
+                lapseRate: context.lapseRate
+            )
+            
+        case .pressureAltitude:
+            // PA → TA: Standard temperature → actual temperature
+            // Pressure at this PA (standard atmosphere)
+            let pressure = BarometricEquations.pressureFromAltitude(
+                altitude: value,
+                referencePressure: ISA.seaLevelPressure,
+                temperature: ISA.seaLevelTemperature,
+                lapseRate: ISA.lapseRate(at: .surface)
+            )
+            
+            // Altitude with actual temperature that has this pressure
+            return BarometricEquations.altitudeFromPressure(
+                pressure: pressure,
+                referencePressure: ISA.seaLevelPressure,
+                temperature: seaLevelTemp,
+                lapseRate: context.lapseRate
+            )
+            
+        case .densityAltitude:
+            return value
         }
     }
 }
@@ -168,7 +250,7 @@ extension Altitude {
         case .agl: newValue = agl
         case .amsl: newValue = amsl
         case .pressureAltitude: newValue = pa
-        case .trueAltitude: newValue = trueAltitude
+        case .densityAltitude: newValue = densityAltitude
         }
         return Altitude(value: newValue, reference: newReference, context: context)
     }
@@ -178,15 +260,21 @@ extension Altitude {
 
 extension Altitude: Equatable {
     public static func == (lhs: Altitude, rhs: Altitude) -> Bool {
-        // Two altitudes are equal if they represent the same physical height
-        // regardless of reference frame
-        lhs.agl.meters == rhs.agl.meters
+        if lhs.context.groundElevation != nil && rhs.context.groundElevation != nil {
+            return lhs.agl.meters == rhs.agl.meters
+        } else {
+            return lhs.amsl.meters == rhs.amsl.meters
+        }
     }
 }
 
 extension Altitude: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(agl.meters)
+        if context.groundElevation != nil {
+            hasher.combine(agl.meters)
+        } else {
+            hasher.combine(amsl.meters)
+        }
     }
 }
 
@@ -194,7 +282,10 @@ extension Altitude: Hashable {
 
 extension Altitude: Comparable {
     public static func < (lhs: Altitude, rhs: Altitude) -> Bool {
-        lhs.agl.meters < rhs.agl.meters
+        if lhs.context.groundElevation != nil && rhs.context.groundElevation != nil {
+            return lhs.agl.meters < rhs.agl.meters
+        } else {
+            return lhs.amsl.meters < rhs.amsl.meters
+        }
     }
 }
-
