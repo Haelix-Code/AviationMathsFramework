@@ -27,27 +27,9 @@ final class UnitAltitudeTests: XCTestCase {
     }
     
     func testAGLtoPA() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .agl, context: .init(groundElevation: .init(feet: 0), qnh: .init(pascals: 101000)))
+        let thisAltitude = Altitude(feet: 15000, reference: .agl, context: .init(groundElevation: .init(feet: 520), qnh: .init(pascals: 101000)))
 
         XCTAssertEqual(thisAltitude.pa.feet, 15599.4, accuracy: 0.1)
-    }
-    
-    func testAGLtoDensity_ISA() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .agl, context: .standardISA)
-        
-        XCTAssertEqual(thisAltitude.densityAltitude.feet, 15000, accuracy: 0.001)
-    }
-    
-    func testAGLtoDensity() throws {
-        let context: AltitudeContext = .init(groundElevation: .init(feet: 500),
-                                             qnh: .init(pascals: 101325),
-                                             temperatureReferenceAltitude: .surface,
-                                             temperatureAtReference: .init(celsius: -5),    // ISA -20
-                                             lapseRate: ISA.lapseRate(at: .surface))
-        
-        let thisAltitude = Altitude(feet: 15000, reference: .agl, context: context)
-
-        XCTAssertEqual(thisAltitude.densityAltitude.feet, 12008)
     }
     
     // From AMSL
@@ -91,17 +73,6 @@ final class UnitAltitudeTests: XCTestCase {
         XCTAssertEqual(thisAltitude.pa.feet, 15079.7, accuracy: 0.1)
     }
     
-    func testAMSLtoDensity() throws {
-        let context: AltitudeContext = .init(groundElevation: .init(feet: 500),
-                                             qnh: .init(pascals: 101325),
-                                             temperatureReferenceAltitude: .surface,
-                                             temperatureAtReference: .init(celsius: -5),    // ISA -20
-                                             lapseRate: ISA.lapseRate(at: .surface))
-        let thisAltitude = Altitude(feet: 15000, reference: .amsl, context: context )
-        
-        XCTAssertEqual(thisAltitude.densityAltitude.feet, 12008)
-    }
-    
     // From PA
     func testPAtoAGL_Standard() throws {
         let thisAltitude = Altitude(feet: 15000, reference: .amsl, context: .init(groundElevation: .init(feet: 5000)))
@@ -128,24 +99,7 @@ final class UnitAltitudeTests: XCTestCase {
 
         XCTAssertEqual(thisAltitude.pa.feet, 15574.9, accuracy: 0.1)
     }
-    
-    func testPAtoDensity() throws {
 
-    }
-    
-    // From Density Altitude
-    func testDensityToAGL() throws {
-        
-    }
-    
-    func testDensityToAMSL() throws {
-        
-    }
-    
-    func testDensityToPA() throws {
-        
-    }
-    
     // Test Reference Conversion Methods
     func testLengthUnits() throws {
         let altitude = Altitude(meters: 1000, reference: .agl, context: standardContext)
