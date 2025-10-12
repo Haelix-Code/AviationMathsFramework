@@ -26,4 +26,14 @@ enum BarometricEquations {
         let pressureAtAltitude =  referencePressure.pascals * pow(temperatureRatio, exponent)
         return .init(pascals: pressureAtAltitude)
     }
+    
+    // ETPS/GS/B1&D1V2.0 Equation (4)
+    static func geopotentialAltitude(pressureAtAltitude: Measurement<UnitPressure>, lapseRate: Double = ISA.lapseRate(at: .surface)) -> Measurement<UnitLength>{
+        let exponent = (-lapseRate * ISA.dryAirGasConstant / ISA.standardGravity.metersPerSecondSquared)
+        let pressureRatio = pressureAtAltitude.pascals / ISA.seaLevelPressure.pascals
+        
+        let geopotentialAltitude = (ISA.seaLevelTemperature.kelvin / lapseRate) * (pow(pressureRatio,exponent) - 1)
+        
+        return .init(meters: geopotentialAltitude)
+    }
 }

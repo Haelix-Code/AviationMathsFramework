@@ -35,13 +35,21 @@ public struct Altitude: Sendable {
         return convertToAMSL()
     }
     
-    public var pa: Measurement<UnitLength> {
+    public var pressureAltitude: Measurement<UnitLength> {
         if reference == .pressureAltitude {
             return value
         }
-        return convertToPA()
+        return convertToPressureAltitude()
+    }
+    
+    public var geopotentialAltitude: Measurement<UnitLength> {
+        if reference == .geopotentialAltitude {
+            return value
+        }
+        return convertToGeopotentialAltitude()
     }
         
+    // MARK: Functions to convert between references
     private func convertToAGL() -> Measurement<UnitLength> {
         guard let groundElev = context.groundElevation else {
             preconditionFailure("Ground elevation required for AGL conversion")
@@ -57,6 +65,9 @@ public struct Altitude: Sendable {
         case .pressureAltitude:
             let amslValue = convertToAMSL()
             return amslValue - groundElev
+            
+        case .geopotentialAltitude:
+            return value
         }
     }
     
@@ -93,10 +104,12 @@ public struct Altitude: Sendable {
                 temperature: seaLevelTemp,
                 lapseRate: context.lapseRate
             )
+        case .geopotentialAltitude:
+            return value
         }
     }
     
-    private func convertToPA() -> Measurement<UnitLength> {
+    private func convertToPressureAltitude() -> Measurement<UnitLength> {
         switch reference {
         case .agl, .amsl:
             // AGL/AMSL → AMSL → PA
@@ -125,8 +138,42 @@ public struct Altitude: Sendable {
             
         case .pressureAltitude:
             return value
+            
+        case .geopotentialAltitude:
+            return convertToGeopotentialAltitude()
         }
     }
+        
+    private func convertToGeopotentialAltitude() -> Measurement<UnitLength> {
+        switch reference {
+        case .agl, .amsl:
+            let amslValue = reference == .agl ? convertToAMSL() : value
+            let pressureAtAltitude = BarometricEquations.pressureFromAltitude(altitude: amslValue)
+            
+            let pressureRatio = pressureAtAltitude.pascals / (context.qnh?.pascals ?? ISA.seaLevelPressure.pascals)
+            
+            let exponent = (context.lapseRate * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
+            let geopotentialAltitude = (context.seaLevelTemperature?.kelvin ?? ISA.seaLevelTemperature.kelvin / context.lapseRate) * (1 - exp(exponent))
+            
+            return .init(meters: geopotentialAltitude)
+            
+        case .pressureAltitude:
+            let amslValue = convertToAMSL()
+            let pressureAtAltitude = BarometricEquations.pressureFromAltitude(altitude: amslValue)
+            
+            let pressureRatio = pressureAtAltitude.pascals / (context.qnh?.pascals ?? ISA.seaLevelPressure.pascals)
+            
+            let exponent = (context.lapseRate * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
+            let geopotentialAltitude = (context.seaLevelTemperature?.kelvin ?? ISA.seaLevelTemperature.kelvin / context.lapseRate) * (1 - exp(exponent))
+            
+            return .init(meters: geopotentialAltitude)
+            
+        case .geopotentialAltitude:
+            return value
+        }
+    }
+    
+    
 }
 
 // MARK: - Convenience Properties
@@ -138,7 +185,8 @@ extension Altitude {
         switch newReference {
         case .agl: newValue = agl
         case .amsl: newValue = amsl
-        case .pressureAltitude: newValue = pa
+        case .pressureAltitude: newValue = pressureAltitude
+        case .geopotentialAltitude: newValue = geopotentialAltitude
         }
         return Altitude(value: newValue, reference: newReference, context: context)
     }
