@@ -24,8 +24,10 @@ final class UnitAltitudeTests: XCTestCase {
         XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15579.4, accuracy: 0.1)
     }
     
-    func testAGLtoGeopotential() throws {
+    func testAGLtoGeopotential_Standard() throws {
+        let thisAltitude = Altitude(feet: 9000, reference: .agl, context: .init(groundElevation: .init(feet: 1000), qnh: .init(pascals: 101325), temperatureReferenceAltitude: .init(feet: 0), temperatureAtReference: .init(celsius: 15)))
         
+        XCTAssertEqual(thisAltitude.geopotentialAltitude.feet, 10000)
     }
     
     
@@ -65,7 +67,10 @@ final class UnitAltitudeTests: XCTestCase {
     }
     
     func testAMSLtoGeopotential() throws {
+        let thisAltitude = Altitude(feet: 9000, reference: .amsl,
+                                    context: .init(groundElevation: .init(feet: 1000), qnh: .init(pascals: 101325), temperatureReferenceAltitude: .init(feet: 0), temperatureAtReference: .init(celsius: 15)))
         
+        XCTAssertEqual(thisAltitude.geopotentialAltitude.feet, 9000)
     }
     
     // From PA
@@ -104,12 +109,24 @@ final class UnitAltitudeTests: XCTestCase {
         
     }
     
+    func testGeopotentialtoAMSL_Standard() {
+        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: standardContext)
+        XCTAssertEqual(thisAltitude.amsl.feet, 10000, accuracy: 0.001)
+    }
+    
     func testGeopotentialtoAMSL() {
-        
+        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: .init(       groundElevation: .init(feet: 1000), qnh: .init(pascals: 101000),temperatureReferenceAltitude: .surface, temperatureAtReference: .init(celsius: -5), lapseRate: ISA.lapseRate(at: .surface)))
+        XCTAssertEqual(thisAltitude.amsl.feet, 9500, accuracy: 0.001) // This is not the right answer
+    }
+    
+    func testGeopotentialtoPA_Standard() {
+        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: standardContext)
+        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 10000)  // This is not the right answer
     }
     
     func testGeopotentialtoPA() {
-        
+        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: .init(       groundElevation: .init(feet: 1000), qnh: .init(pascals: 101000),temperatureReferenceAltitude: .surface, temperatureAtReference: .init(celsius: -5), lapseRate: ISA.lapseRate(at: .surface)))
+        XCTAssertEqual(thisAltitude.amsl.feet, 10000)  // This is not the right answer
     }
 
     // Test Reference Conversion Methods

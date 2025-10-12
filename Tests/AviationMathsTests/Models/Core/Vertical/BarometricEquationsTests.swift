@@ -49,4 +49,18 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(altitude.meters, 5550.8, accuracy: 1)
     }
     
+    func testGeopotentialAltitudefromPressure() throws {
+        let pressure: Measurement<UnitPressure> = .init(pascals: 54020.5)
+        let geopotential = BarometricEquations.geopotentialAltitude(pressureAtAltitude: pressure)
+        
+        XCTAssertEqual(geopotential.meters, 5000, accuracy: 0.1)
+    }
+    
+    func testPressureFromGeopotentialAltitude() throws {
+        let altitude: Measurement<UnitLength> = .init(meters: 5000)
+        let pressure = BarometricEquations.pressureFromGeopotentialAltitude(geopotentialAltitude: altitude)
+        
+        XCTAssertEqual(pressure.pascals, 54020, accuracy: 1)
+    }
+    
 }

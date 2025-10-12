@@ -28,12 +28,29 @@ enum BarometricEquations {
     }
     
     // ETPS/GS/B1&D1V2.0 Equation (4)
-    static func geopotentialAltitude(pressureAtAltitude: Measurement<UnitPressure>, lapseRate: Double = ISA.lapseRate(at: .surface)) -> Measurement<UnitLength>{
-        let exponent = (-lapseRate * ISA.dryAirGasConstant / ISA.standardGravity.metersPerSecondSquared)
-        let pressureRatio = pressureAtAltitude.pascals / ISA.seaLevelPressure.pascals
-        
-        let geopotentialAltitude = (ISA.seaLevelTemperature.kelvin / lapseRate) * (pow(pressureRatio,exponent) - 1)
+    static func geopotentialAltitude(
+        pressureAtAltitude: Measurement<UnitPressure>,
+        referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
+        referenceTemperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
+        lapseRate: Double = ISA.lapseRate(at: .surface)
+    ) -> Measurement<UnitLength>{
+        let exponent = -(lapseRate * ISA.dryAirGasConstant) / ISA.standardGravity.metersPerSecondSquared
+        let pressureRatio = pressureAtAltitude.pascals / referencePressure.pascals
+        let geopotentialAltitude = (referenceTemperature.kelvin / lapseRate) * (pow(pressureRatio,exponent) - 1)
         
         return .init(meters: geopotentialAltitude)
+    }
+    
+    // Inverse
+    static func pressureFromGeopotentialAltitude(
+        geopotentialAltitude: Measurement<UnitLength>,
+        referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
+        referenceTemperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
+        lapseRate: Double = ISA.lapseRate(at: .surface)
+    ) -> Measurement<UnitPressure> {
+        let ratio = 1 + (geopotentialAltitude.meters * lapseRate / referenceTemperature.kelvin)
+        let exponent = -ISA.standardGravity.metersPerSecondSquared / (lapseRate * ISA.dryAirGasConstant)
+        let pressure = referencePressure.pascals * pow(ratio,exponent)
+        return .init(pascals: pressure)
     }
 }

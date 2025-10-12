@@ -22,31 +22,27 @@ public struct Altitude: Sendable {
     
     
     public var agl: Measurement<UnitLength> {
-        if reference == .agl {
-            return value
-        }
-        return convertToAGL()
+        reference == .agl ? value : convertToAGL()
     }
     
     public var amsl: Measurement<UnitLength> {
-        if reference == .amsl {
-            return value
-        }
-        return convertToAMSL()
+        reference == .amsl ? value : convertToAMSL()
     }
     
     public var pressureAltitude: Measurement<UnitLength> {
-        if reference == .pressureAltitude {
-            return value
-        }
-        return convertToPressureAltitude()
+        reference == .pressureAltitude ? value : convertToPressureAltitude()
     }
     
     public var geopotentialAltitude: Measurement<UnitLength> {
-        if reference == .geopotentialAltitude {
-            return value
-        }
-        return convertToGeopotentialAltitude()
+        reference == .geopotentialAltitude ? value : convertToGeopotentialAltitude()
+    }
+    
+    private var seaLevelTemp: Measurement<UnitTemperature> {
+        context.seaLevelTemperature ?? ISA.seaLevelTemperature
+    }
+    
+    private var referenceQNH: Measurement<UnitPressure> {
+        context.qnh ?? ISA.seaLevelPressure
     }
         
     // MARK: Functions to convert between references
@@ -58,16 +54,11 @@ public struct Altitude: Sendable {
         switch reference {
         case .agl:
             return value
-            
         case .amsl:
             return value - groundElev
+        case .pressureAltitude, .geopotentialAltitude:
+            return convertToAMSL() - groundElev
             
-        case .pressureAltitude:
-            let amslValue = convertToAMSL()
-            return amslValue - groundElev
-            
-        case .geopotentialAltitude:
-            return value
         }
     }
     
@@ -83,65 +74,81 @@ public struct Altitude: Sendable {
             return value
             
         case .pressureAltitude:
-            // PA → AMSL: Standard atmosphere pressure → actual atmosphere altitude
-            guard let qnh = context.qnh else {
-                preconditionFailure("QNH required for PA → AMSL conversion")
-            }
+            return convertPressureAltitudeToAMSL()
             
-            // Pressure at this PA in standard atmosphere
-            let pressure = BarometricEquations.pressureFromAltitude(
-                altitude: value,
-                referencePressure: ISA.seaLevelPressure,
-                temperature: ISA.seaLevelTemperature,
-                lapseRate: ISA.lapseRate(at: .surface)
-            )
-            
-            // Altitude in actual atmosphere (with QNH) that has this pressure
-            let seaLevelTemp = context.seaLevelTemperature ?? ISA.seaLevelTemperature
-            return BarometricEquations.altitudeFromPressure(
-                pressure: pressure,
-                referencePressure: qnh,
-                temperature: seaLevelTemp,
-                lapseRate: context.lapseRate
-            )
         case .geopotentialAltitude:
-            return value
+            return convertGeopotentialAltitudeToAMSL()
         }
+    }
+    
+    private func convertPressureAltitudeToAMSL() -> Measurement<UnitLength> {
+        guard let qnh = context.qnh else {
+            preconditionFailure("QNH required for PA -> AMSL conversion")
+        }
+        
+        let pressure = BarometricEquations.pressureFromAltitude(
+            altitude: value,
+            referencePressure: ISA.seaLevelPressure,
+            temperature: ISA.seaLevelTemperature,
+            lapseRate: ISA.lapseRate(at: .surface)
+        )
+        
+        return BarometricEquations.altitudeFromPressure(
+            pressure: pressure,
+            referencePressure: qnh,
+            temperature: seaLevelTemp,
+            lapseRate: context.lapseRate
+        )
+        
+    }
+    
+    private func convertGeopotentialAltitudeToAMSL() -> Measurement<UnitLength> {
+        let pressure = BarometricEquations.pressureFromGeopotentialAltitude(
+            geopotentialAltitude: value,
+            referencePressure: referenceQNH,
+            referenceTemperature: seaLevelTemp,
+            lapseRate: context.lapseRate
+        )
+        
+        return BarometricEquations.altitudeFromPressure(
+            pressure: pressure,
+            referencePressure: referenceQNH,
+            temperature: seaLevelTemp,
+            lapseRate: context.lapseRate
+        )
     }
     
     private func convertToPressureAltitude() -> Measurement<UnitLength> {
         switch reference {
-        case .agl, .amsl:
-            // AGL/AMSL → AMSL → PA
-            guard let qnh = context.qnh else {
-                preconditionFailure("QNH required for AMSL → PA conversion")
-            }
-            
-            let amslValue = reference == .agl ? convertToAMSL() : value
-            let seaLevelTemp = context.seaLevelTemperature ?? ISA.seaLevelTemperature
-            
-            // Pressure at this AMSL altitude (actual atmosphere)
-            let pressure = BarometricEquations.pressureFromAltitude(
-                altitude: amslValue,
-                referencePressure: qnh,
-                temperature: seaLevelTemp,
-                lapseRate: context.lapseRate
-            )
-            
-            // Altitude in standard atmosphere with this pressure
-            return BarometricEquations.altitudeFromPressure(
-                pressure: pressure,
-                referencePressure: ISA.seaLevelPressure,
-                temperature: ISA.seaLevelTemperature,
-                lapseRate: ISA.lapseRate(at: .surface)
-            )
-            
         case .pressureAltitude:
             return value
             
+        case .agl, .amsl:
+            return convertAMSLToPressureAltitude()
+            
         case .geopotentialAltitude:
-            return convertToGeopotentialAltitude()
+            return convertGeopotentialAltitudeToAMSL().asPressureAltitude(context: context)
         }
+    }
+    
+    private func convertAMSLToPressureAltitude() -> Measurement<UnitLength> {
+        guard let qnh = context.qnh else {
+            preconditionFailure("QNH required for AMSL -> PA conversion")
+        }
+        
+        let amslValue = reference == .agl ? convertToAMSL() : value
+        let pressure = BarometricEquations.pressureFromAltitude(
+            altitude: amslValue,
+            referencePressure: qnh,
+            temperature: seaLevelTemp,
+            lapseRate: context.lapseRate
+            )
+        
+        return BarometricEquations.altitudeFromPressure(
+            pressure: pressure,
+            referencePressure: ISA.seaLevelPressure,
+            temperature: ISA.seaLevelTemperature,
+            lapseRate: ISA.lapseRate(at: .surface))
     }
         
     private func convertToGeopotentialAltitude() -> Measurement<UnitLength> {
@@ -172,9 +179,16 @@ public struct Altitude: Sendable {
             return value
         }
     }
-    
-    
+        
 }
+
+private extension Measurement<UnitLength> {
+    func asPressureAltitude(context: AltitudeContext) -> Measurement<UnitLength>{
+        let altitude = Altitude(value: self, reference: .amsl, context: context)
+        return altitude.pressureAltitude
+    }
+}
+
 
 // MARK: - Convenience Properties
 
