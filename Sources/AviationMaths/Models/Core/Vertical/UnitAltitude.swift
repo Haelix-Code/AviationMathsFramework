@@ -33,8 +33,8 @@ public struct Altitude: Sendable {
         reference == .pressureAltitude ? value : convertToPressureAltitude()
     }
     
-    public var geopotentialAltitude: Measurement<UnitLength> {
-        reference == .geopotentialAltitude ? value : convertToGeopotentialAltitude()
+    public var trueAltitude: Measurement<UnitLength> {
+        reference == .trueAltitude ? value : convertToTrueAltitude()
     }
     
     private var seaLevelTemp: Measurement<UnitTemperature> {
@@ -56,7 +56,7 @@ public struct Altitude: Sendable {
             return value
         case .amsl:
             return value - groundElev
-        case .pressureAltitude, .geopotentialAltitude:
+        case .pressureAltitude, .trueAltitude:
             return convertToAMSL() - groundElev
             
         }
@@ -76,8 +76,8 @@ public struct Altitude: Sendable {
         case .pressureAltitude:
             return convertPressureAltitudeToAMSL()
             
-        case .geopotentialAltitude:
-            return convertGeopotentialAltitudeToAMSL()
+        case .trueAltitude:
+            return convertTrueAltitudeToAMSL()
         }
     }
     
@@ -102,9 +102,9 @@ public struct Altitude: Sendable {
         
     }
     
-    private func convertGeopotentialAltitudeToAMSL() -> Measurement<UnitLength> {
-        let pressure = BarometricEquations.pressureFromGeopotentialAltitude(
-            geopotentialAltitude: value,
+    private func convertTrueAltitudeToAMSL() -> Measurement<UnitLength> {
+        let pressure = BarometricEquations.pressureFromTrueAltitude(
+            trueAltitude: value,
             referencePressure: referenceQNH,
             referenceTemperature: seaLevelTemp,
             lapseRate: context.lapseRate
@@ -126,8 +126,8 @@ public struct Altitude: Sendable {
         case .agl, .amsl:
             return convertAMSLToPressureAltitude()
             
-        case .geopotentialAltitude:
-            return convertGeopotentialAltitudeToAMSL().asPressureAltitude(context: context)
+        case .trueAltitude:
+            return convertTrueAltitudeToAMSL().asPressureAltitude(context: context)
         }
     }
     
@@ -151,7 +151,7 @@ public struct Altitude: Sendable {
             lapseRate: ISA.lapseRate(at: .surface))
     }
         
-    private func convertToGeopotentialAltitude() -> Measurement<UnitLength> {
+    private func convertToTrueAltitude() -> Measurement<UnitLength> {
         switch reference {
         case .agl, .amsl:
             let amslValue = reference == .agl ? convertToAMSL() : value
@@ -160,9 +160,9 @@ public struct Altitude: Sendable {
             let pressureRatio = pressureAtAltitude.pascals / (context.qnh?.pascals ?? ISA.seaLevelPressure.pascals)
             
             let exponent = (context.lapseRate * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
-            let geopotentialAltitude = (context.seaLevelTemperature?.kelvin ?? ISA.seaLevelTemperature.kelvin / context.lapseRate) * (1 - exp(exponent))
+            let trueAltitude = (context.seaLevelTemperature?.kelvin ?? ISA.seaLevelTemperature.kelvin / context.lapseRate) * (1 - exp(exponent))
             
-            return .init(meters: geopotentialAltitude)
+            return .init(meters: trueAltitude)
             
         case .pressureAltitude:
             let amslValue = convertToAMSL()
@@ -171,11 +171,11 @@ public struct Altitude: Sendable {
             let pressureRatio = pressureAtAltitude.pascals / (context.qnh?.pascals ?? ISA.seaLevelPressure.pascals)
             
             let exponent = (context.lapseRate * ISA.dryAirGasConstant * log(pressureRatio)) / ISA.standardGravity.metersPerSecondSquared
-            let geopotentialAltitude = (context.seaLevelTemperature?.kelvin ?? ISA.seaLevelTemperature.kelvin / context.lapseRate) * (1 - exp(exponent))
+            let trueAltitude = (context.seaLevelTemperature?.kelvin ?? ISA.seaLevelTemperature.kelvin / context.lapseRate) * (1 - exp(exponent))
             
-            return .init(meters: geopotentialAltitude)
+            return .init(meters: trueAltitude)
             
-        case .geopotentialAltitude:
+        case .trueAltitude:
             return value
         }
     }
@@ -200,7 +200,7 @@ extension Altitude {
         case .agl: newValue = agl
         case .amsl: newValue = amsl
         case .pressureAltitude: newValue = pressureAltitude
-        case .geopotentialAltitude: newValue = geopotentialAltitude
+        case .trueAltitude: newValue = trueAltitude
         }
         return Altitude(value: newValue, reference: newReference, context: context)
     }

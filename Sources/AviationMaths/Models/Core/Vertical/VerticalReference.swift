@@ -1,19 +1,16 @@
-import Foundation
 
 public enum VerticalReference: String, Codable, CaseIterable, Sendable {
-    case agl                // FAA: Absolute Altitude
-    case amsl               // FAA: True Altitude
-    case pressureAltitude   // FAA: Pressure Altitude
-    case geopotentialAltitude
+    case agl
+    case amsl
+    case pressureAltitude
+    case trueAltitude
     
-    public var abbreviation: String { rawValue }
-    
-    public var description: String {
+    public var abbreviation: String {
         switch self {
-        case .agl: return "Above Ground Level"
-        case .amsl: return "Above Mean Sea Level"
-        case .pressureAltitude: return "Pressure Altitude"
-        case .geopotentialAltitude: return "Geopotential Altitude"
+        case .agl: return "AGL"
+        case .amsl: return "AMSL"
+        case .pressureAltitude: return "PA"
+        case .trueAltitude: return "True"
         }
     }
 }
