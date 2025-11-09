@@ -42,6 +42,7 @@ final class UnitAltitudeTests: XCTestCase {
         XCTAssertEqual(thisAltitude.trueAltitude.feet, 4653, accuracy: 1)
     }
     
+    func testAGLtoTrueAltitude() throws {
         // From original test: test_converts_aboveGroundLevel_to_trueAlt
         let thisAltitude = Altitude(
             feet: 12000,
