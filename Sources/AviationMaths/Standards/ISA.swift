@@ -30,7 +30,7 @@ public struct ISA {
     private static let troposphereBase: Measurement<UnitLength> = .init(value: 0, unit: .meters)
     private static let lowerStratosphereBase: Measurement<UnitLength> = .init(value: 11_000, unit: .meters)
     private static let modelUpperLimit: Measurement<UnitLength> = .init(value: 20_000, unit: .meters)
-    private static let troposphereLapseRate: Double = -0.0065
+    public static let troposphereLapseRate: Double = -0.0065
     private static let lowerStratosphereLapseRate: Double = 0.0
     private static let tropopauseTemperature: Double =
     seaLevelTemperature.value + troposphereLapseRate * (lowerStratosphereBase.meters - troposphereBase.meters)
