@@ -30,10 +30,10 @@ public struct ISA {
     private static let troposphereBase: Measurement<UnitLength> = .init(value: 0, unit: .meters)
     private static let lowerStratosphereBase: Measurement<UnitLength> = .init(value: 11_000, unit: .meters)
     private static let modelUpperLimit: Measurement<UnitLength> = .init(value: 20_000, unit: .meters)
-    public static let troposphereLapseRate: Double = 0.0065
+    public static let troposphereLapseRate: Double = 0.0065  // K/m
     private static let lowerStratosphereLapseRate: Double = 0.0
     private static let tropopauseTemperature: Double =
-    seaLevelTemperature.value + troposphereLapseRate * (lowerStratosphereBase.meters - troposphereBase.meters)
+        seaLevelTemperature.value - troposphereLapseRate * (lowerStratosphereBase.meters - troposphereBase.meters)
     
     // MARK: - Instance Properties
     
@@ -47,10 +47,8 @@ public struct ISA {
         let altitudeMeters = altitude.meters
         
         if altitudeMeters < -5000 {
-//            print("⚠️ ISA Warning: Altitude \(altitudeMeters)m is below valid range. Clamping to -5,000m.")
             self.altitude = .init(meters: -5000)
         } else if altitudeMeters > Self.modelUpperLimit.meters {
-//            print("⚠️ ISA Warning: Altitude \(altitudeMeters)m exceeds model validity (20,000m). Results may be inaccurate.")
             self.altitude = altitude
         } else {
             self.altitude = altitude
@@ -85,8 +83,8 @@ public struct ISA {
         
         let standardTemp: Double
         if altitudeMeters < Self.lowerStratosphereBase.meters {
-            // Troposphere: T = T₀ + L × h
-            standardTemp = Self.seaLevelTemperature.value +
+            // Troposphere: T = T₀ - L × h (temperature decreases with altitude)
+            standardTemp = Self.seaLevelTemperature.value -
                           Self.troposphereLapseRate * altitudeMeters
         } else {
             // Lower stratosphere: isothermal at tropopause temperature
@@ -111,7 +109,7 @@ public struct ISA {
             let topAlt = min(altitudeMeters, Self.lowerStratosphereBase.meters)
             let deltaH = topAlt - currentAlt
             let L = Self.troposphereLapseRate
-            let tempAtTop = currentTemp + L * deltaH
+            let tempAtTop = currentTemp - L * deltaH
             
             let exponent = -g / (L * R)
             pressurePa *= pow(tempAtTop / currentTemp, exponent)

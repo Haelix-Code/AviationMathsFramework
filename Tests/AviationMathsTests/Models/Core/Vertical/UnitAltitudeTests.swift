@@ -39,7 +39,7 @@ final class UnitAltitudeTests: XCTestCase {
             )
         )
         
-        XCTAssertEqual(thisAltitude.trueAltitude.feet, 4653, accuracy: 1)
+        XCTAssertEqual(thisAltitude.trueAltitude.feet, 4653, accuracy: 0.1)
     }
     
     func testAGLtoTrueAltitude() throws {
@@ -54,7 +54,7 @@ final class UnitAltitudeTests: XCTestCase {
             )
         )
         
-        XCTAssertEqual(thisAltitude.trueAltitude.feet, 12800, accuracy: 1)
+        XCTAssertEqual(thisAltitude.trueAltitude.feet, 12800, accuracy: 0.1)
     }
     
     // MARK: From AMSL
@@ -109,7 +109,7 @@ final class UnitAltitudeTests: XCTestCase {
             )
         )
         
-        XCTAssertEqual(thisAltitude.trueAltitude.feet, 12066, accuracy: 1)
+        XCTAssertEqual(thisAltitude.trueAltitude.feet, 12066, accuracy: 0.1)
     }
     
     // MARK: From PA
@@ -182,5 +182,36 @@ final class UnitAltitudeTests: XCTestCase {
         let amslAltitude = altitude.in(.amsl)
         XCTAssertEqual(amslAltitude.value.feet, 6000)
         XCTAssertEqual(amslAltitude.reference, .amsl)
+    }
+
+    
+    func testSeaLevelTemperatureInput() throws {
+        // Test using sea level temperature directly
+        let context = AltitudeContext(
+            groundElevation: .init(feet: 800),
+            qnh: ISA.seaLevelPressure,
+            seaLevelTemperature: .init(celsius: 15 + (6.5/1000 * 800 * 0.3048)),  // SL temp calculated from surface
+            lapseRate: ISA.troposphereLapseRate
+        )
+        
+        // Should have valid surface temperature
+        XCTAssertNotNil(context.surfaceTemperature)
+        XCTAssertEqual(context.surfaceTemperature!.celsius, 15, accuracy: 0.1)
+    }
+    
+    func testSurfaceTemperatureInput() throws {
+        // Test using surface temperature (should calculate sea level)
+        let context = AltitudeContext(
+            groundElevation: .init(feet: 800),
+            qnh: ISA.seaLevelPressure,
+            surfaceTemperature: .init(celsius: 15),
+            lapseRate: ISA.troposphereLapseRate
+        )
+        
+        // Should have valid sea level temperature
+        XCTAssertNotNil(context.seaLevelTemperature)
+        
+        let expectedSLTemp = 15 + (6.5/1000 * 800 * 0.3048)
+        XCTAssertEqual(context.seaLevelTemperature!.celsius, expectedSLTemp, accuracy: 0.1)
     }
 }

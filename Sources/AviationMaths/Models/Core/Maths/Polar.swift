@@ -18,18 +18,7 @@ extension PolarVector where Magnitude == Measurement<UnitLength> {
     }
 
     public var range: Measurement<UnitLength> { self.magnitude }
-
-}
-
-extension PolarVector where Magnitude == Measurement<UnitSpeed> {
-    public var vector2D: Vector2D {
-        return .init(x: .init(meters: magnitude.mps * sin(angle.radians)),
-                     y: .init(meters: magnitude.mps * cos(angle.radians)))
-    }
-    public var speed: Measurement<UnitSpeed> { self.magnitude }
-}
-
-extension PolarVector {
+    
     public func positionRelativeToDatum(_ datum: Position2D) -> Position2D {
         let startPoint = Coordinate(position2D: datum)
         let endPoint = startPoint.destination(with: magnitude.meters, bearing: angle.degrees)
@@ -40,7 +29,16 @@ extension PolarVector {
         if angle.degrees.isNaN {
             return "--"
         } else {
-            return "\(angle.degrees) \(range.nauticalMiles)"
+            return "\(angle.degrees) \(range.converted(to: .nauticalMiles).value)"
         }
     }
+
+}
+
+extension PolarVector where Magnitude == Measurement<UnitSpeed> {
+    public var vector2D: Vector2D {
+        return .init(x: .init(meters: magnitude.mps * sin(angle.radians)),
+                     y: .init(meters: magnitude.mps * cos(angle.radians)))
+    }
+    public var speed: Measurement<UnitSpeed> { self.magnitude }
 }
