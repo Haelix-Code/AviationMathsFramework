@@ -1,4 +1,11 @@
+import GeodesySpherical
+
 extension Position2D {
+    public init(coordinate: Coordinate){
+        self.latitude = Latitude(decimalDegrees: coordinate.latitude)
+        self.longitude = Longitude(decimalDegrees: coordinate.longitude)
+    }
+    
     public var latitudeDecimalDegrees: Double {
         latitude.decimalDegrees
     }
