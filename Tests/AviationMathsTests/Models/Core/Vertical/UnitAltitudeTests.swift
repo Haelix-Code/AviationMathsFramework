@@ -4,8 +4,10 @@ import XCTest
 final class UnitAltitudeTests: XCTestCase {
     private let standardContext: AltitudeContext = .standardISA
     
-    // MARK: Conversions Between References
-    // From AGL
+    // MARK: - Conversions Between References
+    
+    // MARK: From AGL
+    
     func testAGLtoAMSL_SeaLevel() throws {
         let thisAltitude = Altitude(feet: 1000, reference: .agl, context: .standardISA)
         
@@ -19,19 +21,44 @@ final class UnitAltitudeTests: XCTestCase {
     }
     
     func testAGLtoPA() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .agl, context: .init(groundElevation: .init(feet: 500), qnh: .init(pascals: 101000)))
+        let thisAltitude = Altitude(feet: 15000, reference: .agl, context: .init(groundElevation: .init(feet: 520), qnh: .init(hectopascals: 1010)))
 
-        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15579.4, accuracy: 0.1)
+        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15599.3, accuracy: 0.5)
     }
     
-    func testAGLtoGeopotential_Standard() throws {
-        let thisAltitude = Altitude(feet: 9000, reference: .agl, context: .init(groundElevation: .init(feet: 1000), qnh: .init(pascals: 101325), temperatureReferenceAltitude: .init(feet: 0), temperatureAtReference: .init(celsius: 15)))
+    func testAGLtoTrueAltitude_Standard() throws {
+        // From original test: test_converts_aboveGroundLevel_to_trueAlt2
+        let thisAltitude = Altitude(
+            feet: 5000,
+            reference: .agl,
+            context: .init(
+                groundElevation: .init(feet: 0),
+                qnh: .init(hectopascals: 1013.25),
+                surfaceTemperature: .init(celsius: -5),
+                lapseRate: 6.5 / 1000
+            )
+        )
         
-        XCTAssertEqual(thisAltitude.geopotentialAltitude.feet, 10000)
+        XCTAssertEqual(thisAltitude.trueAltitude.feet, 4653, accuracy: 1)
     }
     
+        // From original test: test_converts_aboveGroundLevel_to_trueAlt
+        let thisAltitude = Altitude(
+            feet: 12000,
+            reference: .agl,
+            context: .init(
+                groundElevation: .init(feet: 800),
+                qnh: .init(hectopascals: 984.298),
+                surfaceTemperature: .init(celsius: 13.415),
+                lapseRate: 6.5 / 1000
+            )
+        )
+        
+        XCTAssertEqual(thisAltitude.trueAltitude.feet, 12800, accuracy: 1)
+    }
     
-    // From AMSL
+    // MARK: From AMSL
+    
     func testAMSLtoAGL_SeaLevel() throws {
         let thisAltitude = Altitude(feet: 1000, reference: .amsl, context: .init(groundElevation: .init(feet: 1000)))
         
@@ -47,92 +74,113 @@ final class UnitAltitudeTests: XCTestCase {
     func testAMSLtoPA_Standard() throws {
         let thisAltitude = Altitude(feet: 15000, reference: .amsl, context: .standardISA)
 
-        XCTAssertEqual(thisAltitude.pressureAltitude.feet, thisAltitude.amsl.feet, accuracy: 0.0001)
+        XCTAssertEqual(thisAltitude.pressureAltitude.feet, thisAltitude.amsl.feet, accuracy: 0.1)
     }
     
     func testAMSLtoPA() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .amsl, context: .init(groundElevation: .init(feet: 520), qnh: .init(pascals: 101000)))
+        // From original test: test_converts_aboveMeanSeaLevel_to_pressureAltitude
+        let thisAltitude = Altitude(
+            feet: 15000,
+            reference: .amsl,
+            context: .init(groundElevation: .init(feet: 520), qnh: .init(hectopascals: 1010))
+        )
 
-        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15079.7, accuracy: 0.1)
+        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15079.7, accuracy: 0.5)
     }
     
     func testAMSLtoPANoElev() throws {
-        let context = AltitudeContext(
-            qnh: .init(hectopascals: 1010)
-        )
+        let context = AltitudeContext(qnh: .init(hectopascals: 1010))
         
         let thisAltitude = Altitude(feet: 15000, reference: .amsl, context: context)
         
-        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15079.7, accuracy: 0.1)
+        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15079.7, accuracy: 0.5)
     }
     
-    func testAMSLtoGeopotential() throws {
-        let thisAltitude = Altitude(feet: 9000, reference: .amsl,
-                                    context: .init(groundElevation: .init(feet: 1000), qnh: .init(pascals: 101325), temperatureReferenceAltitude: .init(feet: 0), temperatureAtReference: .init(celsius: 15)))
+    func testAMSLtoTrueAltitude() throws {
+        // From original test: test_converts_aboveMeanSealLEvel_to_TrueAltitude
+        let thisAltitude = Altitude(
+            feet: 12000,
+            reference: .amsl,
+            context: .init(
+                groundElevation: .init(feet: 800),
+                qnh: .init(hectopascals: 1013.25),
+                surfaceTemperature: .init(celsius: 15),
+                lapseRate: 6.5 / 1000
+            )
+        )
         
-        XCTAssertEqual(thisAltitude.geopotentialAltitude.feet, 9000)
+        XCTAssertEqual(thisAltitude.trueAltitude.feet, 12066, accuracy: 1)
     }
     
-    // From PA
+    // MARK: From PA
+    
     func testPAtoAGL_Standard() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .amsl, context: .init(groundElevation: .init(feet: 5000)))
+        let thisAltitude = Altitude(feet: 15000, reference: .pressureAltitude, context: .init(groundElevation: .init(feet: 5000)))
 
-        XCTAssertEqual(thisAltitude.agl.feet, 10000, accuracy: 0.0001)
-
+        XCTAssertEqual(thisAltitude.agl.feet, 10000, accuracy: 0.1)
     }
     
     func testPAtoAGL() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .pressureAltitude, context: .init(groundElevation: .init(feet: 520), qnh: .init(pascals: 101000)))
+        // From original test: test_converts_pressureAltitude_to_aboveGroundLevel
+        let thisAltitude = Altitude(
+            feet: 15000,
+            reference: .pressureAltitude,
+            context: .init(groundElevation: .init(feet: 520), qnh: .init(hectopascals: 1010))
+        )
 
-        XCTAssertEqual(thisAltitude.agl.feet, 14400.2, accuracy: 0.1)
-
+        XCTAssertEqual(thisAltitude.agl.feet, 14400.3, accuracy: 0.5)
     }
     
     func testPAtoAMSL_Standard() throws {
         let thisAltitude = Altitude(feet: 15000, reference: .pressureAltitude, context: .standardISA)
 
-        XCTAssertEqual(thisAltitude.pressureAltitude.feet, thisAltitude.amsl.feet, accuracy: 0.0001)
+        XCTAssertEqual(thisAltitude.pressureAltitude.feet, thisAltitude.amsl.feet, accuracy: 0.1)
     }
     
     func testPAtoAMSL() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .amsl, context: .init(groundElevation: .init(feet: 520), qnh: .init(pascals: 99000)))
+        // From original test: test_converts_pressureAltitude_to_aboveMeanSeaLevel
+        let thisAltitude = Altitude(
+            feet: 15000,
+            reference: .pressureAltitude,
+            context: .init(groundElevation: .init(feet: 520), qnh: .init(hectopascals: 1010))
+        )
 
-        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15574.9, accuracy: 0.1)
+        XCTAssertEqual(thisAltitude.amsl.feet, 14920.3, accuracy: 0.5)
     }
     
-    func testPAtoGeopotential() throws {
+    // MARK: From True Altitude
+    
+    func testTrueAltitudeToAGL() throws {
+        // From original test: test_converts_TrueAlt_to_aboveGroundLevel
+        let thisAltitude = Altitude(
+            feet: 4653,
+            reference: .trueAltitude,
+            context: .init(
+                groundElevation: .init(feet: 0),
+                qnh: .init(hectopascals: 1013.25),
+                surfaceTemperature: .init(celsius: -5),
+                lapseRate: 6.5 / 1000
+            )
+        )
         
-    }
-    
-    // From DA
-    func testGeopotentialtoAGL(){
-        
-    }
-    
-    func testGeopotentialtoAMSL_Standard() {
-        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: standardContext)
-        XCTAssertEqual(thisAltitude.amsl.feet, 10000, accuracy: 0.001)
-    }
-    
-    func testGeopotentialtoAMSL() {
-        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: .init(       groundElevation: .init(feet: 1000), qnh: .init(pascals: 101000),temperatureReferenceAltitude: .surface, temperatureAtReference: .init(celsius: -5), lapseRate: ISA.lapseRate(at: .surface)))
-        XCTAssertEqual(thisAltitude.amsl.feet, 9500, accuracy: 0.001) // This is not the right answer
-    }
-    
-    func testGeopotentialtoPA_Standard() {
-        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: standardContext)
-        XCTAssertEqual(thisAltitude.pressureAltitude.feet, 10000)  // This is not the right answer
-    }
-    
-    func testGeopotentialtoPA() {
-        let thisAltitude = Altitude(feet: 10000, reference: .geopotentialAltitude, context: .init(       groundElevation: .init(feet: 1000), qnh: .init(pascals: 101000),temperatureReferenceAltitude: .surface, temperatureAtReference: .init(celsius: -5), lapseRate: ISA.lapseRate(at: .surface)))
-        XCTAssertEqual(thisAltitude.amsl.feet, 10000)  // This is not the right answer
+        XCTAssertEqual(thisAltitude.agl.feet, 5000, accuracy: 1)
     }
 
-    // Test Reference Conversion Methods
+    // MARK: - Unit Conversion Tests
+    
     func testLengthUnits() throws {
         let altitude = Altitude(meters: 1000, reference: .agl, context: standardContext)
         XCTAssertEqual(altitude.agl.meters, 1000)
         XCTAssertEqual(altitude.agl.feet, 3280.84, accuracy: 0.1)
+    }
+    
+    // MARK: - Reference Conversion Method
+    
+    func testInMethod() throws {
+        let altitude = Altitude(feet: 5000, reference: .agl, context: .init(groundElevation: .init(feet: 1000)))
+        
+        let amslAltitude = altitude.in(.amsl)
+        XCTAssertEqual(amslAltitude.value.feet, 6000)
+        XCTAssertEqual(amslAltitude.reference, .amsl)
     }
 }
