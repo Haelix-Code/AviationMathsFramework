@@ -73,3 +73,16 @@ public struct AltitudeContext: Sendable {
         lapseRate: ISA.troposphereLapseRate
     )
 }
+
+extension AltitudeContext {
+    public static func calculateLapseRate(
+        surfaceTemp: Measurement<UnitTemperature>,
+        tempAtAltitude: Measurement<UnitTemperature>,
+        altitude: Measurement<UnitLength>,
+        groundElevation: Measurement<UnitLength>
+    ) -> Double {
+        let temperatureDifference = tempAtAltitude.kelvin - surfaceTemp.kelvin
+        let altitudeDifference = altitude.meters - groundElevation.meters
+        return -temperatureDifference / altitudeDifference
+    }
+}

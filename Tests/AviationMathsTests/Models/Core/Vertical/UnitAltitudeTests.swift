@@ -33,9 +33,9 @@ final class UnitAltitudeTests: XCTestCase {
             reference: .agl,
             context: .init(
                 groundElevation: .init(feet: 0),
-                qnh: .init(hectopascals: 1013.25),
+                qnh: ISA.seaLevelPressure,
                 surfaceTemperature: .init(celsius: -5),
-                lapseRate: 6.5 / 1000
+                lapseRate: ISA.troposphereLapseRate
             )
         )
         
@@ -43,7 +43,6 @@ final class UnitAltitudeTests: XCTestCase {
     }
     
     func testAGLtoTrueAltitude() throws {
-        // From original test: test_converts_aboveGroundLevel_to_trueAlt
         let thisAltitude = Altitude(
             feet: 12000,
             reference: .agl,
@@ -51,7 +50,7 @@ final class UnitAltitudeTests: XCTestCase {
                 groundElevation: .init(feet: 800),
                 qnh: .init(hectopascals: 984.298),
                 surfaceTemperature: .init(celsius: 13.415),
-                lapseRate: 6.5 / 1000
+                lapseRate: ISA.troposphereLapseRate
             )
         )
         
@@ -104,9 +103,9 @@ final class UnitAltitudeTests: XCTestCase {
             reference: .amsl,
             context: .init(
                 groundElevation: .init(feet: 800),
-                qnh: .init(hectopascals: 1013.25),
+                qnh: ISA.seaLevelPressure,
                 surfaceTemperature: .init(celsius: 15),
-                lapseRate: 6.5 / 1000
+                lapseRate: ISA.troposphereLapseRate
             )
         )
         
@@ -158,9 +157,9 @@ final class UnitAltitudeTests: XCTestCase {
             reference: .trueAltitude,
             context: .init(
                 groundElevation: .init(feet: 0),
-                qnh: .init(hectopascals: 1013.25),
+                qnh: ISA.seaLevelPressure,
                 surfaceTemperature: .init(celsius: -5),
-                lapseRate: 6.5 / 1000
+                lapseRate: ISA.troposphereLapseRate
             )
         )
         

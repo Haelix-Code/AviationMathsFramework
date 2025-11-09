@@ -89,7 +89,7 @@ final class BarometricEquationsTests: XCTestCase {
         let pressure: Measurement<UnitPressure> = .init(pascals: 69681) // ~3000m in ISA
         let seaLevelTemp: Measurement<UnitTemperature> = .init(celsius: -5)
         let qnh: Measurement<UnitPressure> = .init(hectopascals: 1013.25)
-        let lapseRate: Double = 0.0065
+        let lapseRate: Double = ISA.troposphereLapseRate
         
         let trueAlt = BarometricEquations.trueAltitudeFromPressure(
             pressure: pressure,
@@ -107,7 +107,7 @@ final class BarometricEquationsTests: XCTestCase {
         let trueAlt: Measurement<UnitLength> = .init(meters: 3000)
         let seaLevelTemp: Measurement<UnitTemperature> = .init(celsius: 25)
         let qnh: Measurement<UnitPressure> = .init(hectopascals: 1013.25)
-        let lapseRate: Double = 0.0065
+        let lapseRate: Double = ISA.troposphereLapseRate
         
         let pressure = BarometricEquations.pressureFromTrueAltitude(
             trueAltitude: trueAlt,
@@ -126,7 +126,7 @@ final class BarometricEquationsTests: XCTestCase {
         let originalAlt: Measurement<UnitLength> = .init(feet: 5000)
         let seaLevelTemp: Measurement<UnitTemperature> = .init(celsius: 15)
         let qnh: Measurement<UnitPressure> = .init(hectopascals: 1013.25)
-        let lapseRate: Double = 0.0065
+        let lapseRate: Double = ISA.troposphereLapseRate
         
         let pressure = BarometricEquations.pressureFromTrueAltitude(
             trueAltitude: originalAlt,

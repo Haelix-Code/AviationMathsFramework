@@ -41,13 +41,15 @@ enum BarometricEquations {
     ) -> Measurement<UnitPressure> {
         let g = ISA.standardGravity.metersPerSecondSquared
         let R = ISA.dryAirGasConstant
-        
-        // Reverse of: h = (T/L) * (1 - exp((L*R*ln(P/P0))/g))
-        // Solving for P: P = P0 * exp((g * ln(1 - h*L/T)) / (L*R))
-        let ratio = 1 - (trueAltitude.meters / (referenceTemperature.kelvin / lapseRate))
-        let exponent = (g * log(ratio)) / (lapseRate * R)
-        let pressure = referencePressure.pascals * exp(exponent)
-        
+
+        let h = trueAltitude.meters
+        let T0 = referenceTemperature.kelvin
+        let L = lapseRate
+
+        let base = 1.0 + (L * h / T0)
+        let exponent = -g / (R * L)
+
+        let pressure = referencePressure.pascals * pow(base, exponent)
         return .init(pascals: pressure)
     }
     
@@ -61,11 +63,16 @@ enum BarometricEquations {
     ) -> Measurement<UnitLength> {
         let g = ISA.standardGravity.metersPerSecondSquared
         let R = ISA.dryAirGasConstant
-        
-        let pressureRatio = pressure.pascals / referencePressure.pascals
-        let exponent = (lapseRate * R * log(pressureRatio)) / g
-        let altitude = (referenceTemperature.kelvin / lapseRate) * (1 - exp(exponent))
-        
+
+        let p = pressure.pascals
+        let p0 = referencePressure.pascals
+        let T0 = referenceTemperature.kelvin
+        let L = lapseRate
+
+        let pressureRatio = p / p0
+        let exponent = -R * L / g
+
+        let altitude = (T0 / L) * (pow(pressureRatio, exponent) - 1.0)
         return .init(meters: altitude)
     }
 }

@@ -1,10 +1,10 @@
 //import Foundation
 //
 //public struct Vector2D {
-//    public let x: Length
-//    public let y: Length
+//    public let x: Measurement<UnitLength>
+//    public let y: Measurement<UnitLength>
 //
-//    public init(x: Length, y: Length) {
+//    public init(x: Measurement<UnitLength>, y: Measurement<UnitLength>) {
 //        self.x = x
 //        self.y = y
 //    }
@@ -16,7 +16,7 @@
 //}
 //
 //extension Vector2D {
-//    private var angle: Angle {
+//    private var angle: Measurement<UnitAngle> {
 //        let result: Double
 //        let x = x.meters, y = y.meters
 //        if x == 0 && y == 0 {
@@ -33,15 +33,15 @@
 //        return .init(radians: result)
 //    }
 //
-//    public var length: Length {
-//        .init(meters: sqrt((x.meters ** 2) + (y.meters ** 2)))
+//    public var length: Measurement<UnitLength> {
+//        .init(meters: sqrt((pow(x.meters, 2)) + (pow(y.meters,2))))
 //    }
 //
 //    public var polarCoordinate: PolarVector<Length> {
 //        .init(angle: angle, magnitude: length)
 //    }
 //
-//    public func angleBetween(vector2D: Vector2D) -> Angle {
+//    public func angleBetween(vector2D: Vector2D) -> Measurement<UnitAngle> {
 //        let numerator = vectorDotProduct(vector1: self, vector2: vector2D)
 //        let denominator = self.length * vector2D.length
 //        let ratio = numerator / denominator
