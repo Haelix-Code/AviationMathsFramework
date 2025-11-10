@@ -111,7 +111,7 @@ public struct ISA {
             let L = Self.troposphereLapseRate
             let tempAtTop = currentTemp - L * deltaH
             
-            let exponent = -g / (L * R)
+            let exponent = g / (L * R)
             pressurePa *= pow(tempAtTop / currentTemp, exponent)
             
             currentAlt = topAlt

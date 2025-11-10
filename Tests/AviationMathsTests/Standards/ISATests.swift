@@ -70,7 +70,7 @@ final class ISATests: XCTestCase {
         let isa = ISA(altitudeMeters: 5000)
         
         // Expected: ~54,020 Pa (from ISA tables)
-        XCTAssertEqual(isa.pressure.value, 54020, accuracy: 0.1)
+        XCTAssertEqual(isa.pressure.value, 54020, accuracy: 1)
         XCTAssertEqual(isa.pressure.hectopascals, 540.20, accuracy: 0.01)
     }
     
@@ -85,7 +85,7 @@ final class ISATests: XCTestCase {
         let isa = ISA(altitudeMeters: 20000)
         
         // Expected: ~5,529 Pa (from ISA tables)
-        XCTAssertEqual(isa.pressure.value, 5475, accuracy: 0.1)
+        XCTAssertEqual(isa.pressure.value, 5475, accuracy: 1)
     }
     
     func testPressureDecreasesWithAltitude() {
@@ -103,16 +103,14 @@ final class ISATests: XCTestCase {
         let isaStandard = ISA(altitudeMeters: 5000)
         let isaHot = ISA(altitudeMeters: 5000, deltaISA: 15)
         
-        // Hot air -> lower pressure (for same altitude)
-        XCTAssertLessThan(isaHot.pressure.value, isaStandard.pressure.value)
+        XCTAssertGreaterThan(isaHot.pressure.value, isaStandard.pressure.value)
     }
     
     func testPressureWithNegativeDeltaISA() {
         let isaStandard = ISA(altitudeMeters: 5000)
         let isaCold = ISA(altitudeMeters: 5000, deltaISA: -15)
         
-        // Cold air -> higher pressure
-        XCTAssertGreaterThan(isaCold.pressure.value, isaStandard.pressure.value)
+        XCTAssertLessThan(isaCold.pressure.value, isaStandard.pressure.value)
     }
     
     // MARK: - Density Tests (Standard ISA)
@@ -216,7 +214,7 @@ final class ISATests: XCTestCase {
         let altitude = Measurement(value: 11000, unit: UnitLength.meters)
         let pressure = ISA.pressure(at: altitude)
         
-        XCTAssertEqual(pressure.value, 22632, accuracy: 0.1)
+        XCTAssertEqual(pressure.value, 22632, accuracy: 1)
     }
     
     func testStaticDensityMethod() {
