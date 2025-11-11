@@ -7,26 +7,22 @@ public struct SpeedContext: Sendable {
     
     private let _density: Measurement<UnitConcentrationMass>?
     
-    /// Air density - either provided directly or calculated from pressure altitude and temperature
     public var density: Measurement<UnitConcentrationMass>? {
         if let density = _density {
             return density
         }
         
-        // Calculate from pressure altitude and temperature if available
         guard let altitude = pressureAltitude else { return nil }
         let delta = deltaISA ?? .init(kelvin: 0)
         return ISA.density(at: altitude, deltaISA: delta)
     }
     
-    /// Speed of sound at the current conditions
     public var speedOfSound: Measurement<UnitSpeed>? {
         guard let altitude = pressureAltitude else { return nil }
         let delta = deltaISA ?? .init(kelvin: 0)
         return ISA.speedOfSound(at: altitude, deltaISA: delta)
     }
     
-    /// Pressure ratio (δ = P / P₀) - needed for compressibility corrections
     public var relativePressure: Double? {
         guard let altitude = pressureAltitude else { return nil }
         let delta = deltaISA ?? .init(kelvin: 0)
@@ -46,7 +42,6 @@ public struct SpeedContext: Sendable {
         self._density = density
     }
     
-    /// Standard ISA conditions at sea level
     public static let standardISA = SpeedContext(
         pressureAltitude: .surface,
         temperature: ISA.seaLevelTemperature,

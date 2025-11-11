@@ -1,50 +1,19 @@
 import Foundation
 
-/// Represents an airspeed with automatic conversions between different reference frames.
-///
-/// Similar to `Altitude`, this type stores a speed value in one reference frame and
-/// provides computed properties to convert to other reference frames on demand.
-///
-/// ## Speed References
-/// - **CAS** (Calibrated Airspeed): Corrected instrument reading at sea level equivalent
-/// - **EAS** (Equivalent Airspeed): CAS corrected for compressibility
-/// - **TAS** (True Airspeed): Actual speed through the air mass
-/// - **Mach**: Ratio of TAS to local speed of sound
-///
-/// ## Conversion Chain
-/// ```
-/// CAS ↔ EAS (via compressibility correction, needs altitude)
-///       ↓
-///      TAS (via density correction, needs density/temperature)
-///       ↓
-///     Mach (via speed of sound, needs temperature)
-/// ```
-///
-/// ## Usage Example
-/// ```swift
-/// let context = SpeedContext(
-///     pressureAltitude: .init(feet: 10000),
-///     deltaISA: .init(kelvin: 0)
-/// )
-///
-/// let speed = Speed(
-///     knots: 250,
-///     reference: .calibratedAirspeed,
-///     context: context
-/// )
-///
-/// print(speed.tas.knots)  // True airspeed in knots
-/// print(speed.mach)       // Mach number
-/// ```
+
 public struct Speed: Sendable {
     public let value: Measurement<UnitSpeed>
     public let reference: SpeedReference
     public let context: SpeedContext
     
-    /// For Mach number reference, store as dimensionless value
     public let machValue: Double?
     
-    // MARK: - Initializers
+    private var localSpeedOfSound: Double {
+        guard let s = context.speedOfSound else {
+            preconditionFailure("Speed of sound missing in SpeedContext")
+        }
+        return s.mps
+    }
     
     public init(value: Measurement<UnitSpeed>, reference: SpeedReference, context: SpeedContext) {
         precondition(reference != .machNumber, "Use init(mach:context:) for Mach number")
@@ -58,12 +27,10 @@ public struct Speed: Sendable {
         self.machValue = mach
         self.reference = .machNumber
         self.context = context
-        // Value is computed from mach
-        self.value = .init(mps: 0)  // Placeholder, use computed properties
+        self.value = .init(mps: 0)
     }
     
-    // MARK: - Convenience Initializers
-    
+
     public init(mps: Double, reference: SpeedReference, context: SpeedContext) {
         if reference == .machNumber {
             self.init(mach: mps, context: context)
@@ -90,28 +57,22 @@ public struct Speed: Sendable {
     
     // MARK: - Computed Properties for Each Reference
     
-    /// Calibrated Airspeed
     public var cas: Measurement<UnitSpeed> {
         reference == .calibratedAirspeed ? value : convertToCAS()
     }
     
-    /// Equivalent Airspeed
     public var eas: Measurement<UnitSpeed> {
         reference == .equivalentAirspeed ? value : convertToEAS()
     }
     
-    /// True Airspeed
     public var tas: Measurement<UnitSpeed> {
         reference == .trueAirspeed ? value : convertToTAS()
     }
     
-    /// Mach Number (dimensionless)
     public var mach: Double {
         reference == .machNumber ? machValue! : convertToMach()
     }
-    
-    // MARK: - Conversion Methods
-    
+
     private func convertToCAS() -> Measurement<UnitSpeed> {
         guard let delta = context.relativePressure else {
             preconditionFailure("Pressure altitude required for CAS conversion")
@@ -128,11 +89,9 @@ public struct Speed: Sendable {
             )
             
         case .trueAirspeed:
-            // TAS → EAS → CAS
             return convertToEAS().asCAS(context: context)
             
         case .machNumber:
-            // Mach → TAS → EAS → CAS
             return convertToTAS().asCAS(context: context)
         }
     }
@@ -162,7 +121,6 @@ public struct Speed: Sendable {
             )
             
         case .machNumber:
-            // Mach → TAS → EAS
             return convertToTAS().asEAS(context: context)
         }
     }
@@ -174,7 +132,6 @@ public struct Speed: Sendable {
         
         switch reference {
         case .calibratedAirspeed, .equivalentAirspeed:
-            // Go through EAS first
             let easValue = reference == .equivalentAirspeed ? value : convertToEAS()
             return AirDataEquations.trueAirspeed(
                 fromEquivalentAirspeed: easValue,
@@ -200,7 +157,6 @@ public struct Speed: Sendable {
             preconditionFailure("Temperature required for Mach conversion")
         }
         
-        // All conversions go through TAS
         let tasValue = reference == .trueAirspeed ? value : convertToTAS()
         return AirDataEquations.machNumber(
             fromTrueAirspeed: tasValue,
@@ -209,7 +165,6 @@ public struct Speed: Sendable {
     }
 }
 
-// MARK: - Helper Extensions
 
 private extension Measurement<UnitSpeed> {
     func asCAS(context: SpeedContext) -> Measurement<UnitSpeed> {
@@ -223,10 +178,8 @@ private extension Measurement<UnitSpeed> {
     }
 }
 
-// MARK: - Convenience Conversion Method
 
 extension Speed {
-    /// Create a new Speed in a different reference frame
     public func `in`(_ newReference: SpeedReference) -> Speed {
         switch newReference {
         case .calibratedAirspeed:
@@ -241,8 +194,6 @@ extension Speed {
     }
 }
 
-// MARK: - Equatable & Hashable
-
 extension Speed: Equatable {
     public static func == (lhs: Speed, rhs: Speed) -> Bool {
         // Compare as TAS (the fundamental speed through air)
@@ -255,8 +206,6 @@ extension Speed: Hashable {
         hasher.combine(tas.mps)
     }
 }
-
-// MARK: - Comparable
 
 extension Speed: Comparable {
     public static func < (lhs: Speed, rhs: Speed) -> Bool {

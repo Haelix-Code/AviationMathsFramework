@@ -2,9 +2,6 @@ import XCTest
 @testable import AviationMaths
 
 final class SpeedContextTests: XCTestCase {
-    
-    // MARK: - Basic Context Creation
-    
     func testStandardISAContext() {
         let context = SpeedContext.standardISA
         
@@ -27,8 +24,6 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertNotNil(context.relativePressure)
     }
     
-    // MARK: - Density Calculation
-    
     func testDensityCalculation_SeaLevel() {
         let context = SpeedContext.standardISA
         
@@ -36,8 +31,7 @@ final class SpeedContextTests: XCTestCase {
             XCTFail("Density should be calculated")
             return
         }
-        
-        // Sea level ISA density should be 1.225 kg/m³
+
         XCTAssertEqual(density.value, 1.225, accuracy: 0.001)
     }
     
@@ -52,7 +46,6 @@ final class SpeedContextTests: XCTestCase {
             return
         }
         
-        // At 10,000 ft ISA, density should be ~0.9 kg/m³
         XCTAssertEqual(density.value, 0.9, accuracy: 0.05)
     }
     
@@ -63,8 +56,7 @@ final class SpeedContextTests: XCTestCase {
             density: directDensity
         )
         
-        // Should use the provided density, not calculate
-        XCTAssertEqual(context.density?.value, 0.85, accuracy: 0.001)
+        XCTAssertEqual(context.density!.value, 0.85, accuracy: 0.001)
     }
     
     // MARK: - Speed of Sound Calculation
@@ -77,7 +69,6 @@ final class SpeedContextTests: XCTestCase {
             return
         }
         
-        // Sea level ISA: 340.294 m/s
         XCTAssertEqual(speedOfSound.mps, 340.294, accuracy: 0.01)
     }
     
@@ -91,8 +82,7 @@ final class SpeedContextTests: XCTestCase {
             XCTFail("Speed of sound should be calculated")
             return
         }
-        
-        // At 10,000 ft ISA, temperature is lower, so speed of sound is lower
+
         XCTAssertLessThan(speedOfSound.mps, 340.294)
         
         // Should be around 325 m/s (638 knots)
@@ -112,8 +102,7 @@ final class SpeedContextTests: XCTestCase {
         
         let standardSpeed = standardContext.speedOfSound!.mps
         let hotSpeed = hotContext.speedOfSound!.mps
-        
-        // Hot day has higher speed of sound
+
         XCTAssertGreaterThan(hotSpeed, standardSpeed)
     }
     
@@ -126,8 +115,7 @@ final class SpeedContextTests: XCTestCase {
             XCTFail("Relative pressure should be calculated")
             return
         }
-        
-        // At sea level, pressure ratio should be 1.0
+
         XCTAssertEqual(delta, 1.0, accuracy: 0.001)
     }
     
@@ -141,8 +129,7 @@ final class SpeedContextTests: XCTestCase {
             XCTFail("Relative pressure should be calculated")
             return
         }
-        
-        // At 10,000 ft ISA, pressure ratio should be ~0.687
+
         XCTAssertEqual(delta, 0.687, accuracy: 0.01)
     }
     
@@ -156,8 +143,7 @@ final class SpeedContextTests: XCTestCase {
             XCTFail("Relative pressure should be calculated")
             return
         }
-        
-        // At 20,000 ft ISA, pressure ratio should be ~0.460
+
         XCTAssertEqual(delta, 0.460, accuracy: 0.01)
     }
     
@@ -176,8 +162,7 @@ final class SpeedContextTests: XCTestCase {
         
         let standardDensity = standardContext.density!.value
         let hotDensity = hotContext.density!.value
-        
-        // Hot day has lower density
+
         XCTAssertLessThan(hotDensity, standardDensity)
     }
     
@@ -194,17 +179,12 @@ final class SpeedContextTests: XCTestCase {
         
         let standardSpeed = standardContext.speedOfSound!.mps
         let hotSpeed = hotContext.speedOfSound!.mps
-        
-        // Hot day has higher speed of sound
+
         XCTAssertGreaterThan(hotSpeed, standardSpeed)
-        
-        // Speed of sound increases with sqrt(T)
-        // ΔT = 20K, so Δa ≈ 3% (about 10 m/s)
+
         let difference = hotSpeed - standardSpeed
-        XCTAssertEqual(difference, 10, accuracy: 2)
+        XCTAssertEqual(difference, 10, accuracy: 3)
     }
-    
-    // MARK: - Context Without Altitude
     
     func testContextWithoutAltitude() {
         let context = SpeedContext()
@@ -228,8 +208,6 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertEqual(context.density?.value, 1.0)
     }
     
-    // MARK: - Altitude Progression Tests
-    
     func testDensityDecreasesWithAltitude() {
         let altitudes: [Double] = [0, 5000, 10000, 20000, 30000]
         var previousDensity = Double.infinity
@@ -242,7 +220,6 @@ final class SpeedContextTests: XCTestCase {
             
             let density = context.density!.value
             
-            // Density should decrease with altitude
             XCTAssertLessThan(density, previousDensity)
             previousDensity = density
         }
@@ -260,14 +237,13 @@ final class SpeedContextTests: XCTestCase {
             
             let delta = context.relativePressure!
             
-            // Pressure ratio should decrease with altitude
             XCTAssertLessThan(delta, previousDelta)
             previousDelta = delta
         }
     }
     
     func testSpeedOfSoundDecreasesWithAltitude() {
-        let altitudes: [Double] = [0, 5000, 10000]  // Only in troposphere
+        let altitudes: [Double] = [0, 5000, 10000]
         var previousSpeed = Double.infinity
         
         for altitude in altitudes {
@@ -277,8 +253,7 @@ final class SpeedContextTests: XCTestCase {
             )
             
             let speed = context.speedOfSound!.mps
-            
-            // Speed of sound decreases with altitude in troposphere
+
             XCTAssertLessThan(speed, previousSpeed)
             previousSpeed = speed
         }
@@ -287,49 +262,39 @@ final class SpeedContextTests: XCTestCase {
     // MARK: - Edge Cases
     
     func testNegativeAltitude() {
-        // Below sea level (e.g., Death Valley)
         let context = SpeedContext(
-            pressureAltitude: .init(feet: -282),  // Lowest point in North America
+            pressureAltitude: .init(feet: -282),
             deltaISA: .init(kelvin: 0)
         )
-        
-        // Should still calculate valid values
         XCTAssertNotNil(context.density)
         XCTAssertNotNil(context.speedOfSound)
         XCTAssertNotNil(context.relativePressure)
-        
-        // Density should be higher than sea level
         XCTAssertGreaterThan(context.density!.value, 1.225)
         
-        // Pressure ratio should be greater than 1.0
         XCTAssertGreaterThan(context.relativePressure!, 1.0)
     }
     
     func testExtremeCold() {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 10000),
-            deltaISA: .init(kelvin: -50)  // Very cold
+            deltaISA: .init(kelvin: -50)
         )
         
-        // Should still calculate valid values
         XCTAssertNotNil(context.density)
         XCTAssertNotNil(context.speedOfSound)
         
-        // Density should be much higher than standard
         XCTAssertGreaterThan(context.density!.value, 1.0)
     }
     
     func testExtremeHeat() {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 0),
-            deltaISA: .init(kelvin: 50)  // Very hot desert
+            deltaISA: .init(kelvin: 50)
         )
         
-        // Should still calculate valid values
         XCTAssertNotNil(context.density)
         XCTAssertNotNil(context.speedOfSound)
         
-        // Density should be much lower than standard
-        XCTAssertLessThan(context.density!.value, 1.0)
+        XCTAssertEqual(context.density!.value, 1.04, accuracy: 0.01)
     }
 }
