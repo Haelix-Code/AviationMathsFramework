@@ -42,3 +42,6 @@ extension PolarVector where Magnitude == Measurement<UnitSpeed> {
     }
     public var speed: Measurement<UnitSpeed> { self.magnitude }
 }
+
+public typealias DistanceVector = PolarVector<Measurement<UnitLength>>
+public typealias SpeedVector = PolarVector<Measurement<UnitSpeed>>
