@@ -33,7 +33,6 @@ enum AirDataEquations {
         relativePressure delta: Double
     ) -> Measurement<UnitSpeed> {
         let machAtSeaLevel = cas.mps / seaLevelSpeedOfSound
-        
         let qcAtSeaLevel = impactPressureCoefficient(fromMach: machAtSeaLevel)
         let qcAtAltitude = qcAtSeaLevel / delta
         let machAtAltitude = machNumber(fromImpactPressureCoefficient: qcAtAltitude)

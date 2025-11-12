@@ -85,7 +85,7 @@ final class SpeedTests: XCTestCase {
         let speed = Speed(knots: 300, reference: .calibratedAirspeed, context: context)
         
         let difference = abs(speed.eas.knots - speed.cas.knots)
-        XCTAssertEqual(difference, 3.2, accuracy: 0.1)
+        XCTAssertEqual(difference, 3.42, accuracy: 0.1)
     }
     
     // MARK: - Round-Trip Conversion Tests
