@@ -104,8 +104,8 @@ public struct ISA {
         var currentAlt = Self.troposphereBase.meters
         var currentTemp = Self.seaLevelTemperature.value + deltaK
         
-        // Layer 1: Troposphere (0 - 11km)
-        if altitudeMeters > Self.troposphereBase.meters {
+        // Layer 1: Troposphere (-5km - 11km)
+        if altitudeMeters >= 0 {
             let topAlt = min(altitudeMeters, Self.lowerStratosphereBase.meters)
             let deltaH = topAlt - currentAlt
             let L = Self.troposphereLapseRate
@@ -116,6 +116,12 @@ public struct ISA {
             
             currentAlt = topAlt
             currentTemp = tempAtTop
+        } else {
+            let L = Self.troposphereLapseRate
+            let deltaH = altitudeMeters
+            let tempAtH = Self.seaLevelTemperature.value - L * deltaH
+            let exponent = g / (L * R)
+            pressurePa = Self.seaLevelPressure.value * pow(tempAtH / Self.seaLevelTemperature.value, exponent)
         }
         
         // Layer 2: Lower Stratosphere (11 - 20km)
@@ -191,4 +197,26 @@ extension ISA {
         at altitude: Measurement<UnitLength>) -> Double {
             return ISA(altitude: altitude).lapseRate
         }
+}
+
+
+extension ISA {
+    /// Calculate desnity from pressure and temperature using ideal gas law
+    /// \(\rho \) = P / ( R x T)
+    public static func densityFromPressureAndTemperature(
+        pressure: Measurement<UnitPressure>,
+        temperature: Measurement<UnitTemperature>
+    ) -> Measurement<UnitConcentrationMass> {
+        let rho = pressure.pascals / (ISA.dryAirGasConstant * temperature.kelvin)
+        return .init(value: rho, unit: .gramsPerLiter)
+    }
+    
+    // a = ((\sqrt \) \gamma x R  x T)
+    public static func speedOfSoundFromTemperature(
+        temperature: Measurement<UnitTemperature>
+    ) -> Measurement<UnitSpeed> {
+        let speedMS = sqrt(ISA.ratioSpecificHeats * ISA.dryAirGasConstant * temperature.kelvin)
+        return .init(mps: speedMS)
+    }
+
 }

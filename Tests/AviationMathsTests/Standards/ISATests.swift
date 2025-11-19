@@ -153,7 +153,6 @@ final class ISATests: XCTestCase {
     }
     
     // MARK: - Speed of Sound Tests
-    
     func testSpeedOfSoundAtSeaLevel() {
         let isa = ISA(altitudeMeters: 0)
         
@@ -239,5 +238,34 @@ final class ISATests: XCTestCase {
         XCTAssertEqual(isa.temperature.kelvin, ISA.seaLevelTemperature.kelvin, accuracy: 1e-6)
         XCTAssertEqual(isa.pressure.value, ISA.seaLevelPressure.value, accuracy: 1)
         XCTAssertEqual(isa.density.value, ISA.seaLevelDensity.value, accuracy: 1e-4)
+    }
+    
+    func testDensityFromPressureAndTemperature() {
+        let pressure = Measurement(value: 101325, unit: UnitPressure.pascals)
+        let temperature = Measurement(value: 288.15, unit: UnitTemperature.kelvin)
+        let density = ISA.densityFromPressureAndTemperature(pressure: pressure, temperature: temperature)
+        XCTAssertEqual(density.value, 1.225, accuracy: 0.01)
+    }
+
+   func testDensityWithExtremeValues() {
+       let pressure = Measurement(value: 500000, unit: UnitPressure.pascals)
+       let temperature = Measurement(value: 400, unit: UnitTemperature.kelvin)
+       
+       let density = ISA.densityFromPressureAndTemperature(pressure: pressure, temperature: temperature)
+
+       XCTAssertEqual(density.value, 4.355, accuracy: 0.001)
+   }
+    
+    func testSpeedOfSoundFromTemperature() {
+        let temperature = Measurement(value: 288.15, unit: UnitTemperature.kelvin)
+        let speedOfSound = ISA.speedOfSoundFromTemperature(temperature: temperature)
+        XCTAssertEqual(speedOfSound.value, 340.30, accuracy: 0.01)
+    }
+
+    func testSpeedOfSoundWithExtremeTemperatures() {
+        let temperature = Measurement(value: -40, unit: UnitTemperature.celsius)
+        let speedOfSound = ISA.speedOfSoundFromTemperature(temperature: temperature)
+
+        XCTAssertEqual(speedOfSound.value, 306.102, accuracy: 0.001)
     }
 }
