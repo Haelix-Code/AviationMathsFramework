@@ -18,7 +18,7 @@ extension PolarVector where Magnitude == Measurement<UnitLength> {
     }
 
     public var range: Measurement<UnitLength> { self.magnitude }
-    
+
     public func positionRelativeToDatum(_ datum: Position2D) -> Position2D {
         let startPoint = Coordinate(position2D: datum)
         let endPoint = startPoint.destination(with: magnitude.meters, bearing: angle.degrees)

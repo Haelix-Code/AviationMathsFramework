@@ -23,7 +23,7 @@ extension Vector2D {
     }
 
     public var length: Measurement<UnitLength> {
-        .init(meters: sqrt((pow(x.meters, 2)) + (pow(y.meters,2))))
+        .init(meters: sqrt((pow(x.meters, 2)) + (pow(y.meters, 2))))
     }
 
     public var polarCoordinate: PolarVector<Measurement<UnitLength>> {

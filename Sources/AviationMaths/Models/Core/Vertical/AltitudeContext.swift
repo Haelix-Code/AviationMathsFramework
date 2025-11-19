@@ -3,15 +3,15 @@ import Foundation
 public struct AltitudeContext: Sendable {
     public let groundElevation: Measurement<UnitLength>?
     public let qnh: Measurement<UnitPressure>?
-    
+
     private let _surfaceTemperature: Measurement<UnitTemperature>?
     private let _seaLevelTemperature: Measurement<UnitTemperature>?
-    
+
     public let temperatureReferenceAltitude: Measurement<UnitLength>?
     public let temperatureAtReference: Measurement<UnitTemperature>?
-    
+
     public let lapseRate: Double?
-    
+
     /// Surface temperature (at ground elevation)
     public var surfaceTemperature: Measurement<UnitTemperature>? {
         if let temp = _surfaceTemperature {
@@ -27,7 +27,7 @@ public struct AltitudeContext: Sendable {
         let surfaceTemp = slTemp.kelvin - rate * elev.meters
         return .init(kelvin: surfaceTemp)
     }
-    
+
     /// Sea level temperature (at height = 0)
     public var seaLevelTemperature: Measurement<UnitTemperature>? {
         if let temp = _seaLevelTemperature {
@@ -43,7 +43,7 @@ public struct AltitudeContext: Sendable {
         let slTemp = surfTemp.kelvin + rate * elev.meters
         return .init(kelvin: slTemp)
     }
-    
+
     public init(
         groundElevation: Measurement<UnitLength>? = nil,
         qnh: Measurement<UnitPressure>? = nil,
@@ -59,7 +59,7 @@ public struct AltitudeContext: Sendable {
         self._seaLevelTemperature = seaLevelTemperature
         self.temperatureReferenceAltitude = temperatureReferenceAltitude
         self.temperatureAtReference = temperatureAtReference
-        
+
         // Calculate lapse rate if not provided but we have the data
         if let lapseRate = lapseRate {
             self.lapseRate = lapseRate
@@ -83,19 +83,19 @@ public struct AltitudeContext: Sendable {
             self.lapseRate = nil
         }
     }
-    
+
     /// Calculate temperature at any altitude using the temperature model
     public func temperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature>? {
         guard let slTemp = seaLevelTemperature,
               let rate = lapseRate else {
             return nil
         }
-        
+
         // T = T_sl - L * h
         let tempAtAlt = slTemp.kelvin - rate * altitude.meters
         return .init(kelvin: tempAtAlt)
     }
-    
+
     public static let standardISA = AltitudeContext(
         groundElevation: .surface,
         qnh: ISA.seaLevelPressure,

@@ -9,14 +9,12 @@ import Foundation
 /// - ICAO Standard Atmosphere (Doc 7488)
 /// - US Standard Atmosphere 1976
 enum AirDataEquations {
-    
 
     private static let gamma: Double = ISA.ratioSpecificHeats  // 1.4
-    
+
     private static let seaLevelSpeedOfSound: Double = ISA.seaLevelSpeedOfSound.mps  // 340.294 m/s
-    
+
     private static let seaLevelDensity: Double = ISA.seaLevelDensity.value  // 1.225 kg/m³
-    
 
     static func impactPressureCoefficient(fromMach mach: Double) -> Double {
         let gamma = ISA.ratioSpecificHeats
@@ -27,7 +25,7 @@ enum AirDataEquations {
     static func machNumber(fromImpactPressureCoefficient qc: Double) -> Double {
         return sqrt(5.0 * (pow(qc + 1.0, 2.0/7.0) - 1.0))
     }
-    
+
     static func equivalentAirspeed(
         fromCalibratedAirspeed cas: Measurement<UnitSpeed>,
         relativePressure delta: Double
@@ -37,10 +35,10 @@ enum AirDataEquations {
         let qcAtAltitude = qcAtSeaLevel / delta
         let machAtAltitude = machNumber(fromImpactPressureCoefficient: qcAtAltitude)
         let eas = machAtAltitude * seaLevelSpeedOfSound * sqrt(delta)
-        
+
         return .init(mps: eas)
     }
-    
+
     static func calibratedAirspeed(
         fromEquivalentAirspeed eas: Measurement<UnitSpeed>,
         relativePressure delta: Double
@@ -50,10 +48,10 @@ enum AirDataEquations {
         let qcAtSeaLevel = qcAtAltitude * delta
         let machAtSeaLevel = machNumber(fromImpactPressureCoefficient: qcAtSeaLevel)
         let cas = machAtSeaLevel * seaLevelSpeedOfSound
-        
+
         return .init(mps: cas)
     }
-    
+
     static func trueAirspeed(
         fromEquivalentAirspeed eas: Measurement<UnitSpeed>,
         density: Measurement<UnitConcentrationMass>
@@ -71,7 +69,6 @@ enum AirDataEquations {
         let eas = tas.mps * sqrt(densityRatio)
         return .init(mps: eas)
     }
-    
 
     static func machNumber(
         fromTrueAirspeed tas: Measurement<UnitSpeed>,

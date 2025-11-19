@@ -26,18 +26,18 @@ public enum LatitudeDirection: String, Codable, CaseIterable, Sendable {
 public enum LongitudeDirection: String, Codable, CaseIterable, Sendable {
     case east = "E"
     case west = "W"
-    
+
     public var sign: Double {
         switch self {
         case .east: return 1.0
         case .west: return -1.0
         }
     }
-    
+
     public init(decimalDegrees: Double) {
         self = decimalDegrees >= 0 ? .east : .west
     }
-    
+
     public var name: String {
         switch self {
         case .east: return "East"
