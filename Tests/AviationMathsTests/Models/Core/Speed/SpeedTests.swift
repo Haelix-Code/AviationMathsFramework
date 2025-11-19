@@ -19,8 +19,8 @@ final class SpeedTests: XCTestCase {
         )
         let speed = Speed(knots: 200, reference: .calibratedAirspeed, context: context)
         XCTAssertEqual(speed.cas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 193.396, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 370.472, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 193.395, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 370.467, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 0.603, accuracy: 0.001)
     }
 
@@ -39,7 +39,7 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 207.294, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 207.297, accuracy: 0.001)
         XCTAssertEqual(speed.eas.knots, 200.000, accuracy: 0.001)
         XCTAssertEqual(speed.tas.knots, 383.121, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 0.623, accuracy: 0.001)
@@ -60,7 +60,7 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 200, reference: .trueAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 105.456, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 105.458, accuracy: 0.001)
         XCTAssertEqual(speed.eas.knots, 104.405, accuracy: 0.001)
         XCTAssertEqual(speed.tas.knots, 200.000, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 0.325, accuracy: 0.001)
@@ -69,9 +69,9 @@ final class SpeedTests: XCTestCase {
     func testFromMach_Standard() throws {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 1, reference: .machNumber, context: context)
-        XCTAssertEqual(speed.cas.knots, 661.469, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 661.477, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 661.477, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 661.485, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 661.485, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 661.485, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 1, accuracy: 0.001)
     }
     
@@ -81,9 +81,9 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 1, reference: .machNumber, context: context)
-        XCTAssertEqual(speed.cas.knots, 350.02, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 320.871, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 614.664, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 350.029, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 320.876, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 614.671, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 1, accuracy: 0.001)
     }
     
@@ -171,9 +171,9 @@ final class SpeedTests: XCTestCase {
         
         let speed = Speed(mach: 2.0, context: context)
         
-        XCTAssertEqual(speed.cas.knots, 758.284, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 569.158, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 1147.136, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 829.822, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 641.752, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 1152.849, accuracy: 0.001)
     }
     
     func testStratospheric() throws {
@@ -184,9 +184,9 @@ final class SpeedTests: XCTestCase {
         
         let speed = Speed(mach: 0.89, context: context)
         
-        XCTAssertEqual(speed.cas.knots, 273.199, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 253.275, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 510.476, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 273.206, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 253.279, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 510.481, accuracy: 0.001)
     }
     
     func testInMethod() throws {

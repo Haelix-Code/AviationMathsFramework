@@ -14,19 +14,24 @@ public struct SpeedContext: Sendable {
         
         guard let altitude = pressureAltitude else { return nil }
         let delta = deltaISA ?? .init(kelvin: 0)
-        return ISA.density(at: altitude, deltaISA: delta)
+        let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
+        let temperature = ISA.temperature(at: altitude, deltaISA: delta)
+        let rho = pressure.pascals / (ISA.dryAirGasConstant * temperature.kelvin)
+        
+        return .init(value: rho, unit: .gramsPerLiter)
     }
     
     public var speedOfSound: Measurement<UnitSpeed>? {
         guard let altitude = pressureAltitude else { return nil }
         let delta = deltaISA ?? .init(kelvin: 0)
-        return ISA.speedOfSound(at: altitude, deltaISA: delta)
+        let temperature = ISA.temperature(at: altitude, deltaISA: delta)
+        let speedMS = sqrt(ISA.ratioSpecificHeats * ISA.dryAirGasConstant * temperature.kelvin)
+        return .init(mps: speedMS)
     }
     
     public var relativePressure: Double? {
         guard let altitude = pressureAltitude else { return nil }
-        let delta = deltaISA ?? .init(kelvin: 0)
-        let pressure = ISA.pressure(at: altitude, deltaISA: delta)
+        let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
         return pressure.pascals / ISA.seaLevelPressure.pascals
     }
     
