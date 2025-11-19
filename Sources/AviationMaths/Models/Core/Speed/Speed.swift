@@ -92,7 +92,9 @@ public struct Speed: Sendable {
             return convertToEAS().asCAS(context: context)
             
         case .machNumber:
-            return convertToTAS().asCAS(context: context)
+            let tas = convertToTAS()
+            let speedFromTas = Speed(value: tas, reference: .trueAirspeed, context: context)
+            return speedFromTas.cas
         }
     }
     
@@ -121,7 +123,9 @@ public struct Speed: Sendable {
             )
             
         case .machNumber:
-            return convertToTAS().asEAS(context: context)
+            let tas = convertToTAS()
+            let speedFromTAS = Speed(value: tas, reference: .trueAirspeed, context: context)
+            return speedFromTAS.eas
         }
     }
     
