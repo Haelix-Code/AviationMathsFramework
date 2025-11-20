@@ -143,6 +143,11 @@ public struct ISA {
 
         return .init(value: rho, unit: .gramsPerLiter)
     }
+    
+    public var relativeDensity: Double {
+        let relativeDensity = density.converted(to: .gramsPerLiter).value / ISA.seaLevelDensity.converted(to: .gramsPerLiter).value
+        return relativeDensity
+    }
 
     public var speedOfSound: Measurement<UnitSpeed> {
         let tempK = temperature.kelvin
@@ -184,6 +189,16 @@ extension ISA {
         deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)
     ) -> Measurement<UnitConcentrationMass> {
         return ISA(altitude: altitude, deltaISA: deltaISA).density
+    }
+    
+    public static func relativeDensity(
+        at altitude: Measurement<UnitLength>,
+        deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)
+    ) -> Double {
+        let density = density(at: altitude, deltaISA: deltaISA)
+        let relativeDensity = density.converted(to: .gramsPerLiter).value / ISA.seaLevelDensity.converted(to: .gramsPerLiter).value
+        
+        return relativeDensity
     }
 
     public static func speedOfSound(
