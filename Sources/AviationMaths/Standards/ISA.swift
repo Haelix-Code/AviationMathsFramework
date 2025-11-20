@@ -32,8 +32,10 @@ public struct ISA {
     private static let modelUpperLimit: Measurement<UnitLength> = .init(value: 20_000, unit: .meters)
     public static let troposphereLapseRate: Double = 0.0065  // K/m
     private static let lowerStratosphereLapseRate: Double = 0.0
-    private static let tropopauseTemperature: Double =
-        seaLevelTemperature.value - troposphereLapseRate * (lowerStratosphereBase.meters - troposphereBase.meters)
+    private static let tropopauseTemperature: Measurement<UnitTemperature> = .init(
+        value: seaLevelTemperature.value - troposphereLapseRate
+            * (lowerStratosphereBase.meters - troposphereBase.meters),
+        unit: .kelvin)
 
     // MARK: - Instance Properties
 
@@ -88,7 +90,7 @@ public struct ISA {
                           Self.troposphereLapseRate * altitudeMeters
         } else {
             // Lower stratosphere: isothermal at tropopause temperature
-            standardTemp = Self.tropopauseTemperature
+            standardTemp = Self.tropopauseTemperature.kelvin
         }
 
         return .init(kelvin: standardTemp + deltaK)
@@ -129,7 +131,7 @@ public struct ISA {
             let tempIsothermal = Self.tropopauseTemperature
 
             let exponent = -g * deltaH / (R * tempIsothermal)
-            pressurePa *= exp(exponent)
+            pressurePa *= exp(exponent.value)
         }
 
         return .init(pascals: pressurePa)
@@ -151,6 +153,35 @@ public struct ISA {
         return relativeDensity
     }
 
+    public var densityAltitude: Measurement<UnitLength> {
+        let rho = density.converted(to: .gramsPerLiter).value
+
+        let g = Self.standardGravity.value
+        let R = Self.dryAirGasConstant
+        let L = Self.troposphereLapseRate
+
+        let T0 = Self.seaLevelTemperature.value
+        let P0 = Self.seaLevelPressure.value
+        let rho0 = Self.seaLevelDensity.converted(to: .gramsPerLiter).value
+        let Ht = Self.lowerStratosphereBase.meters
+        let Tt = Self.tropopauseTemperature.value
+
+        let exponentTroposphere = g / (L * R)
+        let Pt = P0 * pow(Tt / T0, exponentTroposphere)
+
+        let rhot = Pt / (R * Tt)
+
+        if rho >= rhot {
+            let exponent = (g / (L * R)) - 1.0
+            let ratio = rho / rho0
+            let h = (T0 / L) * (1.0 - pow(ratio, 1.0 / exponent))
+            return .init(meters: h)
+        } else {
+            let h = Ht - ((R * Tt) / g) * log(rho / rhot)
+            return .init(meters: h)
+        }
+    }
+
     public var speedOfSound: Measurement<UnitSpeed> {
         let tempK = temperature.kelvin
         let speedMS = sqrt(Self.ratioSpecificHeats * Self.dryAirGasConstant * tempK)
@@ -166,7 +197,6 @@ public struct ISA {
             return Self.troposphereLapseRate
         }
     }
-
 }
 
 // MARK: - Static Calculation Methods
@@ -204,6 +234,13 @@ extension ISA {
             .converted(to: .gramsPerLiter).value
 
         return relativeDensity
+    }
+
+    public static func densityAltitude(
+        at altitude: Measurement<UnitLength>,
+        deltaISA: Measurement<UnitTemperature> = .init(kelvin: 0)
+    ) -> Measurement<UnitLength> {
+        return ISA(altitude: altitude, deltaISA: deltaISA).densityAltitude
     }
 
     public static func speedOfSound(
