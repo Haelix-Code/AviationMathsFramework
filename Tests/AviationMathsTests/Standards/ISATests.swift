@@ -24,7 +24,7 @@ final class ISATests: XCTestCase {
         XCTAssertEqual(isa.speedOfSound.value, 320.53, accuracy: 0.01)
         XCTAssertEqual(isa.lapseRate, 0.0065)
     }
-    
+
     func testAt20000Meters_NoDeltaISA() {
         let isa = ISA(altitudeMeters: 20000)
         XCTAssertEqual(isa.temperature.kelvin, 216.65, accuracy: 0.01)
@@ -35,7 +35,7 @@ final class ISATests: XCTestCase {
         XCTAssertEqual(isa.speedOfSound.value, 295.07, accuracy: 0.01)
         XCTAssertEqual(isa.lapseRate, 0)
     }
-    
+
     func testSeaLevel_DeltaISA() {
         let isa = ISA(altitudeMeters: 0, deltaISA: 20)
         XCTAssertEqual(isa.temperature.kelvin, 308.15, accuracy: 0.01)
@@ -90,8 +90,8 @@ final class ISATests: XCTestCase {
 
         XCTAssertEqual(density.value, 0.7361, accuracy: 0.001)
     }
-    
-    func testStaticRelativeDensityMethod(){
+
+    func testStaticRelativeDensityMethod() {
         let altitude = Measurement(value: 5000, unit: UnitLength.meters)
         let relativeDensity = ISA.relativeDensity(at: altitude)
 
