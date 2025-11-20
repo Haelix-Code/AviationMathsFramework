@@ -96,13 +96,12 @@ public struct ISA {
 
     public var pressure: Measurement<UnitPressure> {
         let altitudeMeters = altitude.meters
-        let deltaK = deltaISA.kelvin
         let g = Self.standardGravity.value
         let R = Self.dryAirGasConstant
 
         var pressurePa = Self.seaLevelPressure.value
         var currentAlt = Self.troposphereBase.meters
-        var currentTemp = Self.seaLevelTemperature.value + deltaK
+        var currentTemp = Self.seaLevelTemperature.value
 
         // Layer 1: Troposphere (-5km - 11km)
         if altitudeMeters >= 0 {
@@ -127,7 +126,7 @@ public struct ISA {
         // Layer 2: Lower Stratosphere (11 - 20km)
         if altitudeMeters > Self.lowerStratosphereBase.meters {
             let deltaH = altitudeMeters - currentAlt
-            let tempIsothermal = Self.tropopauseTemperature + deltaK
+            let tempIsothermal = Self.tropopauseTemperature
 
             let exponent = -g * deltaH / (R * tempIsothermal)
             pressurePa *= exp(exponent)
