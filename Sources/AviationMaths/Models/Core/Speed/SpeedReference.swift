@@ -5,7 +5,7 @@ public enum SpeedReference: String, Codable, CaseIterable, Sendable {
     case equivalentAirspeed  // EAS - CAS corrected for compressibility
     case trueAirspeed       // TAS - actual speed through air mass
     case machNumber         // Mach - ratio to speed of sound
-    
+
     public var abbreviation: String {
         switch self {
         case .calibratedAirspeed: return "CAS"
@@ -14,7 +14,7 @@ public enum SpeedReference: String, Codable, CaseIterable, Sendable {
         case .machNumber: return "Mach"
         }
     }
-    
+
     public var description: String {
         switch self {
         case .calibratedAirspeed: return "Calibrated Airspeed"

@@ -3,7 +3,7 @@ import Foundation
 public struct Position2D: Equatable, Hashable, Codable, Sendable {
     public let latitude: Latitude
     public let longitude: Longitude
-    
+
     public init(latitude: Latitude, longitude: Longitude) {
         self.latitude = latitude
         self.longitude = longitude
@@ -13,7 +13,7 @@ public struct Position2D: Equatable, Hashable, Codable, Sendable {
         self.latitude = Latitude(decimalDegrees: latitude)
         self.longitude = Longitude(decimalDegrees: longitude)
     }
-    
+
     public init(
         latitudeDMS: DegreesMinutesSeconds,
         latitudeDirection: LatitudeDirection,
@@ -33,7 +33,7 @@ public struct Position2D: Equatable, Hashable, Codable, Sendable {
         self.latitude = Latitude(ddm: latitudeDDM, direction: latitudeDirection)
         self.longitude = Longitude(ddm: longitudeDDM, direction: longitudeDirection)
     }
-    
+
     public init(
         latDegrees: Int,
         latMinutes: Int,

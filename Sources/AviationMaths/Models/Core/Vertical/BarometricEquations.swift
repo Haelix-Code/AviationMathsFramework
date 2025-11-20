@@ -2,7 +2,7 @@ import Foundation
 
 enum BarometricEquations {
     // MARK: - Standard Barometric Conversions (ISA)
-    
+
     /// Convert pressure to altitude using barometric formula
     /// Formula: h = (T₀/L) * (1 - (P/P₀)^(R*L/g))
     /// where temperature decreases with altitude: T = T₀ - L*h
@@ -17,7 +17,7 @@ enum BarometricEquations {
         let altitude = temperature.kelvin / lapseRate * (1 - pow(pressureRatio, exponent))
         return .init(meters: altitude)
     }
-    
+
     /// Convert altitude to pressure using barometric formula
     /// Formula: P = P₀ * ((T₀ - L*h)/T₀)^(g/(L*R))
     /// where temperature decreases with altitude: T = T₀ - L*h
@@ -32,9 +32,9 @@ enum BarometricEquations {
         let pressureAtAltitude = referencePressure.pascals * pow(temperatureRatio, exponent)
         return .init(pascals: pressureAtAltitude)
     }
-    
+
     // MARK: - True Altitude Conversions (Non-Standard Atmosphere)
-    
+
     /// Convert true altitude to pressure using actual temperature profile
     /// Based on: maths.service.ts:: convertVerticalPressurePaTempCToAltitudePA
     static func pressureFromTrueAltitude(
@@ -56,7 +56,7 @@ enum BarometricEquations {
         let pressure = referencePressure.pascals * pow(base, exponent)
         return .init(pascals: pressure)
     }
-    
+
     /// Convert pressure to true altitude using actual temperature profile
     /// Based on: maths.service.ts:: convertVerticalPressurePaTempCToAltitudePA
     static func trueAltitudeFromPressure(
