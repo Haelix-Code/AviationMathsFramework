@@ -1,0 +1,4 @@
+excluded:
+  - .build
+disabled_rules:
+  identifier_name

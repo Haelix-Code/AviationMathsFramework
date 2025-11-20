@@ -21,7 +21,10 @@ final class UnitAltitudeTests: XCTestCase {
     }
 
     func testAGLtoPA() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .agl, context: .init(groundElevation: .init(feet: 520), qnh: .init(hectopascals: 1010)))
+        let thisAltitude = Altitude(
+            feet: 15000,
+            reference: .agl,
+            context: .init(groundElevation: .init(feet: 520), qnh: .init(hectopascals: 1010)))
 
         XCTAssertEqual(thisAltitude.pressureAltitude.feet, 15599.3, accuracy: 0.5)
     }
@@ -115,7 +118,10 @@ final class UnitAltitudeTests: XCTestCase {
     // MARK: From PA
 
     func testPAtoAGL_Standard() throws {
-        let thisAltitude = Altitude(feet: 15000, reference: .pressureAltitude, context: .init(groundElevation: .init(feet: 5000)))
+        let thisAltitude = Altitude(
+            feet: 15000,
+            reference: .pressureAltitude,
+            context: .init(groundElevation: .init(feet: 5000)))
 
         XCTAssertEqual(thisAltitude.agl.feet, 10000, accuracy: 0.1)
     }

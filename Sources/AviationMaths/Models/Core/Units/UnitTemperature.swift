@@ -21,7 +21,9 @@ public extension Measurement<UnitTemperature> {
     }
 
     func convertToDensity(pressure: Measurement<UnitPressure>) -> Measurement<UnitConcentrationMass> {
-        let thing: Measurement<UnitConcentrationMass> = .init(value: (pressure.converted(to: .newtonsPerMetersSquared).value / (ISA.dryAirGasConstant * self.kelvin)), unit: .gramsPerLiter)
-        return thing
+        let density: Measurement<UnitConcentrationMass> = .init(
+            value: (pressure.converted(to: .newtonsPerMetersSquared).value / (ISA.dryAirGasConstant * self.kelvin)),
+            unit: .gramsPerLiter)
+        return density
     }
 }
