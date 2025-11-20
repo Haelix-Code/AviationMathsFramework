@@ -88,12 +88,36 @@ final class AtmosphericLayerTests: XCTestCase {
 
     func test_realisticSounding_canExtractAndInterpolate() {
         let sounding = [
-            AtmosphericLayer(altitude: .init(feet: 1000), windDirection: .init(degrees: 190), windSpeed: .init(knots: 8), temperature: .init(celsius: 12)),
-            AtmosphericLayer(altitude: .init(feet: 3000), windDirection: .init(degrees: 205), windSpeed: .init(knots: 15), temperature: .init(celsius: 8)),
-            AtmosphericLayer(altitude: .init(feet: 5000), windDirection: .init(degrees: 220), windSpeed: .init(knots: 22), temperature: .init(celsius: 4)),
-            AtmosphericLayer(altitude: .init(feet: 8000), windDirection: .init(degrees: 250), windSpeed: .init(knots: 35), temperature: .init(celsius: -2)),
-            AtmosphericLayer(altitude: .init(feet: 10000), windDirection: .init(degrees: 270), windSpeed: .init(knots: 45), temperature: .init(celsius: -8)),
-            AtmosphericLayer(altitude: .init(feet: 14000), windDirection: .init(degrees: 280), windSpeed: .init(knots: 60), temperature: .init(celsius: -18))
+            AtmosphericLayer(
+                altitude: .init(feet: 1000),
+                windDirection: .init(degrees: 190),
+                windSpeed: .init(knots: 8),
+                temperature: .init(celsius: 12)),
+            AtmosphericLayer(
+                altitude: .init(feet: 3000),
+                windDirection: .init(degrees: 205),
+                windSpeed: .init(knots: 15),
+                temperature: .init(celsius: 8)),
+            AtmosphericLayer(
+                altitude: .init(feet: 5000),
+                windDirection: .init(degrees: 220),
+                windSpeed: .init(knots: 22),
+                temperature: .init(celsius: 4)),
+            AtmosphericLayer(
+                altitude: .init(feet: 8000),
+                windDirection: .init(degrees: 250),
+                windSpeed: .init(knots: 35),
+                temperature: .init(celsius: -2)),
+            AtmosphericLayer(
+                altitude: .init(feet: 10000),
+                windDirection: .init(degrees: 270),
+                windSpeed: .init(knots: 45),
+                temperature: .init(celsius: -8)),
+            AtmosphericLayer(
+                altitude: .init(feet: 14000),
+                windDirection: .init(degrees: 280),
+                windSpeed: .init(knots: 60),
+                temperature: .init(celsius: -18))
         ]
 
         let winds = sounding.winds
