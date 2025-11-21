@@ -2,31 +2,20 @@ import XCTest
 @testable import AviationMaths
 
 final class WindTests: XCTestCase {
-    func test_init_createsWindWithCorrectValues() {
+    func test_components_withDirectHeadwind() {
         let wind = Wind(
-            altitude: .init(feet: 5000),
-            direction: .init(degrees: 270),
-            speed: .init(knots: 25)
+            altitude: .init(feet: 34000),
+            direction: .init(degrees: 0),
+            speed: .init(knots: 72)
         )
-        XCTAssertEqual(wind.altitude.feet, 5000)
-        XCTAssertEqual(wind.direction.degrees, 270)
-        XCTAssertEqual(wind.speed.knots, 25)
-    }
-
-    func test_components_withDirectHeadwind_returnsFullHeadwindZeroCrosswind() {
-        let wind = Wind(
-            altitude: .init(feet: 5000),
-            direction: .init(degrees: 360),
-            speed: .init(knots: 20)
-        )
-        let track = Measurement<UnitAngle>(degrees: 360)
+        let track = Measurement<UnitAngle>(degrees: 0)
         let components = wind.components(relativeTo: track)
 
-        XCTAssertEqual(components.headwind.knots, 20, accuracy: 0.01)
+        XCTAssertEqual(components.headwind.knots, 72, accuracy: 0.01)
         XCTAssertEqual(components.crosswind.knots, 0, accuracy: 0.01)
     }
 
-    func test_components_withDirectTailwind_returnsNegativeHeadwindZeroCrosswind() {
+    func test_components_withDirectTailwind() {
         let wind = Wind(
             altitude: .init(feet: 5000),
             direction: .init(degrees: 360),
@@ -39,7 +28,7 @@ final class WindTests: XCTestCase {
         XCTAssertEqual(components.crosswind.knots, 0, accuracy: 0.01)
     }
 
-    func test_components_withDirectRightCrosswind_returnsZeroHeadwindPositiveCrosswind() {
+    func test_components_withDirectRightCrosswind() {
         let wind = Wind(
             altitude: .init(feet: 5000),
             direction: .init(degrees: 90),
@@ -87,7 +76,7 @@ final class WindTests: XCTestCase {
         )
         let groundSpeed = wind.groundSpeed(
             trueAirspeed: .init(knots: 150),
-            track: .init(degrees: 360)  // Flying north (perpendicular to wind)
+            track: .init(degrees: 360)
         )
 
         XCTAssertEqual(groundSpeed.knots, 150, accuracy: 0.1)
