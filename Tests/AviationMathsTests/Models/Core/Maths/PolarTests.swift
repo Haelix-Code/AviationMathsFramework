@@ -2,7 +2,6 @@ import XCTest
 @testable import AviationMaths
 
 final class PolarVectorTests: XCTestCase {
-
     func testVector2DConversion_Length() {
         let polar = DistanceVector(angle: .init(value: 0, unit: .radians),
                                    magnitude: .init(meters: 10))
