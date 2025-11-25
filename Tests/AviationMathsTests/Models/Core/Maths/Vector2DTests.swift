@@ -1,8 +1,7 @@
 import XCTest
-@testable import AviationMaths // replace with the actual module name
+@testable import AviationMaths
 
 final class Vector2DTests: XCTestCase {
-
     func testInitAndLength() {
         let v = Vector2D(x: .init(meters: 3), y: .init(meters: 4))
         XCTAssertEqual(v.length.converted(to: .meters).value, 5, accuracy: 1e-10)

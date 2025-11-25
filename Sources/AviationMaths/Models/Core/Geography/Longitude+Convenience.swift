@@ -1,5 +1,4 @@
 extension Longitude {
-
     public var isEasternHemisphere: Bool {
         decimalDegrees > 0
     }
