@@ -3,8 +3,6 @@ import XCTest
 
 final class AirDataEquationsTests: XCTestCase {
 
-    // MARK: - Impact Pressure Coefficient Tests
-
     func testImpactPressureCoefficient_Mach0() {
         let qc = AirDataEquations.impactPressureCoefficient(fromMach: 0.0)
         XCTAssertEqual(qc, 0.0, accuracy: 1e-10, "At Mach 0, qc should be 0")

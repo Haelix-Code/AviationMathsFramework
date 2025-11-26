@@ -2,6 +2,7 @@ import XCTest
 @testable import AviationMaths
 
 final class SpeedContextTests: XCTestCase {
+
     func testStandardISAContext() {
         let context = SpeedContext.standardISA
 

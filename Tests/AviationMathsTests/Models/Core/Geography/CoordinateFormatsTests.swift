@@ -2,6 +2,7 @@ import XCTest
 @testable import AviationMaths
 
 final class CoordinateFormatsTests: XCTestCase {
+
     func testDMSAsDecimalDegrees() {
         let dms = DegreesMinutesSeconds(degrees: 10, minutes: 30, seconds: 30)
         let decimal = dms.asDecimalDegrees

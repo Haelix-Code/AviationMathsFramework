@@ -24,15 +24,6 @@ extension PolarVector where Magnitude == Measurement<UnitLength> {
         let endPoint = startPoint.destination(with: magnitude.meters, bearing: angle.degrees)
         return Position2D(coordinate: endPoint)
     }
-
-    public func description() -> String {
-        if angle.degrees.isNaN {
-            return "--"
-        } else {
-            return "\(angle.degrees) \(range.converted(to: .nauticalMiles).value)"
-        }
-    }
-
 }
 
 extension PolarVector where Magnitude == Measurement<UnitSpeed> {

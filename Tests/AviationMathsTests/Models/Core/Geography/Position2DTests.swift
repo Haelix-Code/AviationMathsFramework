@@ -2,6 +2,7 @@ import XCTest
 @testable import AviationMaths
 
 final class Position2DTests: XCTestCase {
+
     func testInitWithLatitudeLongitude() {
         let lat = Latitude(decimalDegrees: 51.5)
         let lon = Longitude(decimalDegrees: -0.12)

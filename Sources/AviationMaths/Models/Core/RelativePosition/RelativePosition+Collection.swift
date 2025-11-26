@@ -17,7 +17,6 @@ extension RelativePosition {
 }
 
 extension Collection where Element == RelativePosition {
-
     public func sum() -> RelativePosition {
         RelativePosition(summing: self)
     }

@@ -18,7 +18,6 @@ extension RelativePosition {
 }
 
 extension RelativePosition {
-
     public static func * (lhs: RelativePosition, rhs: Double) -> RelativePosition {
         let resultVector = lhs.vector2D * rhs
         return RelativePosition(vector2D: resultVector)

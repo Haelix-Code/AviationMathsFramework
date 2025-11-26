@@ -2,6 +2,7 @@ import XCTest
 @testable import AviationMaths
 
 final class LatitudeTests: XCTestCase {
+
     func testInitWithValidDecimalDegrees() {
         let lat = Latitude(decimalDegrees: 45.0)
         XCTAssertEqual(lat.decimalDegrees, 45.0)
