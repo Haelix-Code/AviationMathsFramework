@@ -31,8 +31,8 @@ extension Vector2D {
     public static func / (lhs: Vector2D, rhs: Double) -> Vector2D {
         precondition(rhs != 0)
         return Vector2D(
-            x: .init(meters: lhs.x.meters * rhs),
-            y: .init(meters: lhs.y.meters * rhs)
+            x: .init(meters: lhs.x.meters / rhs),
+            y: .init(meters: lhs.y.meters / rhs)
         )
     }
 
@@ -54,8 +54,4 @@ extension Vector2D {
     public static func /= (lhs: inout Vector2D, rhs: Double) {
         lhs = lhs / rhs
     }
-}
-
-extension Vector2D {
-
 }

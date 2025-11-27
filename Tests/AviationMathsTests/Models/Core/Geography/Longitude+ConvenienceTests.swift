@@ -2,6 +2,7 @@ import XCTest
 @testable import AviationMaths
 
 final class LongitudeConvenienceTests: XCTestCase {
+
     func testHemisphereProperties() {
         let east = Longitude(decimalDegrees: 45.0)
         XCTAssertTrue(east.isEasternHemisphere)

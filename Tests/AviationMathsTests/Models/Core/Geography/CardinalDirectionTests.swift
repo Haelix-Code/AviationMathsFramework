@@ -2,6 +2,7 @@ import XCTest
 @testable import AviationMaths
 
 final class CardinalDirectionTests: XCTestCase {
+
     func testLatitudeDirectionSign() {
         XCTAssertEqual(LatitudeDirection.north.sign, 1.0)
         XCTAssertEqual(LatitudeDirection.south.sign, -1.0)

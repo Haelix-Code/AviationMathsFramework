@@ -2,6 +2,7 @@ import XCTest
 @testable import AviationMaths
 
 final class LatitudeConvenienceTests: XCTestCase {
+
     func testHemisphereProperties() {
         let north = Latitude(decimalDegrees: 45.0)
         XCTAssertTrue(north.isNorthernHemisphere)

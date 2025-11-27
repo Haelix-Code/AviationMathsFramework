@@ -3,9 +3,7 @@ import XCTest
 
 final class BarometricEquationsTests: XCTestCase {
 
-    // MARK: - Standard Barometric Tests (ISA)
-
-    func testConvertVerticalDistanceMetersToPressurePaISA() throws {
+    func testConvertVerticalDistanceMetersToPressurePaISA() {
         let pressureAtAltitude = BarometricEquations.pressureFromAltitude(
             altitude: .init(meters: 1000),
             referencePressure: ISA.seaLevelPressure,
@@ -16,7 +14,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(pressureAtAltitude.pascals, 89874.75, accuracy: 1)
     }
 
-    func testConvertVerticalDistanceMetersAndQNHToPressurePa() throws {
+    func testConvertVerticalDistanceMetersAndQNHToPressurePa() {
         let pressureAtAltitude = BarometricEquations.pressureFromAltitude(
             altitude: .init(meters: 5000),
             referencePressure: .init(pascals: 101000),
@@ -27,7 +25,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(pressureAtAltitude.pascals, 53847.22, accuracy: 1)
     }
 
-    func testConvertVerticalPressurePaToAltitudeMeters_ZERO() throws {
+    func testConvertVerticalPressurePaToAltitudeMeters_ZERO() {
         let pressure: Measurement<UnitPressure> = .init(pascals: 101325)
         let referencePressure: Measurement<UnitPressure> = .init(hectopascals: 1013.25)
 
@@ -41,7 +39,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(altitude.meters, 0, accuracy: 0.1)
     }
 
-    func testConvertVerticalPressurePaToAltitudeMetersISA() throws {
+    func testConvertVerticalPressurePaToAltitudeMetersISA() {
         let pressure: Measurement<UnitPressure> = .init(pascals: 26436)
 
         let altitude = BarometricEquations.altitudeFromPressure(
@@ -54,7 +52,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(altitude.meters, 10000, accuracy: 1)
     }
 
-    func testConvertVerticalPressurePaToAltitudeMeters() throws {
+    func testConvertVerticalPressurePaToAltitudeMeters() {
         let pressure: Measurement<UnitPressure> = .init(pascals: 95325)
         let referencePressure: Measurement<UnitPressure> = .init(hectopascals: 990)
 
@@ -68,7 +66,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(altitude.meters, 317.9, accuracy: 1)
     }
 
-    func testConvertVerticalPressurePaAndQNHToAltitudeMeters() throws {
+    func testConvertVerticalPressurePaAndQNHToAltitudeMeters() {
         let pressure: Measurement<UnitPressure> = .init(pascals: 50000)
         let referencePressure: Measurement<UnitPressure> = .init(hectopascals: 1010)
 
@@ -82,9 +80,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(altitude.meters, 5550.8, accuracy: 1)
     }
 
-    // MARK: - True Altitude Tests
-
-    func testTrueAltitudeFromPressure() throws {
+    func testTrueAltitudeFromPressure() {
         // Test case: non-standard atmosphere (cold)
         let pressure: Measurement<UnitPressure> = .init(pascals: 69681) // ~3000m in ISA
         let seaLevelTemp: Measurement<UnitTemperature> = .init(celsius: -5)
@@ -102,7 +98,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertLessThan(trueAlt.meters, 3000)
     }
 
-    func testPressureFromTrueAltitude() throws {
+    func testPressureFromTrueAltitude() {
         // Test case: non-standard atmosphere (hot)
         let trueAlt: Measurement<UnitLength> = .init(meters: 3000)
         let seaLevelTemp: Measurement<UnitTemperature> = .init(celsius: 25)
@@ -121,7 +117,7 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertLessThan(pressure.pascals, 80000)
     }
 
-    func testTrueAltitudeRoundTrip() throws {
+    func testTrueAltitudeRoundTrip() {
         // Test that converting altitude → pressure → altitude gives same result
         let originalAlt: Measurement<UnitLength> = .init(feet: 5000)
         let seaLevelTemp: Measurement<UnitTemperature> = .init(celsius: 15)

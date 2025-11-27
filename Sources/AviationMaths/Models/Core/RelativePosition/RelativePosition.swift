@@ -1,27 +1,27 @@
 import Foundation
 
 public struct RelativePosition {
-    public let polarCoordinate: PolarVector<Measurement<UnitLength>>
-
-    public var vector2D: Vector2D {
-        polarCoordinate.vector2D
-    }
+    public let vector2D: Vector2D
+    public var polarCoordinate: PolarVector<Measurement<UnitLength>>
 
     public init(angle: Measurement<UnitAngle>, range: Measurement<UnitLength>) {
         self.polarCoordinate = PolarVector(angle: angle, magnitude: range)
+        self.vector2D = polarCoordinate.vector2D
     }
 
     public init(x: Measurement<UnitLength>, y: Measurement<UnitLength>) {
-        let vector = Vector2D(x: x, y: y)
-        self.polarCoordinate = vector.polarCoordinate
+        self.vector2D = Vector2D(x: x, y: y)
+        self.polarCoordinate = vector2D.polarCoordinate
     }
 
     public init(vector2D: Vector2D) {
+        self.vector2D = vector2D
         self.polarCoordinate = vector2D.polarCoordinate
     }
 
     public init(polarCoordinate: PolarVector<Measurement<UnitLength>>) {
         self.polarCoordinate = polarCoordinate
+        self.vector2D = polarCoordinate.vector2D
     }
 
     public var perpendicularAngles: [Measurement<UnitAngle>] {
@@ -54,11 +54,5 @@ extension RelativePosition: Equatable {
 extension RelativePosition: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(vector2D)
-    }
-}
-
-extension RelativePosition: CustomStringConvertible {
-    public var description: String {
-        "RelativePosition(x: \(x), y: \(y)) [angle: \(angle), range: \(range)]"
     }
 }

@@ -3,6 +3,7 @@ import XCTest
 import GeodesySpherical
 
 final class Position2DConvenienceTests: XCTestCase {
+
     func testInitWithCoordinate() {
         let coord = Coordinate(latitude: 51.5, longitude: -0.12)
         let pos = Position2D(coordinate: coord)
