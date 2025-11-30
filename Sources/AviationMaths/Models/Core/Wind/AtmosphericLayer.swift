@@ -14,12 +14,12 @@ public struct AtmosphericLayer: Equatable {
 
     public init(
         altitude: Measurement<UnitLength>,
-        windDirection: Measurement<UnitAngle>,
+        windFromDirection: Measurement<UnitAngle>,
         windSpeed: Measurement<UnitSpeed>,
         temperature: Measurement<UnitTemperature>
     ) {
         self.altitude = altitude
-        self.wind = Wind(altitude: altitude, direction: windDirection, speed: windSpeed)
+        self.wind = Wind(altitude: altitude, fromDirection: windFromDirection, speed: windSpeed)
         self.temperature = temperature
     }
 }

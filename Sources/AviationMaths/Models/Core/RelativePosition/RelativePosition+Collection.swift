@@ -3,7 +3,7 @@ import Foundation
 extension RelativePosition {
     public init<C: Collection>(summing positions: C) where C.Element == RelativePosition {
         let vectors = positions.map { $0.vector2D }
-        let resultVector = Vector2D(vectors: vectors)
+        let resultVector = CartesianVector(vectors: vectors)
         self.init(vector2D: resultVector)
     }
 
@@ -28,7 +28,7 @@ extension Collection where Element == RelativePosition {
 extension Sequence where Element == RelativePosition {
     public func sum() -> RelativePosition {
         let vectors = self.map { $0.vector2D }
-        let resultVector = Vector2D(vectors: vectors)
+        let resultVector = CartesianVector(vectors: vectors)
         return RelativePosition(vector2D: resultVector)
     }
 }

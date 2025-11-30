@@ -23,9 +23,17 @@ Complete conversion support between all speed types with validation against indu
 - Support for various altitude references and barometric settings
 
 ### Geometry
-- **Vector2D** - Two-dimensional vector operations
-- **PolarCoordinate** - Polar coordinate system support
+- **CartesianVector** - Two-dimensional vector operations
+- **PolarVector** - Polar coordinate system support
 - **Position2D** - Geodetic position calculations (planned)
+
+Concept    Swift Value
+0 rad (angle)    north (points along +y axis in Cartesian)
+Angles increasing    clockwise (matches meteorological bearings)
+x-axis    east (positive)
+y-axis    north (positive)
+
+This keeps math consistent with your JS service.
 
 ## Design Principles
 

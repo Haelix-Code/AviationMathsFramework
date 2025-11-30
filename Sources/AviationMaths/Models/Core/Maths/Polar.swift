@@ -1,38 +1,23 @@
 import Foundation
-import GeodesySpherical
 
-public struct PolarVector<Magnitude: Equatable>: Equatable {
-    public let angle: Measurement<UnitAngle>
-    public let magnitude: Magnitude
+public struct PolarVector<UnitType: Dimension>: Equatable {
+    public let angle: Measurement<UnitAngle>        // Radians, math convention
+    public let magnitude: Measurement<UnitType>
 
-    public init(angle: Measurement<UnitAngle>, magnitude: Magnitude) {
+    public init(angle: Measurement<UnitAngle>, magnitude: Measurement<UnitType>) {
         self.angle = angle
         self.magnitude = magnitude
     }
+    
+    public var asCartesianVector: CartesianVector<UnitType> {
+           let a = angle.converted(to: .radians).value
+           let mag = magnitude.value
+           return CartesianVector(
+               x: Measurement(value: mag * cos(a), unit: magnitude.unit),       // Pure math
+               y: Measurement(value: mag * sin(a), unit: magnitude.unit)        // Pure math
+           )
+       }
 }
 
-extension PolarVector where Magnitude == Measurement<UnitLength> {
-    public var vector2D: Vector2D {
-        return .init(x: .init(meters: magnitude.meters * sin(angle.radians)),
-                     y: .init(meters: magnitude.meters * cos(angle.radians)))
-    }
-
-    public var range: Measurement<UnitLength> { self.magnitude }
-
-    public func positionRelativeToDatum(_ datum: Position2D) -> Position2D {
-        let startPoint = Coordinate(position2D: datum)
-        let endPoint = startPoint.destination(with: magnitude.meters, bearing: angle.degrees)
-        return Position2D(coordinate: endPoint)
-    }
-}
-
-extension PolarVector where Magnitude == Measurement<UnitSpeed> {
-    public var vector2D: Vector2D {
-        return .init(x: .init(meters: magnitude.mps * sin(angle.radians)),
-                     y: .init(meters: magnitude.mps * cos(angle.radians)))
-    }
-    public var speed: Measurement<UnitSpeed> { self.magnitude }
-}
-
-public typealias DistanceVector = PolarVector<Measurement<UnitLength>>
-public typealias SpeedVector = PolarVector<Measurement<UnitSpeed>>
+public typealias LengthPolar = PolarVector<UnitLength>
+public typealias SpeedPolar = PolarVector<UnitSpeed>

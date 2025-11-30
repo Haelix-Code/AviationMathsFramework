@@ -1,10 +1,10 @@
 import XCTest
 @testable import AviationMaths
 
-final class Vector2DArithmeticTests: XCTestCase {
+final class CartesianVectorArithmeticTests: XCTestCase {
 
-    private func v(_ x: Double, _ y: Double) -> Vector2D {
-        Vector2D(
+    private func v(_ x: Double, _ y: Double) -> CartesianVector<UnitLength> {
+        CartesianVector(
             x: .init(meters: x),
             y: .init(meters: y)
         )

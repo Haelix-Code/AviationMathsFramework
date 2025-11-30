@@ -5,7 +5,7 @@ import XCTest
 final class RelativePositionOperatorTests: XCTestCase {
 
     private func makePosition(x: Double, y: Double) -> RelativePosition {
-        return RelativePosition(vector2D: Vector2D(x: .init(meters: x), y: .init(meters: y)))
+        return RelativePosition(vector2D: CartesianVector(x: .init(meters: x), y: .init(meters: y)))
     }
 
     func testAdditionOperator() {

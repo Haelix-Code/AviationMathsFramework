@@ -1,27 +1,27 @@
 import Foundation
 
 public struct RelativePosition {
-    public let vector2D: Vector2D
-    public var polarCoordinate: PolarVector<Measurement<UnitLength>>
+    public let vector2D: LengthCartesianVector
+    public var polarCoordinate: LengthPolar
 
     public init(angle: Measurement<UnitAngle>, range: Measurement<UnitLength>) {
         self.polarCoordinate = PolarVector(angle: angle, magnitude: range)
-        self.vector2D = polarCoordinate.vector2D
+        self.vector2D = polarCoordinate.asCartesianVector
     }
 
     public init(x: Measurement<UnitLength>, y: Measurement<UnitLength>) {
-        self.vector2D = Vector2D(x: x, y: y)
-        self.polarCoordinate = vector2D.polarCoordinate
+        self.vector2D = CartesianVector(x: x, y: y)
+        self.polarCoordinate = vector2D.asPolar
     }
 
-    public init(vector2D: Vector2D) {
+    public init(vector2D: LengthCartesianVector) {
         self.vector2D = vector2D
-        self.polarCoordinate = vector2D.polarCoordinate
+        self.polarCoordinate = vector2D.asPolar
     }
 
-    public init(polarCoordinate: PolarVector<Measurement<UnitLength>>) {
+    public init(polarCoordinate: LengthPolar) {
         self.polarCoordinate = polarCoordinate
-        self.vector2D = polarCoordinate.vector2D
+        self.vector2D = polarCoordinate.asCartesianVector
     }
 
     public var perpendicularAngles: [Measurement<UnitAngle>] {

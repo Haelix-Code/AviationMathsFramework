@@ -26,7 +26,7 @@ final class RelativePositionTests: XCTestCase {
     }
 
     func testInitWithVector2D() {
-        let vector = Vector2D(x: Measurement(value: 1, unit: UnitLength.meters),
+        let vector = CartesianVector(x: Measurement(value: 1, unit: UnitLength.meters),
                               y: Measurement(value: 1, unit: UnitLength.meters))
 
         let position = RelativePosition(vector2D: vector)

@@ -1,63 +1,66 @@
 import Foundation
 
-public extension PolarVector where Magnitude == Measurement<UnitLength> {
+public extension PolarVector {
     func adding(_ other: PolarVector) -> PolarVector {
-        let v1 = self.vector2D
-        let v2 = other.vector2D
-
-        let sum = Vector2D(
-            x: .init(meters: v1.x.meters + v2.x.meters),
-            y: .init(meters: v1.y.meters + v2.y.meters)
+        let sumX = self.asCartesianVector.x.value + other.asCartesianVector.x.value
+        let sumY = self.asCartesianVector.y.value + other.asCartesianVector.y.value
+        
+        let sum = CartesianVector(
+            x: Measurement(value: sumX, unit: magnitude.unit),
+            y: Measurement(value: sumY, unit: magnitude.unit)
         )
 
-        return sum.polarCoordinate
+        return sum.asPolar
     }
 
     func subtracting(_ other: PolarVector) -> PolarVector {
-        let v1 = self.vector2D
-        let v2 = other.vector2D
+        let diffX = self.asCartesianVector.x.value - other.asCartesianVector.x.value
+        let diffY = self.asCartesianVector.y.value - other.asCartesianVector.y.value
 
-        let diff = Vector2D(
-            x: .init(meters: v1.x.meters - v2.x.meters),
-            y: .init(meters: v1.y.meters - v2.y.meters)
+        let diff = CartesianVector(
+            x: Measurement(value: diffX, unit: magnitude.unit),
+            y: Measurement(value: diffY, unit: magnitude.unit)
         )
 
-        return diff.polarCoordinate
+        return diff.asPolar
     }
 
     func rotated(by angle: Measurement<UnitAngle>) -> PolarVector {
-        let newAngle = Measurement<UnitAngle>(
-            value: self.angle.radians + angle.radians,
-            unit: .radians
-        )
-        return PolarVector(angle: newAngle, magnitude: magnitude)
+       let newAngle = Measurement<UnitAngle>(
+           value: self.angle.converted(to: .radians).value +
+                  angle.converted(to: .radians).value,
+           unit: .radians
+       )
+
+       return PolarVector(angle: newAngle, magnitude: magnitude)
     }
 
     var normalized: PolarVector {
         PolarVector(
-            angle: self.angle,
-            magnitude: Measurement<UnitLength>(meters: 1.0)
+            angle: angle,
+            magnitude: Measurement(value: 1.0, unit: magnitude.unit)
         )
     }
 
-    func dotProduct(_ other: PolarVector) -> Measurement<UnitLength> {
-        let m1 = self.magnitude.meters
-        let m2 = other.magnitude.meters
-        let angleDiff = self.angle.radians - other.angle.radians
+    func dotProduct(_ other: PolarVector) -> Measurement<UnitType> {
+        let m1 = magnitude.value
+        let m2 = other.magnitude.value
+        let angleDiff = angle.converted(to: .radians).value -
+                        other.angle.converted(to: .radians).value
 
-        return Measurement(value: m1 * m2 * cos(angleDiff), unit: .meters)
+        return Measurement(value: m1 * m2 * cos(angleDiff), unit: magnitude.unit)
     }
 
     func angleBetween(_ other: PolarVector) -> Measurement<UnitAngle> {
-        let dot = self.dotProduct(other).value
-        let m1 = self.magnitude.meters
-        let m2 = other.magnitude.meters
+        let dot = dotProduct(other).value
+        let m1 = magnitude.value
+        let m2 = other.magnitude.value
 
         guard m1 > 0, m2 > 0 else {
             return Measurement(value: .nan, unit: .radians)
         }
 
-        let ratio = max(-1.0, min(1.0, dot / (m1 * m2)))
+        let ratio = max(-1, min(1, dot / (m1 * m2)))
         return Measurement(value: acos(ratio), unit: .radians)
     }
 }

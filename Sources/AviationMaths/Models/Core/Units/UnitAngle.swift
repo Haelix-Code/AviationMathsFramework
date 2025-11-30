@@ -12,4 +12,12 @@ public extension Measurement<UnitAngle> {
     var radians: Double {
         self.converted(to: .radians).value
     }
+    
+    var normalizedRadians: Double {
+        var rad = self.converted(to: .radians).value
+        while rad <= -Double.pi { rad += 2 * .pi }
+        while rad > Double.pi { rad -= 2 * .pi }
+        return rad
+    }
+
 }
