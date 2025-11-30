@@ -2,25 +2,25 @@ import Foundation
 
 extension RelativePosition {
     public static func + (lhs: RelativePosition, rhs: RelativePosition) -> RelativePosition {
-        let resultVector = lhs.vector2D + rhs.vector2D
-        return RelativePosition(vector2D: resultVector)
+        let resultVector = lhs.cartesianVector + rhs.cartesianVector
+        return RelativePosition(cartesianVector: resultVector)
     }
 
     public static func - (lhs: RelativePosition, rhs: RelativePosition) -> RelativePosition {
-        let resultVector = lhs.vector2D - rhs.vector2D
-        return RelativePosition(vector2D: resultVector)
+        let resultVector = lhs.cartesianVector - rhs.cartesianVector
+        return RelativePosition(cartesianVector: resultVector)
     }
 
     /// Negates a relative position.
     public static prefix func - (position: RelativePosition) -> RelativePosition {
-        RelativePosition(vector2D: -position.vector2D)
+        RelativePosition(cartesianVector: -position.cartesianVector)
     }
 }
 
 extension RelativePosition {
     public static func * (lhs: RelativePosition, rhs: Double) -> RelativePosition {
-        let resultVector = lhs.vector2D * rhs
-        return RelativePosition(vector2D: resultVector)
+        let resultVector = lhs.cartesianVector * rhs
+        return RelativePosition(cartesianVector: resultVector)
     }
 
     public static func * (lhs: Double, rhs: RelativePosition) -> RelativePosition {
@@ -29,8 +29,8 @@ extension RelativePosition {
 
     public static func / (lhs: RelativePosition, rhs: Double) -> RelativePosition {
         precondition(rhs != 0, "Cannot divide by zero")
-        let resultVector = lhs.vector2D / rhs
-        return RelativePosition(vector2D: resultVector)
+        let resultVector = lhs.cartesianVector / rhs
+        return RelativePosition(cartesianVector: resultVector)
     }
 }
 

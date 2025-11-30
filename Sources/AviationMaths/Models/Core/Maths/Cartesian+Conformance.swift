@@ -1,10 +1,10 @@
-extension Vector2D: Equatable {
-    public static func == (lhs: Vector2D, rhs: Vector2D) -> Bool {
+extension CartesianVector: Equatable {
+    public static func == (lhs: CartesianVector, rhs: CartesianVector) -> Bool {
         lhs.x == rhs.x && lhs.y == rhs.y
     }
 }
 
-extension Vector2D: Hashable {
+extension CartesianVector: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(x)
         hasher.combine(y)

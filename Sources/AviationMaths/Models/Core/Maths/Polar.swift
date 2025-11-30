@@ -1,38 +1,30 @@
 import Foundation
-import GeodesySpherical
 
-public struct PolarVector<Magnitude: Equatable>: Equatable {
-    public let angle: Measurement<UnitAngle>
-    public let magnitude: Magnitude
+/// A polar vector using aviation convention:
+/// - 0° = North (+y axis)
+/// - 90° = East (+x axis)
+/// - Angles increase clockwise
+public struct PolarVector<UnitType: Dimension>: Equatable {
+    /// Bearing in aviation convention (0° = North, clockwise positive)
+    public let bearing: Measurement<UnitAngle>
+    public let magnitude: Measurement<UnitType>
 
-    public init(angle: Measurement<UnitAngle>, magnitude: Magnitude) {
-        self.angle = angle
+    public init(bearing: Measurement<UnitAngle>, magnitude: Measurement<UnitType>) {
+        self.bearing = bearing.normalized
         self.magnitude = magnitude
     }
-}
 
-extension PolarVector where Magnitude == Measurement<UnitLength> {
-    public var vector2D: Vector2D {
-        return .init(x: .init(meters: magnitude.meters * sin(angle.radians)),
-                     y: .init(meters: magnitude.meters * cos(angle.radians)))
-    }
-
-    public var range: Measurement<UnitLength> { self.magnitude }
-
-    public func positionRelativeToDatum(_ datum: Position2D) -> Position2D {
-        let startPoint = Coordinate(position2D: datum)
-        let endPoint = startPoint.destination(with: magnitude.meters, bearing: angle.degrees)
-        return Position2D(coordinate: endPoint)
+    /// Convert to Cartesian using aviation convention
+    /// x = East (+), y = North (+)
+    public var asCartesianVector: CartesianVector<UnitType> {
+        let bearingRad = bearing.converted(to: .radians).value
+        let mag = magnitude.value
+        return CartesianVector(
+            x: Measurement(value: mag * sin(bearingRad), unit: magnitude.unit),
+            y: Measurement(value: mag * cos(bearingRad), unit: magnitude.unit)
+        )
     }
 }
 
-extension PolarVector where Magnitude == Measurement<UnitSpeed> {
-    public var vector2D: Vector2D {
-        return .init(x: .init(meters: magnitude.mps * sin(angle.radians)),
-                     y: .init(meters: magnitude.mps * cos(angle.radians)))
-    }
-    public var speed: Measurement<UnitSpeed> { self.magnitude }
-}
-
-public typealias DistanceVector = PolarVector<Measurement<UnitLength>>
-public typealias SpeedVector = PolarVector<Measurement<UnitSpeed>>
+public typealias LengthPolar = PolarVector<UnitLength>
+public typealias SpeedPolar = PolarVector<UnitSpeed>

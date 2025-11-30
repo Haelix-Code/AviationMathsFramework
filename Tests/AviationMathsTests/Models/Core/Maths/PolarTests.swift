@@ -3,55 +3,89 @@ import XCTest
 
 final class PolarVectorTests: XCTestCase {
 
-    func testVector2DConversion_Length() {
-        let polar = DistanceVector(angle: .init(value: 0, unit: .radians),
-                                   magnitude: .init(meters: 10))
-        let vector = polar.vector2D
-        XCTAssertEqual(vector.x.meters, 0, accuracy: 1e-10)
-        XCTAssertEqual(vector.y.meters, 10, accuracy: 1e-10)
+    func testCartesianConversion_North() {
+        let polar = LengthPolar(bearing: .init(degrees: 0), magnitude: .init(meters: 10))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, 0, accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, 10, accuracy: 1e-10)
     }
 
-    func testVector2DConversion_Speed() {
-        let polar = SpeedVector(angle: .init(value: .pi/2, unit: .radians),
-                                magnitude: .init(value: 2, unit: .metersPerSecond))
-        let vector = polar.vector2D
-        XCTAssertEqual(vector.x.meters, 2, accuracy: 1e-10)
-        XCTAssertEqual(vector.y.meters, 0, accuracy: 1e-10)
+    func testCartesianConversion_East() {
+        let polar = LengthPolar(bearing: .init(degrees: 90), magnitude: .init(meters: 10))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, 10, accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, 0, accuracy: 1e-10)
     }
 
-    func testVector2DConversion_Quadrants() {
-        let mag = Measurement<UnitLength>(meters: 1)
-
-        // 45° → x = sin(45°), y = cos(45°)
-        var v = DistanceVector(angle: .init(value: .pi/4, unit: .radians),
-                               magnitude: mag).vector2D
-        XCTAssertEqual(v.x.meters, sqrt(0.5), accuracy: 1e-10)
-        XCTAssertEqual(v.y.meters, sqrt(0.5), accuracy: 1e-10)
-
-        // 135°
-        v = DistanceVector(angle: .init(value: 3 * .pi/4, unit: .radians),
-                           magnitude: mag).vector2D
-        XCTAssertEqual(v.x.meters, sqrt(0.5), accuracy: 1e-10)
-        XCTAssertEqual(v.y.meters, -sqrt(0.5), accuracy: 1e-10)
-
-        // 225°
-        v = DistanceVector(angle: .init(value: 5 * .pi/4, unit: .radians),
-                           magnitude: mag).vector2D
-        XCTAssertEqual(v.x.meters, -sqrt(0.5), accuracy: 1e-10)
-        XCTAssertEqual(v.y.meters, -sqrt(0.5), accuracy: 1e-10)
-
-        // 315°
-        v = DistanceVector(angle: .init(value: 7 * .pi/4, unit: .radians),
-                           magnitude: mag).vector2D
-        XCTAssertEqual(v.x.meters, -sqrt(0.5), accuracy: 1e-10)
-        XCTAssertEqual(v.y.meters, sqrt(0.5), accuracy: 1e-10)
+    func testCartesianConversion_South() {
+        let polar = LengthPolar(bearing: .init(degrees: 180), magnitude: .init(meters: 10))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, 0, accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, -10, accuracy: 1e-10)
     }
 
-    func testVector2DConversion_ZeroMagnitude() {
-        let polar = DistanceVector(angle: .init(value: 1.234, unit: .radians),
-                                   magnitude: .init(meters: 0))
-        let v = polar.vector2D
-        XCTAssertEqual(v.x.meters, 0, accuracy: 1e-10)
-        XCTAssertEqual(v.y.meters, 0, accuracy: 1e-10)
+    func testCartesianConversion_West() {
+        let polar = LengthPolar(bearing: .init(degrees: 270), magnitude: .init(meters: 10))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, -10, accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, 0, accuracy: 1e-10)
+    }
+
+    func testCartesianConversion_NorthEast() {
+        // 45° → equal x and y, both positive
+        let polar = LengthPolar(bearing: .init(degrees: 45), magnitude: .init(meters: 1))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, sqrt(0.5), accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, sqrt(0.5), accuracy: 1e-10)
+    }
+
+    func testCartesianConversion_SouthEast() {
+        // 135° → positive x, negative y
+        let polar = LengthPolar(bearing: .init(degrees: 135), magnitude: .init(meters: 1))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, sqrt(0.5), accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, -sqrt(0.5), accuracy: 1e-10)
+    }
+
+    func testCartesianConversion_SouthWest() {
+        // 225° → negative x, negative y
+        let polar = LengthPolar(bearing: .init(degrees: 225), magnitude: .init(meters: 1))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, -sqrt(0.5), accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, -sqrt(0.5), accuracy: 1e-10)
+    }
+
+    func testCartesianConversion_NorthWest() {
+        // 315° → negative x, positive y
+        let polar = LengthPolar(bearing: .init(degrees: 315), magnitude: .init(meters: 1))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, -sqrt(0.5), accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, sqrt(0.5), accuracy: 1e-10)
+    }
+
+    func testCartesianConversion_ZeroMagnitude() {
+        let polar = LengthPolar(bearing: .init(degrees: 123), magnitude: .init(meters: 0))
+        let cart = polar.asCartesianVector
+        XCTAssertEqual(cart.x.meters, 0, accuracy: 1e-10)
+        XCTAssertEqual(cart.y.meters, 0, accuracy: 1e-10)
+    }
+
+    func testBearingNormalization() {
+        // 450° should normalize to 90°
+        let polar = LengthPolar(bearing: .init(degrees: 450), magnitude: .init(meters: 1))
+        XCTAssertEqual(polar.bearing.degrees, 90, accuracy: 1e-10)
+
+        // -90° should normalize to 270°
+        let polar2 = LengthPolar(bearing: .init(degrees: -90), magnitude: .init(meters: 1))
+        XCTAssertEqual(polar2.bearing.degrees, 270, accuracy: 1e-10)
+    }
+
+    func testSpeedPolar() {
+        let polar = SpeedPolar(bearing: .init(degrees: 45), magnitude: .init(knots: 100))
+        let cart = polar.asCartesianVector
+
+        // 45° at 100kt → ~70.7kt East, ~70.7kt North
+        XCTAssertEqual(cart.x.knots, 70.71, accuracy: 0.01)
+        XCTAssertEqual(cart.y.knots, 70.71, accuracy: 0.01)
     }
 }
