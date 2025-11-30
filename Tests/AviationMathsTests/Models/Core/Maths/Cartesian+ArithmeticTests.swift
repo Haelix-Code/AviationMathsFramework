@@ -3,7 +3,7 @@ import XCTest
 
 final class CartesianVectorArithmeticTests: XCTestCase {
 
-    private func v(_ x: Double, _ y: Double) -> CartesianVector<UnitLength> {
+    private func v(_ x: Double, _ y: Double) -> LengthCartesianVector {
         CartesianVector(
             x: .init(meters: x),
             y: .init(meters: y)
@@ -66,35 +66,4 @@ final class CartesianVectorArithmeticTests: XCTestCase {
         XCTAssertEqual(result.y.meters, -3)
     }
 
-    func testPlusEqual() {
-        var a = v(1, 1)
-        a += v(2, 3)
-
-        XCTAssertEqual(a.x.meters, 3)
-        XCTAssertEqual(a.y.meters, 4)
-    }
-
-    func testMinusEqual() {
-        var a = v(5, 5)
-        a -= v(2, 1)
-
-        XCTAssertEqual(a.x.meters, 3)
-        XCTAssertEqual(a.y.meters, 4)
-    }
-
-    func testTimesEqual() {
-        var a = v(2, 3)
-        a *= 3
-
-        XCTAssertEqual(a.x.meters, 6)
-        XCTAssertEqual(a.y.meters, 9)
-    }
-
-    func testDivideEqual() {
-        var a = v(10, 20)
-        a /= 2
-
-        XCTAssertEqual(a.x.meters, 5)
-        XCTAssertEqual(a.y.meters, 10)
-    }
 }

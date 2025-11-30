@@ -69,6 +69,17 @@ final class ISATests: XCTestCase {
         XCTAssertEqual(isa.lapseRate, 0)
     }
 
+    func testTropopauseBoundary() {
+        let below = ISA(altitudeMeters: 10999)
+        let at = ISA(altitudeMeters: 11000)
+        let above = ISA(altitudeMeters: 11001)
+
+        XCTAssertEqual(below.lapseRate, 0.0065)
+        XCTAssertEqual(at.lapseRate, 0.0065)
+        XCTAssertEqual(above.lapseRate, 0)
+        XCTAssertEqual(at.temperature.kelvin, 216.65, accuracy: 0.0001)
+    }
+
     func testStaticTemperatureWithDeltaISA() {
         let altitude = Measurement(value: 5000, unit: UnitLength.meters)
         let delta = Measurement(value: 10, unit: UnitTemperature.kelvin)

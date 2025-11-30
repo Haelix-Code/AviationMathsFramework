@@ -2,7 +2,7 @@ import Foundation
 import GeodesySpherical
 
 public extension CartesianVector where UnitType == UnitLength {
-    var lengthPolar: PolarVector<UnitLength> { asPolar }
+    var lengthPolar: LengthPolar { asPolar }
     var length: Measurement<UnitLength> { magnitude }
 
     func positionRelativeToDatum(_ datum: Position2D) -> Position2D {

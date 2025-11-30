@@ -145,7 +145,7 @@ final class CartesianVectorTests: XCTestCase {
     }
 
     func testSpeedVector() {
-        let speedVector = CartesianVector<UnitSpeed>(
+        let speedVector = SpeedCartesianVector(
             x: .init(knots: 30), // 30kt East component
             y: .init(knots: 40) // 40kt North component
         )

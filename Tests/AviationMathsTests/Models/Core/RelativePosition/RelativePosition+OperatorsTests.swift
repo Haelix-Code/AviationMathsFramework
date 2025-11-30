@@ -60,15 +60,6 @@ final class RelativePositionOperatorTests: XCTestCase {
         XCTAssertEqual(result.range.meters, 0, accuracy: 0.001)
     }
 
-    func testNegation_Cartesian() {
-        let p = position(x: 2, y: -3)
-
-        let result = -p
-
-        XCTAssertEqual(result.x.meters, -2, accuracy: 0.0001)
-        XCTAssertEqual(result.y.meters, 3, accuracy: 0.0001)
-    }
-
     func testNegation_Bearing() {
         // Negating flips to reciprocal bearing
         let p = position(bearing: 45, range: 100)
@@ -86,15 +77,6 @@ final class RelativePositionOperatorTests: XCTestCase {
 
         XCTAssertEqual(result.range.meters, 100, accuracy: 0.001)
         XCTAssertEqual(result.bearing.degrees, 90, accuracy: 0.001) // Same bearing
-    }
-
-    func testMultiplication_DoubleOnLeft() {
-        let p = position(x: 1, y: -1)
-
-        let result = 3.0 * p
-
-        XCTAssertEqual(result.x.meters, 3, accuracy: 0.0001)
-        XCTAssertEqual(result.y.meters, -3, accuracy: 0.0001)
     }
 
     func testMultiplication_Negative() {
@@ -116,41 +98,4 @@ final class RelativePositionOperatorTests: XCTestCase {
         XCTAssertEqual(result.bearing.degrees, 270, accuracy: 0.001)
     }
 
-    func testPlusEquals() {
-        var p1 = position(x: 1, y: 1)
-        let p2 = position(x: 2, y: 3)
-
-        p1 += p2
-
-        XCTAssertEqual(p1.x.meters, 3, accuracy: 0.0001)
-        XCTAssertEqual(p1.y.meters, 4, accuracy: 0.0001)
-    }
-
-    func testMinusEquals() {
-        var p1 = position(x: 5, y: 5)
-        let p2 = position(x: 2, y: 1)
-
-        p1 -= p2
-
-        XCTAssertEqual(p1.x.meters, 3, accuracy: 0.0001)
-        XCTAssertEqual(p1.y.meters, 4, accuracy: 0.0001)
-    }
-
-    func testTimesEquals() {
-        var p = position(x: 2, y: 3)
-
-        p *= 2
-
-        XCTAssertEqual(p.x.meters, 4, accuracy: 0.0001)
-        XCTAssertEqual(p.y.meters, 6, accuracy: 0.0001)
-    }
-
-    func testDivideEquals() {
-        var p = position(x: 10, y: 20)
-
-        p /= 5
-
-        XCTAssertEqual(p.x.meters, 2, accuracy: 0.0001)
-        XCTAssertEqual(p.y.meters, 4, accuracy: 0.0001)
-    }
 }

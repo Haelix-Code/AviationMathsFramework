@@ -29,7 +29,7 @@ extension AngularCoordinate {
         Self.validRange.contains(decimalDegrees)
     }
 
-    public var asMEasurement: Measurement<UnitAngle> {
+    public var asMeasurement: Measurement<UnitAngle> {
         Measurement(value: decimalDegrees, unit: .degrees)
     }
 }
