@@ -1,35 +1,39 @@
 import Foundation
 
 public struct RelativePosition {
-    public let vector2D: LengthCartesianVector
+    public let cartesianVector: LengthCartesianVector
     public var polarCoordinate: LengthPolar
 
-    public init(angle: Measurement<UnitAngle>, range: Measurement<UnitLength>) {
-        self.polarCoordinate = PolarVector(angle: angle, magnitude: range)
-        self.vector2D = polarCoordinate.asCartesianVector
+    public init(bearing: Measurement<UnitAngle>, range: Measurement<UnitLength>) {
+        self.polarCoordinate = PolarVector(bearing: bearing, magnitude: range)
+        self.cartesianVector = polarCoordinate.asCartesianVector
     }
 
     public init(x: Measurement<UnitLength>, y: Measurement<UnitLength>) {
-        self.vector2D = CartesianVector(x: x, y: y)
-        self.polarCoordinate = vector2D.asPolar
+        self.cartesianVector = CartesianVector(x: x, y: y)
+        self.polarCoordinate = cartesianVector.asPolar
     }
 
-    public init(vector2D: LengthCartesianVector) {
-        self.vector2D = vector2D
-        self.polarCoordinate = vector2D.asPolar
+    public init(cartesianVector: LengthCartesianVector) {
+        self.cartesianVector = cartesianVector
+        self.polarCoordinate = cartesianVector.asPolar
     }
 
     public init(polarCoordinate: LengthPolar) {
         self.polarCoordinate = polarCoordinate
-        self.vector2D = polarCoordinate.asCartesianVector
+        self.cartesianVector = polarCoordinate.asCartesianVector
+    }
+    
+    public var reciprocalBearing: Measurement<UnitAngle>{
+        bearing.reciprocal
     }
 
-    public var perpendicularAngles: [Measurement<UnitAngle>] {
-        polarCoordinate.angle.perpendicularAngles
+    public var perpendiculars: [Measurement<UnitAngle>] {
+        polarCoordinate.bearing.perpendiculars
     }
 
-    public var angle: Measurement<UnitAngle> {
-        polarCoordinate.angle
+    public var bearing: Measurement<UnitAngle> {
+        polarCoordinate.bearing
     }
 
     public var range: Measurement<UnitLength> {
@@ -37,22 +41,22 @@ public struct RelativePosition {
     }
 
     public var x: Measurement<UnitLength> {
-        vector2D.x
+        cartesianVector.x
     }
 
     public var y: Measurement<UnitLength> {
-        vector2D.y
+        cartesianVector.y
     }
 }
 
 extension RelativePosition: Equatable {
     public static func == (lhs: RelativePosition, rhs: RelativePosition) -> Bool {
-        lhs.vector2D == rhs.vector2D
+        lhs.cartesianVector == rhs.cartesianVector
     }
 }
 
 extension RelativePosition: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(vector2D)
+        hasher.combine(cartesianVector)
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 
 public struct Wind: Equatable, Sendable {
     public let altitude: Measurement<UnitLength>
-    public let fromDirection: Measurement<UnitAngle>        // Direction from which the wind is blowing
+    public let fromDirection: Measurement<UnitAngle> // Direction wind blows FROM
     public let speed: Measurement<UnitSpeed>
 
     public init(
@@ -11,38 +11,32 @@ public struct Wind: Equatable, Sendable {
         speed: Measurement<UnitSpeed>
     ) {
         self.altitude = altitude
-        self.fromDirection = fromDirection
+        self.fromDirection = fromDirection.normalized
         self.speed = speed
     }
     
-    var toDirection: Measurement<UnitAngle> {
-        var deg = fromDirection.degrees + 180
-        deg.formTruncatingRemainder(dividingBy: 360)
-        return .init(degrees: deg)
+    /// Direction wind is blowing TO (opposite of fromDirection)
+    public var toDirection: Measurement<UnitAngle> {
+        Measurement(value: fromDirection.degrees + 180, unit: .degrees).normalized
     }
     
-    var vector: SpeedCartesianVector {
-           // Wind bearing in degrees (from North)
-           let toDirectionDeg = (fromDirection.degrees + 180).truncatingRemainder(dividingBy: 360)
-           let angleRad = toDirectionDeg * .pi / 180
+    /// Wind as a velocity vector (direction = where wind is going)
+    public var vector: SpeedCartesianVector {
+        // Polar with bearing = toDirection (where wind pushes things)
+        let polar = SpeedPolar(bearing: toDirection, magnitude: speed)
+        return polar.asCartesianVector
+    }
 
-           // Convert to Cartesian: x = east, y = north
-           return CartesianVector(
-               x: .init(value: speed.value * sin(angleRad), unit: speed.unit),
-               y: .init(value: speed.value * cos(angleRad), unit: speed.unit)
-           )
-       }
-
-    var polar: SpeedPolar {
-        let angleRad = (.pi / 180) * (90 - toDirection.degrees) // 0 rad along +x, CCW
-        return SpeedPolar(angle: .init(value: angleRad, unit: .radians), magnitude: speed)
+    /// Wind as a polar vector
+    public var polar: SpeedPolar {
+        SpeedPolar(bearing: toDirection, magnitude: speed)
     }
 }
 
 public extension Wind {
-    init(feet: Double, knots: Double, bearing: Double) {
+    init(feet: Double, knots: Double, bearingFrom: Double) {
         self.altitude = .init(feet: feet)
-        self.fromDirection = .init(degrees: bearing)
+        self.fromDirection = .init(degrees: bearingFrom)
         self.speed = .init(knots: knots)
     }
 }

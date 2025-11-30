@@ -129,7 +129,7 @@ final class AtmosphericLayerTests: XCTestCase {
     }
     
     func testInitAndProperties() {
-        let wind = Wind(feet: 5000, knots: 30, bearing: 180)
+        let wind = Wind(feet: 5000, knots: 30, bearingFrom: 180)
         let layer = AtmosphericLayer(wind: wind,
                                      temperature: .init(celsius: -5))
 

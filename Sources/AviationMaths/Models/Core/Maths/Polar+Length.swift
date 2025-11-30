@@ -7,7 +7,10 @@ extension PolarVector where UnitType == UnitLength {
 
     public func positionRelativeToDatum(_ datum: Position2D) -> Position2D {
         let start = Coordinate(position2D: datum)
-        let end = start.destination(with: magnitude.value, bearing: angle.converted(to: .degrees).value)
+        let end = start.destination(
+            with: magnitude.meters,
+            bearing: bearing.converted(to: .degrees).value
+        )
         return Position2D(coordinate: end)
     }
 }

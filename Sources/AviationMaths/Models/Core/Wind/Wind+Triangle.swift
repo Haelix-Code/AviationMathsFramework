@@ -1,29 +1,39 @@
 import Foundation
 
 public struct WindTriangle: Sendable {
+    /// Calculate groundspeed vector from TAS, track, and wind
+    /// - Parameters:
+    /// - tas: True airspeed magnitude
+    /// - track: Track direction (bearing aircraft is traveling over ground)
+    /// - wind: Wind conditions
+    /// - Returns: Groundspeed as a Cartesian vector
     public static func groundspeed(
-           tas: Measurement<UnitSpeed>,
-           track: Measurement<UnitAngle>,
-           wind: Wind
-       ) -> CartesianVector<UnitSpeed> {
-           // Convert aircraft track (bearing from north) to math polar
-           // 0 rad = north, angles clockwise
-           let trackRad = track.converted(to: .radians).value
-
-           let tasVector = CartesianVector<UnitSpeed>(
-               x: .init(value: tas.value * sin(trackRad), unit: tas.unit),
-               y: .init(value: tas.value * cos(trackRad), unit: tas.unit)
-           )
-
-           // Wind vector already converted from meteorological bearing
-           let windVector = wind.vector
-
-           // Groundspeed = TAS vector + wind vector
-           let gsVector = CartesianVector<UnitSpeed>(
-               x: .init(value: tasVector.x.value + windVector.x.value, unit: tas.unit),
-               y: .init(value: tasVector.y.value + windVector.y.value, unit: tas.unit)
-           )
-
-           return gsVector
-       }
+    tas: Measurement<UnitSpeed>,
+    track: Measurement<UnitAngle>,
+    wind: Wind
+    ) -> CartesianVector<UnitSpeed> {
+        // Aircraft velocity vector (TAS in direction of track)
+        let aircraftPolar = SpeedPolar(bearing: track, magnitude: tas)
+        let aircraftVector = aircraftPolar.asCartesianVector
+        
+        // Wind vector (already gives us direction wind is pushing)
+        let windVector = wind.vector
+        // Groundspeed = aircraft velocity + wind velocity
+        return aircraftVector + windVector
+    }
+    
+    /// Calculate groundspeed and track from TAS, heading, and wind
+    /// - Parameters:
+    /// - tas: True airspeed magnitude
+    /// - heading: Heading (direction aircraft nose points)
+    /// - wind: Wind conditions
+    /// - Returns: Groundspeed as a polar vector (magnitude and track)
+    public static func groundspeedPolar(
+         tas: Measurement<UnitSpeed>,
+         heading: Measurement<UnitAngle>,
+         wind: Wind
+         ) -> SpeedPolar {
+         let gsVector = groundspeed(tas: tas, track: heading, wind: wind)
+         return gsVector.asPolar
+    }
 }

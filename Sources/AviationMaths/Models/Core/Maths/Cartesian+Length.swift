@@ -8,12 +8,10 @@ public extension CartesianVector where UnitType == UnitLength {
     func positionRelativeToDatum(_ datum: Position2D) -> Position2D {
         let polar = self.asPolar
         let start = Coordinate(position2D: datum)
-
         let end = start.destination(
             with: polar.magnitude.meters,
-            bearing: polar.angle.converted(to: .degrees).value
+            bearing: polar.bearing.converted(to: .degrees).value
         )
-
         return Position2D(coordinate: end)
     }
 }

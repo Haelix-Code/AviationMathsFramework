@@ -3,9 +3,10 @@ import XCTest
 
 final class CartesianVectorTests: XCTestCase {
 
-    func testInitAndLength() {
+    func testInitAndMagnitude() {
+        // 3-4-5 triangle
         let v = CartesianVector(x: .init(meters: 3), y: .init(meters: 4))
-        XCTAssertEqual(v.length.converted(to: .meters).value, 5, accuracy: 1e-10)
+        XCTAssertEqual(v.magnitude.meters, 5, accuracy: 1e-10)
     }
 
     func testInitWithVectorsArray() {
@@ -16,85 +17,131 @@ final class CartesianVectorTests: XCTestCase {
         XCTAssertEqual(sum.y.meters, 6)
     }
 
-    func testPolarCoordinate() {
-        let v = CartesianVector(x: .init(meters: 0), y: .init(meters: 1))
-        let polar = v.asPolar
-        XCTAssertEqual(polar.magnitude.converted(to: .meters).value, 1, accuracy: 1e-10)
-        XCTAssertEqual(polar.angle.converted(to: .degrees).value, 90, accuracy: 1e-10)
-    }
-
-    func testAngleBetweenVectors() {
-        let v1 = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
-        let v2 = CartesianVector(x: .init(meters: 0), y: .init(meters: 1))
-        let angle = v1.angle(between: v2)
-        XCTAssertEqual(angle.converted(to: .degrees).value, 90, accuracy: 1e-10)
-    }
-
-    func testAngleQuadrants() {
-        // Q1: x > 0, y > 0 → 45°
-        var v = CartesianVector(x: .init(meters: 1), y: .init(meters: 1))
-        XCTAssertEqual(v.asPolar.angle.converted(to: .degrees).value, 45, accuracy: 1e-10)
-
-        // Q2: x < 0, y > 0 → 135°
-        v = CartesianVector(x: .init(meters: -1), y: .init(meters: 1))
-        XCTAssertEqual(v.asPolar.angle.converted(to: .degrees).value, 135, accuracy: 1e-10)
-
-        // Q3: x < 0, y < 0 → -135° or 225°
-        v = CartesianVector(x: .init(meters: -1), y: .init(meters: -1))
-        XCTAssertEqual(v.asPolar.angle.converted(to: .degrees).value, -135, accuracy: 1e-10)
-
-        // Q4: x > 0, y < 0 → -45°
-        v = CartesianVector(x: .init(meters: 1), y: .init(meters: -1))
-        XCTAssertEqual(v.asPolar.angle.converted(to: .degrees).value, -45, accuracy: 1e-10)
-    }
-
-    func testAngleBetweenColinearOpposite() {
-        let v1 = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
-        let v2 = CartesianVector(x: .init(meters: -1), y: .init(meters: 0))
-        let angle = v1.angle(between: v2)
-        XCTAssertEqual(angle.converted(to: .degrees).value, 180, accuracy: 1e-10)
-    }
-    
-    func testZeroLengthVector() {
+    func testZeroVector() {
         let v = CartesianVector(x: .init(meters: 0), y: .init(meters: 0))
         XCTAssertEqual(v.magnitude.value, 0, accuracy: 1e-10)
-        XCTAssertEqual(v.asPolar.angle.value, 0, accuracy: 1e-10)  // Should be fine or undefined
+        // Bearing of zero vector is technically undefined, but atan2(0,0) = 0
+        XCTAssertEqual(v.bearing.degrees, 0, accuracy: 1e-10)
+    }
+
+    func testBearing_North() {
+        // Pure North: x=0, y=+1 → bearing 0°
+        let v = CartesianVector(x: .init(meters: 0), y: .init(meters: 1))
+        XCTAssertEqual(v.bearing.degrees, 0, accuracy: 1e-10)
+        XCTAssertEqual(v.magnitude.meters, 1, accuracy: 1e-10)
     }
     
-    func testEdgeCaseAngles() {
-        // Positive X-axis, should be 0 degrees
-        let v1 = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
-        XCTAssertEqual(v1.asPolar.angle.converted(to: .degrees).value, 0, accuracy: 1e-10)
-
-        // Positive Y-axis, should be 90 degrees
-        let v2 = CartesianVector(x: .init(meters: 0), y: .init(meters: 1))
-        XCTAssertEqual(v2.asPolar.angle.converted(to: .degrees).value, 90, accuracy: 1e-10)
-
-        // Negative X-axis, should be 180 degrees
-        let v3 = CartesianVector(x: .init(meters: -1), y: .init(meters: 0))
-        XCTAssertEqual(v3.asPolar.angle.converted(to: .degrees).value, 180, accuracy: 1e-10)
-
-        // Negative Y-axis, should be -90 degrees
-        let v4 = CartesianVector(x: .init(meters: 0), y: .init(meters: -1))
-        XCTAssertEqual(v4.asPolar.angle.converted(to: .degrees).value, -90, accuracy: 1e-10)
+    func testBearing_East() {
+        // Pure East: x=+1, y=0 → bearing 90°
+        let v = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
+        XCTAssertEqual(v.bearing.degrees, 90, accuracy: 1e-10)
     }
     
-    func testAngleBetweenParallelVectors() {
+    func testBearing_South() {
+        // Pure South: x=0, y=-1 → bearing 180°
+        let v = CartesianVector(x: .init(meters: 0), y: .init(meters: -1))
+        XCTAssertEqual(v.bearing.degrees, 180, accuracy: 1e-10)
+    }
+    
+    func testBearing_West() {
+        // Pure West: x=-1, y=0 → bearing 270°
+        let v = CartesianVector(x: .init(meters: -1), y: .init(meters: 0))
+        XCTAssertEqual(v.bearing.degrees, 270, accuracy: 1e-10)
+    }
+ 
+    func testBearing_NorthEast() {
+        // Q1: x > 0, y > 0 → bearing 45° (NE)
+        let v = CartesianVector(x: .init(meters: 1), y: .init(meters: 1))
+        XCTAssertEqual(v.bearing.degrees, 45, accuracy: 1e-10)
+    }
+    
+    func testBearing_SouthEast() {
+        // Q2: x > 0, y < 0 → bearing 135° (SE)
+        let v = CartesianVector(x: .init(meters: 1), y: .init(meters: -1))
+        XCTAssertEqual(v.bearing.degrees, 135, accuracy: 1e-10)
+    }
+    
+    func testBearing_SouthWest() {
+        // Q3: x < 0, y < 0 → bearing 225° (SW)
+        let v = CartesianVector(x: .init(meters: -1), y: .init(meters: -1))
+        XCTAssertEqual(v.bearing.degrees, 225, accuracy: 1e-10)
+    }
+    
+    func testBearing_NorthWest() {
+        // Q4: x < 0, y > 0 → bearing 315° (NW)
+        let v = CartesianVector(x: .init(meters: -1), y: .init(meters: 1))
+        XCTAssertEqual(v.bearing.degrees, 315, accuracy: 1e-10)
+    }
+
+    func testPolarRoundTrip_AllCardinals() {
+        let testCases: [(bearing: Double, x: Double, y: Double)] = [
+            (0, 0, 1), // North
+            (90, 1, 0), // East
+            (180, 0, -1), // South
+            (270, -1, 0), // West
+        ]
+        
+        for tc in testCases {
+            let polar = PolarVector(bearing: .init(degrees: tc.bearing),
+                                   magnitude: Measurement<UnitLength>(meters: 1))
+            let cart = polar.asCartesianVector
+            
+            XCTAssertEqual(cart.x.meters, tc.x, accuracy: 1e-10,
+                          "Failed x for bearing \(tc.bearing)")
+            XCTAssertEqual(cart.y.meters, tc.y, accuracy: 1e-10,
+                          "Failed y for bearing \(tc.bearing)")
+            
+            // And back
+            let recovered = cart.asPolar
+            XCTAssertEqual(recovered.bearing.degrees, tc.bearing, accuracy: 1e-10,
+                          "Failed round-trip for bearing \(tc.bearing)")
+        }
+    }
+    
+    func testPolarRoundTrip_IntermediateBearings() {
+        let bearings: [Double] = [30, 60, 120, 150, 210, 240, 300, 330]
+        
+        for bearing in bearings {
+            let polar = PolarVector(bearing: .init(degrees: bearing),
+                                   magnitude: Measurement<UnitLength>(meters: 10))
+            let cart = polar.asCartesianVector
+            let recovered = cart.asPolar
+            
+            XCTAssertEqual(recovered.bearing.degrees, bearing, accuracy: 1e-10,
+                          "Failed round-trip for bearing \(bearing)")
+            XCTAssertEqual(recovered.magnitude.meters, 10, accuracy: 1e-10)
+        }
+    }
+
+    func testAngleBetween_Perpendicular() {
+        let north = CartesianVector(x: .init(meters: 0), y: .init(meters: 1))
+        let east = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
+        let angle = north.angle(between: east)
+        XCTAssertEqual(angle.degrees, 90, accuracy: 1e-10)
+    }
+    
+    func testAngleBetween_Parallel() {
         let v1 = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
         let v2 = CartesianVector(x: .init(meters: 2), y: .init(meters: 0))
         let angle = v1.angle(between: v2)
-        XCTAssertEqual(angle.converted(to: .degrees).value, 0, accuracy: 1e-10)  // Parallel, 0 degrees
+        XCTAssertEqual(angle.degrees, 0, accuracy: 1e-10)
     }
-
-    func testAngleBetweenAntiparallelVectors() {
+    
+    func testAngleBetween_Opposite() {
         let v1 = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
         let v2 = CartesianVector(x: .init(meters: -1), y: .init(meters: 0))
         let angle = v1.angle(between: v2)
-        XCTAssertEqual(angle.converted(to: .degrees).value, 180, accuracy: 1e-10)  // Antiparallel, 180 degrees
+        XCTAssertEqual(angle.degrees, 180, accuracy: 1e-10)
     }
-    
-    func testWithSpeed() {
-        let speedVector = CartesianVector<UnitSpeed>(x: .init(mps: 10), y: .init(mps: 20))
-        XCTAssertEqual(speedVector.magnitude.converted(to: .metersPerSecond).value, 22.3607, accuracy: 1e-4)
+
+    func testSpeedVector() {
+        let speedVector = CartesianVector<UnitSpeed>(
+            x: .init(knots: 30), // 30kt East component
+            y: .init(knots: 40) // 40kt North component
+        )
+        XCTAssertEqual(speedVector.magnitude.knots, 50, accuracy: 1e-4)
+        
+        // Bearing should be ~37° (more North than East)
+        XCTAssertEqual(speedVector.bearing.degrees, 36.87, accuracy: 0.01)
     }
 }
