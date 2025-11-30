@@ -51,7 +51,7 @@ public struct Altitude: Sendable {
 
     // MARK: - Conversion Methods
 
-    private func convertToAGL() -> Measurement<UnitLength> {
+    internal func convertToAGL() -> Measurement<UnitLength> {
         guard let groundElev = context.groundElevation else {
             preconditionFailure("Ground elevation required for AGL conversion")
         }
@@ -66,7 +66,7 @@ public struct Altitude: Sendable {
         }
     }
 
-    private func convertToAMSL() -> Measurement<UnitLength> {
+    internal func convertToAMSL() -> Measurement<UnitLength> {
         switch reference {
         case .agl:
             guard let groundElev = context.groundElevation else {
@@ -123,7 +123,7 @@ public struct Altitude: Sendable {
         )
     }
 
-    private func convertToPressureAltitude() -> Measurement<UnitLength> {
+    internal func convertToPressureAltitude() -> Measurement<UnitLength> {
         switch reference {
         case .pressureAltitude:
             return value
@@ -156,7 +156,7 @@ public struct Altitude: Sendable {
         )
     }
 
-    private func convertToTrueAltitude() -> Measurement<UnitLength> {
+    internal func convertToTrueAltitude() -> Measurement<UnitLength> {
         guard let seaLevelTemp = context.seaLevelTemperature else {
             preconditionFailure("Temperature profile required for True Altitude conversion")
         }
@@ -214,8 +214,11 @@ private extension Measurement<UnitLength> {
 // MARK: - Convenience Properties
 
 extension Altitude {
-    /// Create a new Altitude in a different reference frame
-    public func `in`(_ newReference: VerticalReference) -> Altitude {
+    /// Create a new Altitude in a different reference frame.
+    /// Returns nil if the conversion is not possible with the current context.
+    public func `in`(_ newReference: VerticalReference) -> Altitude? {
+        guard canConvert(to: newReference) else { return nil }
+
         let newValue: Measurement<UnitLength>
         switch newReference {
         case .agl: newValue = agl
@@ -225,39 +228,13 @@ extension Altitude {
         }
         return Altitude(value: newValue, reference: newReference, context: context)
     }
-}
 
-// MARK: - Equatable & Hashable
-
-extension Altitude: Equatable {
-    public static func == (lhs: Altitude, rhs: Altitude) -> Bool {
-        // Compare in AMSL unless both have ground elevation (then use AGL)
-        if lhs.context.groundElevation != nil && rhs.context.groundElevation != nil {
-            return lhs.agl.meters == rhs.agl.meters
-        } else {
-            return lhs.amsl.meters == rhs.amsl.meters
+    /// Create a new Altitude in a different reference frame.
+    /// Crashes if the conversion is not possible.
+    public func converted(to newReference: VerticalReference) -> Altitude {
+        guard let result = self.in(newReference) else {
+            preconditionFailure("Cannot convert from \(reference) to \(newReference) with current context")
         }
-    }
-}
-
-extension Altitude: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        if context.groundElevation != nil {
-            hasher.combine(agl.meters)
-        } else {
-            hasher.combine(amsl.meters)
-        }
-    }
-}
-
-// MARK: - Comparable
-
-extension Altitude: Comparable {
-    public static func < (lhs: Altitude, rhs: Altitude) -> Bool {
-        if lhs.context.groundElevation != nil && rhs.context.groundElevation != nil {
-            return lhs.agl.meters < rhs.agl.meters
-        } else {
-            return lhs.amsl.meters < rhs.amsl.meters
-        }
+        return result
     }
 }

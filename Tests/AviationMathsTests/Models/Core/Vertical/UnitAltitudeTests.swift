@@ -172,8 +172,8 @@ final class UnitAltitudeTests: XCTestCase {
         let altitude = Altitude(feet: 5000, reference: .agl, context: .init(groundElevation: .init(feet: 1000)))
 
         let amslAltitude = altitude.in(.amsl)
-        XCTAssertEqual(amslAltitude.value.feet, 6000)
-        XCTAssertEqual(amslAltitude.reference, .amsl)
+        XCTAssertEqual(amslAltitude!.value.feet, 6000)
+        XCTAssertEqual(amslAltitude!.reference, .amsl)
     }
 
     func testSeaLevelTemperatureInput() {

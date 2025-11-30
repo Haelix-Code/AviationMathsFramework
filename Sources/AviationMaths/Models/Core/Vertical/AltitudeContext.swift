@@ -1,5 +1,38 @@
+// File: Sources/AviationMaths/Models/Core/Vertical/AltitudeContext.swift
 import Foundation
 
+/// Context for altitude conversions, defining the atmospheric conditions.
+///
+/// ## Creating Contexts
+///
+/// **Standard ISA conditions:**
+/// ```swift
+/// let context = AltitudeContext.standardISA
+/// ```
+///
+/// **Simple QNH-only (no temperature correction):**
+/// ```swift
+/// let context = AltitudeContext.qnhOnly(hectopascals: 1005, groundElevation: .init(feet: 500))
+/// ```
+///
+/// **Full temperature profile:**
+/// ```swift
+/// let context = AltitudeContext.withSurfaceTemperature(
+/// groundElevation: .init(feet: 500),
+/// qnh: .init(hectopascals: 1005),
+/// surfaceTemp: .init(celsius: 22)
+/// )
+/// ```
+///
+/// **Custom (full flexibility):**
+/// ```swift
+/// let context = AltitudeContext(
+/// groundElevation: .init(feet: 500),
+/// qnh: .init(hectopascals: 1005),
+/// surfaceTemperature: .init(celsius: 22),
+/// lapseRate: 0.0055 // Non-standard lapse rate
+/// )
+/// ```
 public struct AltitudeContext: Sendable {
     public let groundElevation: Measurement<UnitLength>?
     public let qnh: Measurement<UnitPressure>?
@@ -17,13 +50,11 @@ public struct AltitudeContext: Sendable {
         if let temp = _surfaceTemperature {
             return temp
         }
-        // Calculate from sea level temperature if available
         guard let slTemp = _seaLevelTemperature,
               let elev = groundElevation,
               let rate = lapseRate else {
             return nil
         }
-        // T_surface = T_sl - L * h_elevation
         let surfaceTemp = slTemp.kelvin - rate * elev.meters
         return .init(kelvin: surfaceTemp)
     }
@@ -33,17 +64,45 @@ public struct AltitudeContext: Sendable {
         if let temp = _seaLevelTemperature {
             return temp
         }
-        // Calculate from surface temperature if available
         guard let surfTemp = _surfaceTemperature,
               let elev = groundElevation,
               let rate = lapseRate else {
             return nil
         }
-        // T_sl = T_surface + L * h_elevation
         let slTemp = surfTemp.kelvin + rate * elev.meters
         return .init(kelvin: slTemp)
     }
 
+    /// Whether this context has sufficient data for true altitude calculations
+    public var canCalculateTrueAltitude: Bool {
+        seaLevelTemperature != nil && lapseRate != nil
+    }
+
+    /// Whether this context has sufficient data for AGL calculations
+    public var canCalculateAGL: Bool {
+        groundElevation != nil
+    }
+
+    /// Whether this context has sufficient data for pressure altitude calculations
+    public var canCalculatePressureAltitude: Bool {
+        qnh != nil
+    }
+
+    // MARK: - Full Initialiser (Maximum Flexibility)
+
+    /// Creates an altitude context with full control over all parameters.
+    ///
+    /// - Parameters:
+    /// - groundElevation: Elevation of the ground/terrain above mean sea level
+    /// - qnh: Local barometric pressure adjusted to sea level
+    /// - surfaceTemperature: Actual temperature at ground elevation
+    /// - seaLevelTemperature: Actual temperature extrapolated to sea level
+    /// - temperatureReferenceAltitude: Altitude of a known temperature measurement
+    /// - temperatureAtReference: Temperature at the reference altitude
+    /// - lapseRate: Temperature lapse rate in K/m (default ISA is 0.0065)
+    ///
+    /// - Note: Provide either `surfaceTemperature` or `seaLevelTemperature`, not both.
+    /// If both are provided, `surfaceTemperature` takes precedence.
     public init(
         groundElevation: Measurement<UnitLength>? = nil,
         qnh: Measurement<UnitPressure>? = nil,
@@ -67,22 +126,106 @@ public struct AltitudeContext: Sendable {
                   let altTemp = temperatureAtReference,
                   let tempAlt = temperatureReferenceAltitude,
                   let elev = groundElevation {
-            // Lapse rate = (T_surface - T_alt) / (h_alt - h_surface)
-            // Note: this is positive when temperature decreases with altitude
             let temperatureDifference = surfTemp.kelvin - altTemp.kelvin
             let altitudeDifference = tempAlt.meters - elev.meters
-            self.lapseRate = temperatureDifference / altitudeDifference
+            self.lapseRate = altitudeDifference != 0 ? temperatureDifference / altitudeDifference : nil
         } else if let slTemp = seaLevelTemperature,
                   let altTemp = temperatureAtReference,
                   let tempAlt = temperatureReferenceAltitude {
-            // Calculate from sea level
             let temperatureDifference = slTemp.kelvin - altTemp.kelvin
-            let altitudeDifference = tempAlt.meters - 0  // sea level is at 0
-            self.lapseRate = temperatureDifference / altitudeDifference
+            let altitudeDifference = tempAlt.meters
+            self.lapseRate = altitudeDifference != 0 ? temperatureDifference / altitudeDifference : nil
         } else {
             self.lapseRate = nil
         }
     }
+
+    // MARK: - Factory Methods (Common Configurations)
+
+    /// Standard ISA conditions at sea level.
+    public static let standardISA = AltitudeContext(
+        groundElevation: .surface,
+        qnh: ISA.seaLevelPressure,
+        seaLevelTemperature: ISA.seaLevelTemperature,
+        lapseRate: ISA.troposphereLapseRate
+    )
+
+    /// Creates a context for QNH-based conversions without temperature correction.
+    ///
+    /// Use this when you only need to convert between AMSL, AGL, and Pressure Altitude,
+    /// and don't need True Altitude calculations.
+    ///
+    /// - Parameters:
+    /// - hectopascals: QNH in hectopascals (hPa/mb)
+    /// - groundElevation: Ground elevation above mean sea level
+    public static func qnhOnly(
+        hectopascals: Double,
+        groundElevation: Measurement<UnitLength>
+    ) -> AltitudeContext {
+        AltitudeContext(
+            groundElevation: groundElevation,
+            qnh: .init(hectopascals: hectopascals)
+        )
+    }
+
+    /// Creates a context with surface temperature for full altitude conversions.
+    ///
+    /// - Parameters:
+    /// - groundElevation: Ground elevation above mean sea level
+    /// - qnh: Local QNH pressure
+    /// - surfaceTemp: Actual temperature at ground level
+    /// - lapseRate: Temperature lapse rate (defaults to ISA standard 0.0065 K/m)
+    public static func withSurfaceTemperature(
+        groundElevation: Measurement<UnitLength>,
+        qnh: Measurement<UnitPressure>,
+        surfaceTemp: Measurement<UnitTemperature>,
+        lapseRate: Double = ISA.troposphereLapseRate
+    ) -> AltitudeContext {
+        AltitudeContext(
+            groundElevation: groundElevation,
+            qnh: qnh,
+            surfaceTemperature: surfaceTemp,
+            lapseRate: lapseRate
+        )
+    }
+
+    /// Creates a context from ISA deviation (delta ISA).
+    ///
+    /// - Parameters:
+    /// - groundElevation: Ground elevation above mean sea level
+    /// - qnh: Local QNH pressure
+    /// - deltaISA: Temperature deviation from ISA in degrees (positive = hotter)
+    public static func withDeltaISA(
+        groundElevation: Measurement<UnitLength>,
+        qnh: Measurement<UnitPressure>,
+        deltaISA: Double
+    ) -> AltitudeContext {
+        let isaTemp = ISA.temperature(at: groundElevation)
+        let actualTemp = Measurement<UnitTemperature>(kelvin: isaTemp.kelvin + deltaISA)
+
+        return AltitudeContext(
+            groundElevation: groundElevation,
+            qnh: qnh,
+            surfaceTemperature: actualTemp,
+            lapseRate: ISA.troposphereLapseRate
+        )
+    }
+
+    /// Creates a context for pressure altitude only (standard pressure, no QNH).
+    ///
+    /// Use this when working purely in pressure altitude with no local corrections.
+    public static func pressureAltitudeOnly(
+        groundElevation: Measurement<UnitLength>? = nil
+    ) -> AltitudeContext {
+        AltitudeContext(
+            groundElevation: groundElevation,
+            qnh: ISA.seaLevelPressure,
+            seaLevelTemperature: ISA.seaLevelTemperature,
+            lapseRate: ISA.troposphereLapseRate
+        )
+    }
+
+    // MARK: - Temperature Calculation
 
     /// Calculate temperature at any altitude using the temperature model
     public func temperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature>? {
@@ -90,19 +233,12 @@ public struct AltitudeContext: Sendable {
               let rate = lapseRate else {
             return nil
         }
-
-        // T = T_sl - L * h
         let tempAtAlt = slTemp.kelvin - rate * altitude.meters
         return .init(kelvin: tempAtAlt)
     }
-
-    public static let standardISA = AltitudeContext(
-        groundElevation: .surface,
-        qnh: ISA.seaLevelPressure,
-        seaLevelTemperature: ISA.seaLevelTemperature,
-        lapseRate: ISA.troposphereLapseRate
-    )
 }
+
+// MARK: - Lapse Rate Utility
 
 extension AltitudeContext {
     /// Calculate lapse rate from two temperature measurements
