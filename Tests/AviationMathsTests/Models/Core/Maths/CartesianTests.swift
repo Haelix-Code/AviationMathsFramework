@@ -74,24 +74,34 @@ final class CartesianVectorTests: XCTestCase {
     }
 
     func testPolarRoundTrip_AllCardinals() {
-        let testCases: [(bearing: Double, x: Double, y: Double)] = [
-            (0, 0, 1), // North
-            (90, 1, 0), // East
-            (180, 0, -1), // South
-            (270, -1, 0) // West
+        struct TestCase {
+            let bearing: Double
+            let expectedX: Double
+            let expectedY: Double
+        }
+
+        let testCases: [TestCase] = [
+            TestCase(bearing: 0, expectedX: 0, expectedY: 1),    // North
+            TestCase(bearing: 90, expectedX: 1, expectedY: 0),   // East
+            TestCase(bearing: 180, expectedX: 0, expectedY: -1), // South
+            TestCase(bearing: 270, expectedX: -1, expectedY: 0)  // West
         ]
 
         for tc in testCases {
+            // Create Polar Vector
             let polar = PolarVector(bearing: .init(degrees: tc.bearing),
-                                   magnitude: Measurement<UnitLength>(meters: 1))
+                                    magnitude: Measurement<UnitLength>(meters: 1))
+
+            // Convert to Cartesian coordinates
             let cart = polar.asCartesianVector
 
-            XCTAssertEqual(cart.x.meters, tc.x, accuracy: 1e-10,
+            // Test conversion to Cartesian
+            XCTAssertEqual(cart.x.meters, tc.expectedX, accuracy: 1e-10,
                           "Failed x for bearing \(tc.bearing)")
-            XCTAssertEqual(cart.y.meters, tc.y, accuracy: 1e-10,
+            XCTAssertEqual(cart.y.meters, tc.expectedY, accuracy: 1e-10,
                           "Failed y for bearing \(tc.bearing)")
 
-            // And back
+            // Test round-trip conversion back to Polar
             let recovered = cart.asPolar
             XCTAssertEqual(recovered.bearing.degrees, tc.bearing, accuracy: 1e-10,
                           "Failed round-trip for bearing \(tc.bearing)")
