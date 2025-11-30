@@ -27,13 +27,25 @@ Complete conversion support between all speed types with validation against indu
 - **PolarVector** - Polar coordinate system support
 - **Position2D** - Geodetic position calculations (planned)
 
-Concept    Swift Value
-0 rad (angle)    north (points along +y axis in Cartesian)
-Angles increasing    clockwise (matches meteorological bearings)
-x-axis    east (positive)
-y-axis    north (positive)
+## Coordinate System Convention
 
-This keeps math consistent with your JS service.
+This library uses **aviation convention** throughout, where bearings are measured clockwise from North. This differs from standard mathematical convention (counter-clockwise from East) but aligns with how pilots, navigators, and aviation systems work in the real world.
+
+**Key definitions:**
+- **0° = North** (+y axis)
+- **90° = East** (+x axis)
+- **180° = South** (-y axis)
+- **270° = West** (-x axis)
+- **Angles increase clockwise**
+
+**Trigonometric consequences:** The conversion between polar and Cartesian coordinates uses `x = magnitude × sin(bearing)` and `y = magnitude × cos(bearing)`, with the inverse `bearing = atan2(x, y)`. Note the swapped sine/cosine and reversed atan2 arguments compared to mathematical convention.
+
+**Cartesian interpretation:** The x-component represents East-West displacement (positive = East), and the y-component represents North-South displacement (positive = North). When you see a `CartesianVector` with `x = 100, y = 0`, that's 100 units due East.
+
+**Wind handling:** Wind is conventionally reported as the direction it blows *from* (e.g., "wind from 270" means wind coming from the West). The `Wind` struct stores this `fromDirection` but internally converts to a velocity vector pointing in the direction the wind pushes objects (the `toDirection`, which is the reciprocal bearing). This means `wind.vector` gives you a Cartesian vector you can directly add to an aircraft's velocity vector to compute groundspeed.
+
+**Why this matters:** By enforcing aviation convention at the lowest level, all higher-level calculations (wind triangles, relative positions, track and drift) work correctly without scattered conversion code. A `PolarVector` with bearing 045° genuinely points Northeast, and adding two `CartesianVector`s produces geometrically correct results that match real-world navigation.
+
 
 ## Design Principles
 
