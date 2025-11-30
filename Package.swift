@@ -12,15 +12,13 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/florianreinhart/Geodesy", .upToNextMajor(from: "0.2.2")),
-        .package(url: "https://github.com/ngageoint/mgrs-ios.git", from: "2.0.0")
+        .package(url: "https://github.com/florianreinhart/Geodesy", .upToNextMajor(from: "0.2.2"))
     ],
     targets: [
         .target(
             name: "AviationMaths",
             dependencies: [
-               .product(name: "Geodesy", package: "Geodesy"),
-               .product(name: "MGRS", package: "mgrs-ios")
+               .product(name: "Geodesy", package: "Geodesy")
            ]
         ),
         .testTarget(
