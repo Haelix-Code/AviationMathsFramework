@@ -13,7 +13,7 @@ public struct PolarVector<UnitType: Dimension>: Equatable {
         self.bearing = bearing.normalized
         self.magnitude = magnitude
     }
-    
+
     /// Convert to Cartesian using aviation convention
     /// x = East (+), y = North (+)
     public var asCartesianVector: CartesianVector<UnitType> {

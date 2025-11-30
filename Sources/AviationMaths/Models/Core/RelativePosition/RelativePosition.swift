@@ -23,8 +23,8 @@ public struct RelativePosition {
         self.polarCoordinate = polarCoordinate
         self.cartesianVector = polarCoordinate.asCartesianVector
     }
-    
-    public var reciprocalBearing: Measurement<UnitAngle>{
+
+    public var reciprocalBearing: Measurement<UnitAngle> {
         bearing.reciprocal
     }
 

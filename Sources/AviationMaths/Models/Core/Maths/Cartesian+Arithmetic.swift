@@ -40,7 +40,7 @@ extension CartesianVector {
             y: Measurement(value: lhs.y.value / rhs, unit: lhs.y.unit)
         )
     }
-    
+
     func dot(_ other: CartesianVector<UnitType>) -> Measurement<UnitType> {
         let v = x.value * other.x.value + y.value * other.y.value
         return Measurement(value: v, unit: x.unit)

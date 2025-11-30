@@ -127,7 +127,7 @@ final class AtmosphericLayerTests: XCTestCase {
         XCTAssertNotNil(tempAt7000)
         XCTAssertEqual(tempAt7000?.celsius ?? -999, 0, accuracy: 0.1)
     }
-    
+
     func testInitAndProperties() {
         let wind = Wind(feet: 5000, knots: 30, bearingFrom: 180)
         let layer = AtmosphericLayer(wind: wind,

@@ -30,14 +30,14 @@ extension CartesianVector {
     public var asPolar: PolarVector<UnitType> {
         PolarVector(bearing: bearing, magnitude: magnitude)
     }
-    
+
     public var magnitude: Measurement<UnitType> {
         let xVal = x.value
         let yVal = y.value
         let mag = sqrt(xVal * xVal + yVal * yVal)
         return Measurement(value: mag, unit: x.unit)
     }
-    
+
     /// Bearing in aviation convention (0° = North, clockwise positive)
     public var bearing: Measurement<UnitAngle> {
         let xVal = x.value

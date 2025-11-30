@@ -12,7 +12,7 @@ public extension Measurement<UnitAngle> {
     var radians: Double {
         self.converted(to: .radians).value
     }
-    
+
     /// Normalize bearing to 0..<360 degrees
     var normalized: Measurement<UnitAngle> {
         var degrees = self.converted(to: .degrees).value
@@ -20,7 +20,7 @@ public extension Measurement<UnitAngle> {
         if degrees < 0 { degrees += 360 }
         return Measurement(value: degrees, unit: .degrees)
     }
-    
+
     /// Normalize to -180...180 range (for signed differences)
     var normalizedSigned: Measurement<UnitAngle> {
         var degrees = self.converted(to: .degrees).value

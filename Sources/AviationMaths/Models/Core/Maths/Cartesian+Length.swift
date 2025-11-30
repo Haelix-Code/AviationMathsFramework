@@ -4,7 +4,7 @@ import GeodesySpherical
 public extension CartesianVector where UnitType == UnitLength {
     var lengthPolar: PolarVector<UnitLength> { asPolar }
     var length: Measurement<UnitLength> { magnitude }
-    
+
     func positionRelativeToDatum(_ datum: Position2D) -> Position2D {
         let polar = self.asPolar
         let start = Coordinate(position2D: datum)

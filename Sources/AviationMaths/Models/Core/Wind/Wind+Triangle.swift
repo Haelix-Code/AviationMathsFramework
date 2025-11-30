@@ -15,13 +15,13 @@ public struct WindTriangle: Sendable {
         // Aircraft velocity vector (TAS in direction of track)
         let aircraftPolar = SpeedPolar(bearing: track, magnitude: tas)
         let aircraftVector = aircraftPolar.asCartesianVector
-        
+
         // Wind vector (already gives us direction wind is pushing)
         let windVector = wind.vector
         // Groundspeed = aircraft velocity + wind velocity
         return aircraftVector + windVector
     }
-    
+
     /// Calculate groundspeed and track from TAS, heading, and wind
     /// - Parameters:
     /// - tas: True airspeed magnitude

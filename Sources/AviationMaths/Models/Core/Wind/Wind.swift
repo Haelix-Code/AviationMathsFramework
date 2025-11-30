@@ -14,12 +14,12 @@ public struct Wind: Equatable, Sendable {
         self.fromDirection = fromDirection.normalized
         self.speed = speed
     }
-    
+
     /// Direction wind is blowing TO (opposite of fromDirection)
     public var toDirection: Measurement<UnitAngle> {
         Measurement(value: fromDirection.degrees + 180, unit: .degrees).normalized
     }
-    
+
     /// Wind as a velocity vector (direction = where wind is going)
     public var vector: SpeedCartesianVector {
         // Polar with bearing = toDirection (where wind pushes things)
