@@ -12,7 +12,7 @@ final class CartesianVectorTests: XCTestCase {
     func testInitWithVectorsArray() {
         let v1 = CartesianVector(x: .init(meters: 1), y: .init(meters: 2))
         let v2 = CartesianVector(x: .init(meters: 3), y: .init(meters: 4))
-        let sum = CartesianVector(vectors: [v1, v2])
+        let sum = CartesianVector.sum([v1, v2])
         XCTAssertEqual(sum.x.meters, 4)
         XCTAssertEqual(sum.y.meters, 6)
     }

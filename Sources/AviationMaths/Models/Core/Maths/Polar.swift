@@ -26,5 +26,15 @@ public struct PolarVector<UnitType: Dimension>: Equatable {
     }
 }
 
+extension PolarVector: Vector {
+    public var x: Measurement<UnitType> { asCartesianVector.x }
+    public var y: Measurement<UnitType> { asCartesianVector.y }
+
+    public init(x: Measurement<UnitType>, y: Measurement<UnitType>) {
+        let cart = CartesianVector(x: x, y: y)
+        self.init(bearing: cart.bearing, magnitude: cart.magnitude)
+    }
+}
+
 public typealias LengthPolar = PolarVector<UnitLength>
 public typealias SpeedPolar = PolarVector<UnitSpeed>
