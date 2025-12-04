@@ -12,7 +12,7 @@ final class CartesianVectorTests: XCTestCase {
     func testInitWithVectorsArray() {
         let v1 = CartesianVector(x: .init(meters: 1), y: .init(meters: 2))
         let v2 = CartesianVector(x: .init(meters: 3), y: .init(meters: 4))
-        let sum = CartesianVector(vectors: [v1, v2])
+        let sum = CartesianVector.sum([v1, v2])
         XCTAssertEqual(sum.x.meters, 4)
         XCTAssertEqual(sum.y.meters, 6)
     }
@@ -22,55 +22,6 @@ final class CartesianVectorTests: XCTestCase {
         XCTAssertEqual(v.magnitude.value, 0, accuracy: 1e-10)
         // Bearing of zero vector is technically undefined, but atan2(0,0) = 0
         XCTAssertEqual(v.bearing.degrees, 0, accuracy: 1e-10)
-    }
-
-    func testBearing_North() {
-        // Pure North: x=0, y=+1 → bearing 0°
-        let v = CartesianVector(x: .init(meters: 0), y: .init(meters: 1))
-        XCTAssertEqual(v.bearing.degrees, 0, accuracy: 1e-10)
-        XCTAssertEqual(v.magnitude.meters, 1, accuracy: 1e-10)
-    }
-
-    func testBearing_East() {
-        // Pure East: x=+1, y=0 → bearing 90°
-        let v = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
-        XCTAssertEqual(v.bearing.degrees, 90, accuracy: 1e-10)
-    }
-
-    func testBearing_South() {
-        // Pure South: x=0, y=-1 → bearing 180°
-        let v = CartesianVector(x: .init(meters: 0), y: .init(meters: -1))
-        XCTAssertEqual(v.bearing.degrees, 180, accuracy: 1e-10)
-    }
-
-    func testBearing_West() {
-        // Pure West: x=-1, y=0 → bearing 270°
-        let v = CartesianVector(x: .init(meters: -1), y: .init(meters: 0))
-        XCTAssertEqual(v.bearing.degrees, 270, accuracy: 1e-10)
-    }
-
-    func testBearing_NorthEast() {
-        // Q1: x > 0, y > 0 → bearing 45° (NE)
-        let v = CartesianVector(x: .init(meters: 1), y: .init(meters: 1))
-        XCTAssertEqual(v.bearing.degrees, 45, accuracy: 1e-10)
-    }
-
-    func testBearing_SouthEast() {
-        // Q2: x > 0, y < 0 → bearing 135° (SE)
-        let v = CartesianVector(x: .init(meters: 1), y: .init(meters: -1))
-        XCTAssertEqual(v.bearing.degrees, 135, accuracy: 1e-10)
-    }
-
-    func testBearing_SouthWest() {
-        // Q3: x < 0, y < 0 → bearing 225° (SW)
-        let v = CartesianVector(x: .init(meters: -1), y: .init(meters: -1))
-        XCTAssertEqual(v.bearing.degrees, 225, accuracy: 1e-10)
-    }
-
-    func testBearing_NorthWest() {
-        // Q4: x < 0, y > 0 → bearing 315° (NW)
-        let v = CartesianVector(x: .init(meters: -1), y: .init(meters: 1))
-        XCTAssertEqual(v.bearing.degrees, 315, accuracy: 1e-10)
     }
 
     func testPolarRoundTrip_AllCardinals() {

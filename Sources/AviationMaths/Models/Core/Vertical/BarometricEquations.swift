@@ -6,7 +6,7 @@ enum BarometricEquations {
     /// Convert pressure to altitude using barometric formula
     /// Formula: h = (T₀/L) * (1 - (P/P₀)^(R*L/g))
     /// where temperature decreases with altitude: T = T₀ - L*h
-    static func altitudeFromPressure(
+    package static func altitudeFromPressure(
         pressure: Measurement<UnitPressure>,
         referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
         temperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
@@ -21,7 +21,7 @@ enum BarometricEquations {
     /// Convert altitude to pressure using barometric formula
     /// Formula: P = P₀ * ((T₀ - L*h)/T₀)^(g/(L*R))
     /// where temperature decreases with altitude: T = T₀ - L*h
-    static func pressureFromAltitude(
+    package static func pressureFromAltitude(
         altitude: Measurement<UnitLength>,
         referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
         temperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
@@ -37,7 +37,7 @@ enum BarometricEquations {
 
     /// Convert true altitude to pressure using actual temperature profile
     /// Based on: maths.service.ts:: convertVerticalPressurePaTempCToAltitudePA
-    static func pressureFromTrueAltitude(
+    package static func pressureFromTrueAltitude(
         trueAltitude: Measurement<UnitLength>,
         referencePressure: Measurement<UnitPressure>,
         referenceTemperature: Measurement<UnitTemperature>,
@@ -59,7 +59,7 @@ enum BarometricEquations {
 
     /// Convert pressure to true altitude using actual temperature profile
     /// Based on: maths.service.ts:: convertVerticalPressurePaTempCToAltitudePA
-    static func trueAltitudeFromPressure(
+    package static func trueAltitudeFromPressure(
         pressure: Measurement<UnitPressure>,
         referencePressure: Measurement<UnitPressure>,
         referenceTemperature: Measurement<UnitTemperature>,

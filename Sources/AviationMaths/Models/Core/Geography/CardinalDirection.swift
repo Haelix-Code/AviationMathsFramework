@@ -48,8 +48,9 @@ public enum LongitudeDirection: String, Codable, CaseIterable, Sendable {
 
 extension LongitudeDirection {
     public static func from(bearing: Double) -> LongitudeDirection {
-        let normalized = bearing.truncatingRemainder(dividingBy: 360)
-        return (normalized > 180 || (normalized < 0 && normalized > -180)) ? .west : .east
+        var normalized = bearing.truncatingRemainder(dividingBy: 360)
+        if normalized < 0 { normalized += 360 }
+        return (normalized > 180) ? .west : .east
     }
 }
 

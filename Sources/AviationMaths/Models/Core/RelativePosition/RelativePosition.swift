@@ -48,15 +48,3 @@ public struct RelativePosition {
         cartesianVector.y
     }
 }
-
-extension RelativePosition: Equatable {
-    public static func == (lhs: RelativePosition, rhs: RelativePosition) -> Bool {
-        lhs.cartesianVector == rhs.cartesianVector
-    }
-}
-
-extension RelativePosition: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(cartesianVector)
-    }
-}

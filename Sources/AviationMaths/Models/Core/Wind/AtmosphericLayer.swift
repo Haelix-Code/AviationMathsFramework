@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents atmospheric conditions at a specific altitude.
-public struct AtmosphericLayer: Equatable {
+public struct AtmosphericLayer: Equatable, Sendable {
     public let altitude: Measurement<UnitLength>
     public let wind: Wind
     public let temperature: Measurement<UnitTemperature>

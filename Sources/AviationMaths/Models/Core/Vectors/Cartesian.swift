@@ -12,23 +12,28 @@ public struct CartesianVector<UnitType: Dimension> {
         self.y = y
     }
 
-    public init(vectors: [CartesianVector<UnitType>]) {
-        self.x = Measurement(
+    public static func sum(_ vectors: [CartesianVector<UnitType>]) -> CartesianVector<UnitType> {
+        CartesianVector(
+            x: Measurement(
             value: vectors.map { $0.x.value }.reduce(0, +),
             unit: vectors.first?.x.unit ?? UnitType.baseUnit()
-        )
-        self.y = Measurement(
+        ),
+            y: Measurement(
             value: vectors.map { $0.y.value }.reduce(0, +),
             unit: vectors.first?.y.unit ?? UnitType.baseUnit()
+        )
         )
     }
 }
 
-extension CartesianVector {
-    /// Convert to polar using aviation convention
-    /// Returns bearing (0° = North, clockwise) and magnitude
-    public var asPolar: PolarVector<UnitType> {
-        PolarVector(bearing: bearing, magnitude: magnitude)
+extension CartesianVector: Vector {
+    public init(bearing: Measurement<UnitAngle>, magnitude: Measurement<UnitType>) {
+        let rad = bearing.converted(to: .radians).value
+        let mag = magnitude.value
+        self.init(
+            x: Measurement(value: mag * sin(rad), unit: magnitude.unit),
+            y: Measurement(value: mag * cos(rad), unit: magnitude.unit)
+        )
     }
 
     public var magnitude: Measurement<UnitType> {
@@ -49,14 +54,12 @@ extension CartesianVector {
 
     /// Angle between this vector and another (always positive, 0-180°)
     public func angle(between other: CartesianVector<UnitType>) -> Measurement<UnitAngle> {
-        let d = dot(other).value
-        let m1 = magnitude.value
-        let m2 = other.magnitude.value
-        guard m1 > 0, m2 > 0 else {
-            return Measurement(value: 0, unit: .radians)
-        }
-        let ratio = max(-1, min(1, d / (m1 * m2)))
+        let ratio = max(-1, min(1, dot(other) / (magnitude.value * other.magnitude.value)))
         return Measurement(value: acos(ratio), unit: .radians)
+    }
+    /// Returns bearing (0° = North, clockwise) and magnitude
+    public var asPolar: PolarVector<UnitType> {
+        PolarVector(bearing: bearing, magnitude: magnitude)
     }
 }
 
