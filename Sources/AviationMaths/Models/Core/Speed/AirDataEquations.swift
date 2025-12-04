@@ -16,7 +16,7 @@ enum AirDataEquations {
 
     private static let seaLevelDensity: Double = ISA.seaLevelDensity.value  // 1.225 kg/m³
 
-    static func impactPressureCoefficient(fromMach mach: Double) -> Double {
+    package static func impactPressureCoefficient(fromMach mach: Double) -> Double {
         let gamma = ISA.ratioSpecificHeats
         return pow(1.0 + (gamma - 1.0) / 2.0 * pow(mach, 2),
                       gamma / (gamma - 1.0)) - 1.0
