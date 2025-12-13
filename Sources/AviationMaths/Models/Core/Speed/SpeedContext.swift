@@ -54,3 +54,27 @@ public struct SpeedContext: Sendable {
         density: ISA.seaLevelDensity
     )
 }
+
+
+extension SpeedContext {
+    /// Initialize with pressure altitude and actual measured temperature
+    /// Automatically computes ΔISA and density.
+    public init(
+        pressureAltitude: Measurement<UnitLength>,
+        measuredTemperature: Measurement<UnitTemperature>
+    ) {
+        let isaTemp = ISA.temperature(at: pressureAltitude)
+        let delta = Measurement<UnitTemperature>(kelvin: measuredTemperature.kelvin - isaTemp.kelvin)
+        let pressure = ISA.pressure(at: pressureAltitude)
+        let density = ISA.densityFromPressureAndTemperature(
+            pressure: pressure,
+            temperature: measuredTemperature
+        )
+        self.init(
+            pressureAltitude: pressureAltitude,
+            temperature: measuredTemperature,
+            deltaISA: delta,
+            density: density
+        )
+    }
+}

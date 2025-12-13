@@ -6,7 +6,7 @@ public enum EASType: SpeedType {}
 public enum TASType: SpeedType {}
 public enum MachType: SpeedType {}
 
-public struct TypedSpeed<Reference: SpeedType>: Sendable {
+public struct TypedSpeed<Reference: SpeedType>: Sendable, Codable, Equatable {
     public let value: Measurement<UnitSpeed>
 
     public init(_ value: Measurement<UnitSpeed>) {
@@ -19,6 +19,10 @@ public struct TypedSpeed<Reference: SpeedType>: Sendable {
 
     public init(mps: Double) {
         self.value = .init(mps: mps)
+    }
+    
+    public var asUnitspeed: Measurement<UnitSpeed> {
+        return value
     }
 }
 
@@ -44,3 +48,5 @@ extension TypedSpeed where Reference == TASType {
         return CAS(speed.cas)
     }
 }
+
+

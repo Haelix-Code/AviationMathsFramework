@@ -1,4 +1,4 @@
-public enum VerticalReference: String, Codable, CaseIterable, Sendable {
+public enum VerticalReference: String, Codable, CaseIterable, Sendable, Equatable {
     case agl
     case amsl
     case pressureAltitude

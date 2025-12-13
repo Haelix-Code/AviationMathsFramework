@@ -1,4 +1,4 @@
-extension Altitude: Equatable {
+extension Altitude {
     public static func == (lhs: Altitude, rhs: Altitude) -> Bool {
         // Compare in AMSL unless both have ground elevation (then use AGL)
         if lhs.context.groundElevation != nil && rhs.context.groundElevation != nil {

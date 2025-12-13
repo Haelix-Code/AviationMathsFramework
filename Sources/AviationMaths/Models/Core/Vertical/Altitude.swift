@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Altitude: Sendable {
+public struct Altitude: Codable, Equatable, Sendable {
     public let value: Measurement<UnitLength>
     public let reference: VerticalReference
     public let context: AltitudeContext

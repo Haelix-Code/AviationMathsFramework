@@ -1,46 +1,14 @@
-// File: Sources/AviationMaths/Models/Core/Vertical/AltitudeContext.swift
 import Foundation
 
 /// Context for altitude conversions, defining the atmospheric conditions.
-///
-/// ## Creating Contexts
-///
-/// **Standard ISA conditions:**
-/// ```swift
-/// let context = AltitudeContext.standardISA
-/// ```
-///
-/// **Simple QNH-only (no temperature correction):**
-/// ```swift
-/// let context = AltitudeContext.qnhOnly(hectopascals: 1005, groundElevation: .init(feet: 500))
-/// ```
-///
-/// **Full temperature profile:**
-/// ```swift
-/// let context = AltitudeContext.withSurfaceTemperature(
-/// groundElevation: .init(feet: 500),
-/// qnh: .init(hectopascals: 1005),
-/// surfaceTemp: .init(celsius: 22)
-/// )
-/// ```
-///
-/// **Custom (full flexibility):**
-/// ```swift
-/// let context = AltitudeContext(
-/// groundElevation: .init(feet: 500),
-/// qnh: .init(hectopascals: 1005),
-/// surfaceTemperature: .init(celsius: 22),
-/// lapseRate: 0.0055 // Non-standard lapse rate
-/// )
-/// ```
-public struct AltitudeContext: Sendable {
+public struct AltitudeContext: Sendable, Equatable, Codable {
     public let groundElevation: Measurement<UnitLength>?
     public let qnh: Measurement<UnitPressure>?
 
     private let _surfaceTemperature: Measurement<UnitTemperature>?
     private let _seaLevelTemperature: Measurement<UnitTemperature>?
 
-    public let temperatureReferenceAltitude: Measurement<UnitLength>?
+    public let temperatureReferenceAltitudeAMSL: Measurement<UnitLength>?
     public let temperatureAtReference: Measurement<UnitTemperature>?
 
     public let lapseRate: Double?
@@ -108,7 +76,7 @@ public struct AltitudeContext: Sendable {
         qnh: Measurement<UnitPressure>? = nil,
         surfaceTemperature: Measurement<UnitTemperature>? = nil,
         seaLevelTemperature: Measurement<UnitTemperature>? = nil,
-        temperatureReferenceAltitude: Measurement<UnitLength>? = nil,
+        temperatureReferenceAltitudeAMSL: Measurement<UnitLength>? = nil,
         temperatureAtReference: Measurement<UnitTemperature>? = nil,
         lapseRate: Double? = nil
     ) {
@@ -116,7 +84,7 @@ public struct AltitudeContext: Sendable {
         self.qnh = qnh
         self._surfaceTemperature = surfaceTemperature
         self._seaLevelTemperature = seaLevelTemperature
-        self.temperatureReferenceAltitude = temperatureReferenceAltitude
+        self.temperatureReferenceAltitudeAMSL = temperatureReferenceAltitudeAMSL
         self.temperatureAtReference = temperatureAtReference
 
         // Calculate lapse rate if not provided but we have the data
@@ -124,14 +92,14 @@ public struct AltitudeContext: Sendable {
             self.lapseRate = lapseRate
         } else if let surfTemp = surfaceTemperature,
                   let altTemp = temperatureAtReference,
-                  let tempAlt = temperatureReferenceAltitude,
+                  let tempAlt = temperatureReferenceAltitudeAMSL,
                   let elev = groundElevation {
             let temperatureDifference = surfTemp.kelvin - altTemp.kelvin
             let altitudeDifference = tempAlt.meters - elev.meters
             self.lapseRate = altitudeDifference != 0 ? temperatureDifference / altitudeDifference : nil
         } else if let slTemp = seaLevelTemperature,
                   let altTemp = temperatureAtReference,
-                  let tempAlt = temperatureReferenceAltitude {
+                  let tempAlt = temperatureReferenceAltitudeAMSL {
             let temperatureDifference = slTemp.kelvin - altTemp.kelvin
             let altitudeDifference = tempAlt.meters
             self.lapseRate = altitudeDifference != 0 ? temperatureDifference / altitudeDifference : nil

@@ -63,5 +63,12 @@ extension CartesianVector: Vector {
     }
 }
 
+public extension CartesianVector {
+    /// Zero vector: (0, 0) in Cartesian coordinates.
+    static var zero: CartesianVector<UnitType> {
+        return CartesianVector(x: Measurement(value: 0, unit: UnitType.baseUnit()), y: Measurement(value: 0, unit: UnitType.baseUnit()))
+    }
+}
+
 public typealias LengthCartesianVector = CartesianVector<UnitLength>
 public typealias SpeedCartesianVector = CartesianVector<UnitSpeed>

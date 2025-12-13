@@ -1,7 +1,7 @@
 import Foundation
 
 public struct Wind: Equatable, Sendable {
-    public let altitude: Measurement<UnitLength>
+    public let altitude: Measurement<UnitLength> // AMSL
     public let fromDirection: Measurement<UnitAngle> // Direction wind blows FROM
     public let speed: Measurement<UnitSpeed>
 
@@ -15,7 +15,6 @@ public struct Wind: Equatable, Sendable {
         self.speed = speed
     }
 
-    /// Direction wind is blowing TO (opposite of fromDirection)
     public var toDirection: Measurement<UnitAngle> {
         Measurement(value: fromDirection.degrees + 180, unit: .degrees).normalized
     }
@@ -41,30 +40,29 @@ public extension Wind {
     }
 }
 
-extension Wind: Encodable {
-    enum CodingKeys: String, CodingKey {
-        case altitude
-        case fromDirection
-        case speed
+extension Wind: Codable {
+
+    private struct Scalar: Codable { let value: Double; let unit: String }
+
+    private enum UnitKeys: String, CodingKey { case altitude, speed, direction }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: UnitKeys.self)
+
+        let a = try c.decode(Scalar.self, forKey: .altitude)
+        let s = try c.decode(Scalar.self, forKey: .speed)
+        let d = try c.decode(Scalar.self, forKey: .direction)
+
+        altitude = (a.unit == "ft") ? .init(feet: a.value) : .init(meters: a.value)
+        speed    = (s.unit == "kn") ? .init(knots: s.value) : .init(mps: s.value)
+        fromDirection = .init(degrees: d.value).normalized
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(altitude.meters, forKey: .altitude)
-        try container.encode(fromDirection.degrees, forKey: .fromDirection)
-        try container.encode(speed.mps, forKey: .speed)
+        var c = encoder.container(keyedBy: UnitKeys.self)
+        try c.encode(Scalar(value: altitude.converted(to: .feet).value, unit: "ft"), forKey: .altitude)
+        try c.encode(Scalar(value: speed.converted(to: .knots).value, unit: "kn"), forKey: .speed)
+        try c.encode(Scalar(value: fromDirection.degrees, unit: "°"), forKey: .direction)
     }
 }
 
-extension Wind: Decodable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let altitudeMeters = try container.decode(Double.self, forKey: .altitude)
-        let directionDegrees = try container.decode(Double.self, forKey: .fromDirection)
-        let speedMPS = try container.decode(Double.self, forKey: .speed)
-
-        self.altitude = .init(meters: altitudeMeters)
-        self.fromDirection = .init(degrees: directionDegrees)
-        self.speed = .init(mps: speedMPS)
-    }
-}
