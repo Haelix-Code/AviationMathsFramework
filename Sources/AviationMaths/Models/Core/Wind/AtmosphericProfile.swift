@@ -23,7 +23,7 @@ public struct AtmosphericProfileBuilder {
     }
 }
 
-public struct AtmosphericProfile: Codable, Equatable, Sendable  {
+public struct AtmosphericProfile: Codable, Equatable, Sendable {
     public let layers: [AtmosphericLayer]
 
     public init(@AtmosphericProfileBuilder _ builder: () -> [AtmosphericLayer]) {

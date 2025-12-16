@@ -41,8 +41,8 @@ public struct Bearing: Hashable, Codable, Sendable {
     public var perpendiculars: (left: Bearing, right: Bearing) {
         (Bearing(degrees: _degrees - 90), Bearing(degrees: _degrees + 90))
     }
-    
-    public var asMeasurement: Measurement<UnitAngle>{
+
+    public var asMeasurement: Measurement<UnitAngle> {
         Measurement(value: _degrees, unit: .degrees)
     }
 

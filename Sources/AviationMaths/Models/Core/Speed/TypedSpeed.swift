@@ -20,7 +20,7 @@ public struct TypedSpeed<Reference: SpeedType>: Sendable, Codable, Equatable {
     public init(mps: Double) {
         self.value = .init(mps: mps)
     }
-    
+
     public var asUnitspeed: Measurement<UnitSpeed> {
         return value
     }
@@ -48,5 +48,3 @@ extension TypedSpeed where Reference == TASType {
         return CAS(speed.cas)
     }
 }
-
-

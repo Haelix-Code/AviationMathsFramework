@@ -15,7 +15,7 @@ extension VerticalReference {
             )
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.abbreviation)

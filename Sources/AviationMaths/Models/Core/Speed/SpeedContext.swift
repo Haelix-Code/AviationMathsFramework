@@ -55,7 +55,6 @@ public struct SpeedContext: Sendable {
     )
 }
 
-
 extension SpeedContext {
     /// Initialize with pressure altitude and actual measured temperature
     /// Automatically computes ΔISA and density.

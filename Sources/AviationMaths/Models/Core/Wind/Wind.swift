@@ -65,4 +65,3 @@ extension Wind: Codable {
         try c.encode(Scalar(value: fromDirection.degrees, unit: "°"), forKey: .direction)
     }
 }
-
