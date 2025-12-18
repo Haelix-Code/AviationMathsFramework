@@ -15,8 +15,14 @@ public struct SpeedContext: Sendable {
         guard let altitude = pressureAltitude else { return nil }
         let delta = deltaISA ?? .init(kelvin: 0)
         let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
-        let temperature = ISA.temperature(at: altitude, deltaISA: delta)
-        let rho = ISA.densityFromPressureAndTemperature(pressure: pressure, temperature: temperature)
+        let temp: Measurement<UnitTemperature>
+        if let t = temperature {
+            temp = t
+        } else {
+            let delta = deltaISA ?? .init(kelvin: 0)
+            temp = ISA.temperature(at: altitude, deltaISA: delta)
+        }
+        let rho = ISA.densityFromPressureAndTemperature(pressure: pressure, temperature: temp)
 
         return rho
     }
@@ -24,8 +30,14 @@ public struct SpeedContext: Sendable {
     public var speedOfSound: Measurement<UnitSpeed>? {
         guard let altitude = pressureAltitude else { return nil }
         let delta = deltaISA ?? .init(kelvin: 0)
-        let temperature = ISA.temperature(at: altitude, deltaISA: delta)
-        let speed = ISA.speedOfSoundFromTemperature(temperature: temperature)
+        let temp: Measurement<UnitTemperature>
+        if let t = temperature {
+            temp = t
+        } else {
+            let delta = deltaISA ?? .init(kelvin: 0)
+            temp = ISA.temperature(at: altitude, deltaISA: delta)
+        }
+        let speed = ISA.speedOfSoundFromTemperature(temperature: temp)
         return speed
     }
 
