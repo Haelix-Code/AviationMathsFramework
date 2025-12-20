@@ -17,8 +17,8 @@ public struct WindTriangle: Sendable {
         wind: Wind
     ) -> SpeedCartesianVector {
         let airVector = SpeedPolar(bearing: heading, magnitude: tas).asCartesianVector
-        let windVector = wind.vector
-        return airVector + windVector
+        let windVectorToDirection = CartesianVector(bearing: wind.toDirection, magnitude: wind.speed)
+        return airVector + windVectorToDirection
     }
 
     /// Calculate ground vector as polar coordinates (track and groundspeed).
@@ -174,4 +174,29 @@ public struct WindTriangle: Sendable {
         return Measurement(knots: component)
     }
 
+    /// Simple groundspeed calculation:
+    /// GS ≈ TAS − headwindComponent
+    ///
+    /// - Wind direction is FROM (meteorological)
+    /// - Positive headwind reduces GS
+    /// - Crosswind (±90°) contributes zero
+    ///
+    /// This intentionally ignores drift / WCA.
+    public static func simpleGroundspeed(
+        heading: Measurement<UnitAngle>,
+        tas: Measurement<UnitSpeed>,
+        wind: Wind
+    ) -> Measurement<UnitSpeed> {
+          let deltaDeg = (wind.fromDirection.degrees - heading.degrees)
+        print(wind.fromDirection.degrees, heading.degrees)
+          let deltaRad = Measurement<UnitAngle>(degrees: deltaDeg).normalizedSigned.radians
+        
+          // Along-track component (positive = headwind)
+          let headwind = wind.speed.knots * cos(deltaRad)
+
+          // Groundspeed ≈ TAS minus headwind
+          let gsKnots = tas.knots - headwind
+          return Measurement<UnitSpeed>(knots: gsKnots)
+    }
+    
 }

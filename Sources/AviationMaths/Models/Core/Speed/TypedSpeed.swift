@@ -6,7 +6,7 @@ public enum EASType: SpeedType {}
 public enum TASType: SpeedType {}
 public enum MachType: SpeedType {}
 
-public struct TypedSpeed<Reference: SpeedType>: Sendable, Codable, Equatable {
+public struct TypedSpeed<Reference: SpeedType>: Sendable, Equatable {
     public let value: Measurement<UnitSpeed>
 
     public init(_ value: Measurement<UnitSpeed>) {
@@ -46,5 +46,16 @@ extension TypedSpeed where Reference == TASType {
     public func toCAS(context: SpeedContext) -> CAS {
         let speed = Speed(value: value, reference: .trueAirspeed, context: context)
         return CAS(speed.cas)
+    }
+}
+
+extension TypedSpeed: Codable {
+    public init(from decoder: Decoder) throws {
+        let cs = try CodableSpeed(from: decoder)
+        self.value = cs.raw
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        try CodableSpeed(value).encode(to: encoder)
     }
 }
