@@ -101,37 +101,36 @@ final class RelativePositionTests: XCTestCase {
 
     func testPerpendicularBearings_North() {
         let pos = RelativePosition(bearing: .init(degrees: 0), range: .init(meters: 1))
-        let perpendiculars = pos.perpendiculars
+        let (perpendicular1, perpendicular2) = pos.perpendiculars
 
-        XCTAssertEqual(perpendiculars.count, 2)
-        XCTAssertEqual(perpendiculars[0].degrees, 90, accuracy: 0.0001)   // Right (East)
-        XCTAssertEqual(perpendiculars[1].degrees, 270, accuracy: 0.0001)  // Left (West)
+        XCTAssertEqual(perpendicular1.degrees, 90, accuracy: 0.0001)   // Right (East)
+        XCTAssertEqual(perpendicular2.degrees, 270, accuracy: 0.0001)   // Left (West)
     }
 
     func testPerpendicularBearings_East() {
         let pos = RelativePosition(bearing: .init(degrees: 90), range: .init(meters: 1))
-        let perpendiculars = pos.perpendiculars
+        let (perpendicular1, perpendicular2) = pos.perpendiculars
 
-        XCTAssertEqual(perpendiculars[0].degrees, 180, accuracy: 0.0001)  // Right (South)
-        XCTAssertEqual(perpendiculars[1].degrees, 0, accuracy: 0.0001)    // Left (North)
+        XCTAssertEqual(perpendicular1.degrees, 180, accuracy: 0.0001)  // Right (South)
+        XCTAssertEqual(perpendicular2.degrees, 0, accuracy: 0.0001)   // Left (North)
     }
 
     func testPerpendicularBearings_WrappingHigh() {
         // 300° + 90° = 390° → 30°
         let pos = RelativePosition(bearing: .init(degrees: 300), range: .init(meters: 1))
-        let perpendiculars = pos.perpendiculars
+        let (perpendicular1, perpendicular2) = pos.perpendiculars
 
-        XCTAssertEqual(perpendiculars[0].degrees, 30, accuracy: 0.0001)
-        XCTAssertEqual(perpendiculars[1].degrees, 210, accuracy: 0.0001)
+        XCTAssertEqual(perpendicular1.degrees, 30, accuracy: 0.0001)
+        XCTAssertEqual(perpendicular2.degrees, 210, accuracy: 0.0001)
     }
 
     func testPerpendicularBearings_WrappingLow() {
         // 30° - 90° = -60° → 300°
         let pos = RelativePosition(bearing: .init(degrees: 30), range: .init(meters: 1))
-        let perpendiculars = pos.perpendiculars
+        let (perpendicular1, perpendicular2) = pos.perpendiculars
 
-        XCTAssertEqual(perpendiculars[0].degrees, 120, accuracy: 0.0001)
-        XCTAssertEqual(perpendiculars[1].degrees, 300, accuracy: 0.0001)
+        XCTAssertEqual(perpendicular1.degrees, 120, accuracy: 0.0001)
+        XCTAssertEqual(perpendicular2.degrees, 300, accuracy: 0.0001)
     }
 
     func testReciprocalBearing() {

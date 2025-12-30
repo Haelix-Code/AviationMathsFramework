@@ -237,4 +237,13 @@ extension Altitude {
         }
         return result
     }
+    
+    func value(in ref: VerticalReference) -> Measurement<UnitLength> {
+        switch ref {
+        case .agl: return self.agl
+        case .amsl: return self.amsl
+        case .pressureAltitude: return self.pressureAltitude
+        case .trueAltitude: return self.trueAltitude
+        }
+    }
 }

@@ -191,7 +191,6 @@ final class UnitAltitudeTests: XCTestCase {
     }
 
     func testSurfaceTemperatureInput() {
-        // Test using surface temperature (should calculate sea level)
         let context = AltitudeContext(
             groundElevation: .init(feet: 800),
             qnh: ISA.seaLevelPressure,
@@ -199,7 +198,6 @@ final class UnitAltitudeTests: XCTestCase {
             lapseRate: ISA.troposphereLapseRate
         )
 
-        // Should have valid sea level temperature
         XCTAssertNotNil(context.seaLevelTemperature)
 
         let expectedSLTemp = 15 + (6.5/1000 * 800 * 0.3048)

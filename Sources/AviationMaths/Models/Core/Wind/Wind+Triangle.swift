@@ -188,7 +188,6 @@ public struct WindTriangle: Sendable {
         wind: Wind
     ) -> Measurement<UnitSpeed> {
           let deltaDeg = (wind.fromDirection.degrees - heading.degrees)
-        print(wind.fromDirection.degrees, heading.degrees)
           let deltaRad = Measurement<UnitAngle>(degrees: deltaDeg).normalizedSigned.radians
         
           // Along-track component (positive = headwind)

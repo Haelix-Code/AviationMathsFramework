@@ -5,6 +5,8 @@ public extension Measurement where UnitType == UnitLength {
 
     init(meters value: Double) { self.init(value: value, unit: .meters) }
 
+    init(nauticalMiles value: Double) { self.init(value: value, unit: .nauticalMiles)}
+    
     var feet: Double {
         self.converted(to: .feet).value
     }

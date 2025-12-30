@@ -28,7 +28,7 @@ public struct RelativePosition: Sendable {
         bearing.reciprocal
     }
 
-    public var perpendiculars: [Measurement<UnitAngle>] {
+    public var perpendiculars: (Measurement<UnitAngle>, Measurement<UnitAngle>) {
         polarCoordinate.bearing.perpendiculars
     }
 

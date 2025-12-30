@@ -5,10 +5,10 @@ extension Measurement<UnitAngle> {
         Measurement(value: self.degrees + 180, unit: .degrees).normalized
     }
 
-    public var perpendiculars: [Measurement<UnitAngle>] {
-        return [
+    public var perpendiculars: (Measurement<UnitAngle>, Measurement<UnitAngle>) {
+        return (
             Measurement(value: self.degrees + 90, unit: .degrees).normalized,
             Measurement(value: self.degrees - 90, unit: .degrees).normalized
-        ]
+        )
     }
 }
