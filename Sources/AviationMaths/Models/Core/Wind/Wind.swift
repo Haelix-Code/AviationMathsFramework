@@ -33,9 +33,9 @@ public struct Wind: Equatable, Sendable {
 }
 
 public extension Wind {
-    init(feet: Double, knots: Double, bearingFrom: Double) {
+    init(feet: Double, knots: Double, fromDirection: Double) {
         self.altitude = .init(feet: feet)
-        self.fromDirection = .init(degrees: bearingFrom)
+        self.fromDirection = .init(degrees: fromDirection)
         self.speed = .init(knots: knots)
     }
 }

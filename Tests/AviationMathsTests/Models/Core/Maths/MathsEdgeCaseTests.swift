@@ -98,7 +98,7 @@ final class EdgeCaseTests: XCTestCase {
         // What happens when wind speed = TAS and is a direct crosswind?
         let heading = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 100, bearingFrom: 90) // 100kt from right
+        let wind = Wind(feet: 0, knots: 100, fromDirection: 90) // 100kt from right
 
         // Should still produce valid result
         let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
@@ -109,7 +109,7 @@ final class EdgeCaseTests: XCTestCase {
         // Flying into a headwind stronger than your airspeed = going backwards
         let heading = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 50)
-        let wind = Wind(feet: 0, knots: 100, bearingFrom: 0) // 100kt headwind
+        let wind = Wind(feet: 0, knots: 100, fromDirection: 0) // 100kt headwind
 
         let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
 

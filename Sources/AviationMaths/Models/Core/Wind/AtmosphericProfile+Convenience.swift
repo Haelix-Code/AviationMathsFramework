@@ -14,8 +14,8 @@ public extension AtmosphericProfile {
         let layers = winds.map { w in
             AtmosphericLayer(
                 altitude: w.altitude,
-                windFromDirection: w.fromDirection,
-                windSpeed: w.speed,
+                fromDirection: w.fromDirection,
+                speed: w.speed,
                 temperature: temp(at: w.altitude)
             )
         }

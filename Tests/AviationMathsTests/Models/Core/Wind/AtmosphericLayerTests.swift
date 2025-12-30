@@ -5,8 +5,8 @@ final class AtmosphericLayerTests: XCTestCase {
     func test_initWithComponents_createsLayerCorrectly() {
         let layer = AtmosphericLayer(
             altitude: .init(feet: 10000),
-            windFromDirection: .init(degrees: 280),
-            windSpeed: .init(knots: 40),
+            fromDirection: .init(degrees: 280),
+            speed: .init(knots: 40),
             temperature: .init(celsius: -10)
         )
 
@@ -20,14 +20,14 @@ final class AtmosphericLayerTests: XCTestCase {
         let layers = [
             AtmosphericLayer(
                 altitude: .init(feet: 1000),
-                windFromDirection: .init(degrees: 180),
-                windSpeed: .init(knots: 10),
+                fromDirection: .init(degrees: 180),
+                speed: .init(knots: 10),
                 temperature: .init(celsius: 15)
             ),
             AtmosphericLayer(
                 altitude: .init(feet: 5000),
-                windFromDirection: .init(degrees: 220),
-                windSpeed: .init(knots: 25),
+                fromDirection: .init(degrees: 220),
+                speed: .init(knots: 25),
                 temperature: .init(celsius: 5)
             )
         ]
@@ -47,14 +47,14 @@ final class AtmosphericLayerTests: XCTestCase {
         let layers = [
             AtmosphericLayer(
                 altitude: .init(feet: 5000),
-                windFromDirection: .init(degrees: 270),
-                windSpeed: .init(knots: 25),
+                fromDirection: .init(degrees: 270),
+                speed: .init(knots: 25),
                 temperature: .init(celsius: 10)
             ),
             AtmosphericLayer(
                 altitude: .init(feet: 10000),
-                windFromDirection: .init(degrees: 280),
-                windSpeed: .init(knots: 40),
+                fromDirection: .init(degrees: 280),
+                speed: .init(knots: 40),
                 temperature: .init(celsius: 0)
             )
         ]
@@ -68,14 +68,14 @@ final class AtmosphericLayerTests: XCTestCase {
         let layers = [
             AtmosphericLayer(
                 altitude: .init(feet: 10000),
-                windFromDirection: .init(degrees: 280),
-                windSpeed: .init(knots: 40),
+                fromDirection: .init(degrees: 280),
+                speed: .init(knots: 40),
                 temperature: .init(celsius: 0)
             ),
             AtmosphericLayer(
                 altitude: .init(feet: 5000),
-                windFromDirection: .init(degrees: 270),
-                windSpeed: .init(knots: 25),
+                fromDirection: .init(degrees: 270),
+                speed: .init(knots: 25),
                 temperature: .init(celsius: 10)
             )
         ]
@@ -90,33 +90,33 @@ final class AtmosphericLayerTests: XCTestCase {
         let sounding = [
             AtmosphericLayer(
                 altitude: .init(feet: 1000),
-                windFromDirection: .init(degrees: 190),
-                windSpeed: .init(knots: 8),
+                fromDirection: .init(degrees: 190),
+                speed: .init(knots: 8),
                 temperature: .init(celsius: 12)),
             AtmosphericLayer(
                 altitude: .init(feet: 3000),
-                windFromDirection: .init(degrees: 205),
-                windSpeed: .init(knots: 15),
+                fromDirection: .init(degrees: 205),
+                speed: .init(knots: 15),
                 temperature: .init(celsius: 8)),
             AtmosphericLayer(
                 altitude: .init(feet: 5000),
-                windFromDirection: .init(degrees: 220),
-                windSpeed: .init(knots: 22),
+                fromDirection: .init(degrees: 220),
+                speed: .init(knots: 22),
                 temperature: .init(celsius: 4)),
             AtmosphericLayer(
                 altitude: .init(feet: 8000),
-                windFromDirection: .init(degrees: 250),
-                windSpeed: .init(knots: 35),
+                fromDirection: .init(degrees: 250),
+                speed: .init(knots: 35),
                 temperature: .init(celsius: -2)),
             AtmosphericLayer(
                 altitude: .init(feet: 10000),
-                windFromDirection: .init(degrees: 270),
-                windSpeed: .init(knots: 45),
+                fromDirection: .init(degrees: 270),
+                speed: .init(knots: 45),
                 temperature: .init(celsius: -8)),
             AtmosphericLayer(
                 altitude: .init(feet: 14000),
-                windFromDirection: .init(degrees: 280),
-                windSpeed: .init(knots: 60),
+                fromDirection: .init(degrees: 280),
+                speed: .init(knots: 60),
                 temperature: .init(celsius: -18))
         ]
 
@@ -129,7 +129,7 @@ final class AtmosphericLayerTests: XCTestCase {
     }
 
     func testInitAndProperties() {
-        let wind = Wind(feet: 5000, knots: 30, bearingFrom: 180)
+        let wind = Wind(feet: 5000, knots: 30, fromDirection: 180)
         let layer = AtmosphericLayer(wind: wind,
                                      temperature: .init(celsius: -5))
 
@@ -142,14 +142,14 @@ final class AtmosphericLayerTests: XCTestCase {
         let layers = [
             AtmosphericLayer(
                 altitude: .init(feet: 0),
-                windFromDirection: .init(degrees: 0),
-                windSpeed: .init(knots: 10),
+                fromDirection: .init(degrees: 0),
+                speed: .init(knots: 10),
                 temperature: .init(celsius: 20)
             ),
             AtmosphericLayer(
                 altitude: .init(feet: 10000),
-                windFromDirection: .init(degrees: 180),
-                windSpeed: .init(knots: 40),
+                fromDirection: .init(degrees: 180),
+                speed: .init(knots: 40),
                 temperature: .init(celsius: -10)
             )
         ]
@@ -163,12 +163,12 @@ final class AtmosphericLayerTests: XCTestCase {
     func testTemperatureInterpolation() {
         let layers = [
             AtmosphericLayer(altitude: .init(feet: 0),
-                             windFromDirection: .init(degrees: 0),
-                             windSpeed: .init(knots: 0),
+                             fromDirection: .init(degrees: 0),
+                             speed: .init(knots: 0),
                              temperature: .init(celsius: 20)),
             AtmosphericLayer(altitude: .init(feet: 10000),
-                             windFromDirection: .init(degrees: 0),
-                             windSpeed: .init(knots: 0),
+                             fromDirection: .init(degrees: 0),
+                             speed: .init(knots: 0),
                              temperature: .init(celsius: 0))
         ]
 
@@ -180,12 +180,12 @@ final class AtmosphericLayerTests: XCTestCase {
     func testTemperatureOutOfRange() {
         let layers = [
             AtmosphericLayer(altitude: .init(feet: 1000),
-                             windFromDirection: .init(degrees: 0),
-                             windSpeed: .init(knots: 0),
+                             fromDirection: .init(degrees: 0),
+                             speed: .init(knots: 0),
                              temperature: .init(celsius: 10)),
             AtmosphericLayer(altitude: .init(feet: 2000),
-                             windFromDirection: .init(degrees: 0),
-                             windSpeed: .init(knots: 0),
+                             fromDirection: .init(degrees: 0),
+                             speed: .init(knots: 0),
                              temperature: .init(celsius: 0))
         ]
 
@@ -196,8 +196,8 @@ final class AtmosphericLayerTests: XCTestCase {
     func testAtmosphericLayerCodableRoundtrip() throws {
         let layer = AtmosphericLayer(
             altitude: .init(meters: 1000),
-            windFromDirection: .init(degrees: 270),
-            windSpeed: .init(mps: 15),
+            fromDirection: .init(degrees: 270),
+            speed: .init(mps: 15),
             temperature: .init(celsius: -2)
         )
 

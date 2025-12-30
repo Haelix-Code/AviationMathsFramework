@@ -50,13 +50,13 @@ extension AtmosphericLayer {
     public static func layer(
         altitude: Double,
         windFrom: Double,
-        windSpeed: Double,
+        speed: Double,
         temperature: Double
     ) -> AtmosphericLayer {
         AtmosphericLayer(
             altitude: .init(feet: altitude),
-            windFromDirection: .init(degrees: windFrom),
-            windSpeed: .init(knots: windSpeed),
+            fromDirection: .init(degrees: windFrom),
+            speed: .init(knots: speed),
             temperature: .init(celsius: temperature)
         )
     }

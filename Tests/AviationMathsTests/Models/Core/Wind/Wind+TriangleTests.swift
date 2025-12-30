@@ -6,7 +6,7 @@ final class WindTriangleTests: XCTestCase {
     func testGroundVector_NoWind() {
         let heading = Measurement<UnitAngle>(degrees: 45)
         let tas = Measurement<UnitSpeed>(knots: 120)
-        let wind = Wind(feet: 0, knots: 0, bearingFrom: 0)
+        let wind = Wind(feet: 0, knots: 0, fromDirection: 0)
 
         let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
 
@@ -17,7 +17,7 @@ final class WindTriangleTests: XCTestCase {
     func testGroundVector_PureHeadwind() {
         let heading = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 0) // From North
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 0) // From North
 
         let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
 
@@ -28,7 +28,7 @@ final class WindTriangleTests: XCTestCase {
     func testGroundVector_PureTailwind() {
         let heading = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 180) // From South
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 180) // From South
 
         let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
 
@@ -39,7 +39,7 @@ final class WindTriangleTests: XCTestCase {
     func testGroundVector_RightCrosswind() {
         let heading = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 90) // From East (right)
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 90) // From East (right)
 
         let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
         let drift = WindTriangle.driftAngle(heading: heading, tas: tas, wind: wind)
@@ -53,7 +53,7 @@ final class WindTriangleTests: XCTestCase {
     func testGroundVector_LeftCrosswind() {
         let heading = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 270) // From West (left)
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 270) // From West (left)
 
         let drift = WindTriangle.driftAngle(heading: heading, tas: tas, wind: wind)
 
@@ -63,7 +63,7 @@ final class WindTriangleTests: XCTestCase {
     func testAirVector_NoWind() {
         let track = Measurement<UnitAngle>(degrees: 90)
         let groundspeed = Measurement<UnitSpeed>(knots: 150)
-        let wind = Wind(feet: 0, knots: 0, bearingFrom: 0)
+        let wind = Wind(feet: 0, knots: 0, fromDirection: 0)
 
         let air = WindTriangle.airVectorPolar(track: track, groundspeed: groundspeed, wind: wind)
 
@@ -74,7 +74,7 @@ final class WindTriangleTests: XCTestCase {
     func testAirVector_Headwind() {
         let track = Measurement<UnitAngle>(degrees: 0)
         let groundspeed = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 0) // Headwind
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 0) // Headwind
 
         let air = WindTriangle.airVectorPolar(track: track, groundspeed: groundspeed, wind: wind)
 
@@ -85,7 +85,7 @@ final class WindTriangleTests: XCTestCase {
     func testAirVector_Tailwind() {
         let track = Measurement<UnitAngle>(degrees: 0)
         let groundspeed = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 180) // Tailwind
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 180) // Tailwind
 
         let air = WindTriangle.airVectorPolar(track: track, groundspeed: groundspeed, wind: wind)
 
@@ -96,7 +96,7 @@ final class WindTriangleTests: XCTestCase {
     func testAirVector_Crosswind() {
         let track = Measurement<UnitAngle>(degrees: 0)
         let groundspeed = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 270) // From West (left)
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 270) // From West (left)
 
         let air = WindTriangle.airVectorPolar(track: track, groundspeed: groundspeed, wind: wind)
 
@@ -108,7 +108,7 @@ final class WindTriangleTests: XCTestCase {
     func testHeadingForTrack_Simple() {
         let track = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 100)
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 270) // Left crosswind
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 270) // Left crosswind
 
         let result = WindTriangle.headingForTrack(track: track, tas: tas, wind: wind)
 
@@ -133,7 +133,7 @@ final class WindTriangleTests: XCTestCase {
     func testHeadingForTrack_WindTooStrong() {
         let track = Measurement<UnitAngle>(degrees: 0)
         let tas = Measurement<UnitSpeed>(knots: 50)
-        let wind = Wind(feet: 0, knots: 60, bearingFrom: 90) // Crosswind exceeds TAS
+        let wind = Wind(feet: 0, knots: 60, fromDirection: 90) // Crosswind exceeds TAS
 
         let result = WindTriangle.headingForTrack(track: track, tas: tas, wind: wind)
 
@@ -190,7 +190,7 @@ final class WindTriangleTests: XCTestCase {
 
     func testWind_RoundTrip() {
         // Create a scenario, calculate wind, then verify
-        let originalWind = Wind(feet: 10000, knots: 35, bearingFrom: 225)
+        let originalWind = Wind(feet: 10000, knots: 35, fromDirection: 225)
         let heading = Measurement<UnitAngle>(degrees: 90)
         let tas = Measurement<UnitSpeed>(knots: 180)
 
@@ -212,7 +212,7 @@ final class WindTriangleTests: XCTestCase {
     }
 
     func testHeadwindComponent_PureHeadwind() {
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 0)
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 0)
         let track = Measurement<UnitAngle>(degrees: 0)
 
         let headwind = WindTriangle.headwindComponent(wind: wind, track: track)
@@ -221,7 +221,7 @@ final class WindTriangleTests: XCTestCase {
     }
 
     func testHeadwindComponent_PureTailwind() {
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 180)
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 180)
         let track = Measurement<UnitAngle>(degrees: 0)
 
         let headwind = WindTriangle.headwindComponent(wind: wind, track: track)
@@ -230,7 +230,7 @@ final class WindTriangleTests: XCTestCase {
     }
 
     func testHeadwindComponent_Crosswind() {
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 90)
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 90)
         let track = Measurement<UnitAngle>(degrees: 0)
 
         let headwind = WindTriangle.headwindComponent(wind: wind, track: track)
@@ -239,7 +239,7 @@ final class WindTriangleTests: XCTestCase {
     }
 
     func testHeadwindComponent_Quartering() {
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 45) // From NE
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 45) // From NE
         let track = Measurement<UnitAngle>(degrees: 0) // Tracking North
 
         let headwind = WindTriangle.headwindComponent(wind: wind, track: track)
@@ -249,7 +249,7 @@ final class WindTriangleTests: XCTestCase {
     }
 
     func testCrosswindComponent_FromRight() {
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 90) // From East
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 90) // From East
         let track = Measurement<UnitAngle>(degrees: 0) // Tracking North
 
         let crosswind = WindTriangle.crosswindComponent(wind: wind, track: track)
@@ -258,7 +258,7 @@ final class WindTriangleTests: XCTestCase {
     }
 
     func testCrosswindComponent_FromLeft() {
-        let wind = Wind(feet: 0, knots: 20, bearingFrom: 270) // From West
+        let wind = Wind(feet: 0, knots: 20, fromDirection: 270) // From West
         let track = Measurement<UnitAngle>(degrees: 0) // Tracking North
 
         let crosswind = WindTriangle.crosswindComponent(wind: wind, track: track)

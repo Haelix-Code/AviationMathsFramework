@@ -4,22 +4,27 @@ public struct Speed: Sendable {
     public let value: Measurement<UnitSpeed>
     public let reference: SpeedReference
     public let context: SpeedContext
-
     public let machValue: Double?
-
-    private var localSpeedOfSound: Double {
+        
+    private var localSpeedOfSound: Double? {
         guard let s = context.speedOfSound else {
-            preconditionFailure("Speed of sound missing in SpeedContext")
+            return nil
         }
         return s.mps
     }
 
     public init(value: Measurement<UnitSpeed>, reference: SpeedReference, context: SpeedContext) {
-        precondition(reference != .machNumber, "Use init(mach:context:) for Mach number")
-        self.value = value
-        self.reference = reference
-        self.context = context
-        self.machValue = nil
+        if reference == .machNumber {
+            self.machValue = value.value
+            self.reference = .machNumber
+            self.context = context
+            self.value = .init(mps: 0)
+        } else {
+            self.value = value
+            self.reference = reference
+            self.context = context
+            self.machValue = nil
+        }
     }
 
     public init(mach: Double, context: SpeedContext) {
@@ -55,97 +60,107 @@ public struct Speed: Sendable {
 
     // MARK: - Computed Properties for Each Reference
 
+    // CAS - will crash if context is insufficient
+    /// - Warning: Use `casIfPossible` or `asCAS()` for safer alternatives
     public var cas: Measurement<UnitSpeed> {
-        reference == .calibratedAirspeed ? value : convertToCAS()
+        reference == .calibratedAirspeed ? value : try! convertToCAS()
     }
-
+    
+    /// EAS - will crash if context is insufficient
+    /// - Warning: Use `easIfPossible` or `asEAS()` for safer alternatives
     public var eas: Measurement<UnitSpeed> {
-        reference == .equivalentAirspeed ? value : convertToEAS()
+        reference == .equivalentAirspeed ? value : try! convertToEAS()
     }
-
+    
+    /// TAS - will crash if context is insufficient
+    /// - Warning: Use `tasIfPossible` or `asTAS()` for safer alternatives
     public var tas: Measurement<UnitSpeed> {
-        reference == .trueAirspeed ? value : convertToTAS()
+        reference == .trueAirspeed ? value : try! convertToTAS()
     }
-
+    
+    /// Mach - will crash if context is insufficient
+    /// - Warning: Use `machIfPossible` or `asMach()` for safer alternatives
     public var mach: Double {
-        reference == .machNumber ? machValue! : convertToMach()
+        reference == .machNumber ? machValue! : try! convertToMach()
     }
 
-    private func convertToCAS() -> Measurement<UnitSpeed> {
+    internal func convertToCAS() throws -> Measurement<UnitSpeed> {
         guard let delta = context.relativePressure else {
-            preconditionFailure("Pressure altitude required for CAS conversion")
+            throw SpeedConversionError.missingPressureAltitude
         }
-
+        
         switch reference {
         case .calibratedAirspeed:
             return value
-
+            
         case .equivalentAirspeed:
             return AirDataEquations.calibratedAirspeed(
                 fromEquivalentAirspeed: value,
                 relativePressure: delta
             )
-
+            
         case .trueAirspeed:
-            return convertToEAS().asCAS(context: context)
-
+            let eas = try convertToEAS()
+            return try Speed(value: eas, reference: .equivalentAirspeed, context: context)
+                .convertToCAS()
+            
         case .machNumber:
-            let tas = convertToTAS()
-            let speedFromTas = Speed(value: tas, reference: .trueAirspeed, context: context)
-            return speedFromTas.cas
+            let tas = try convertToTAS()
+            return try Speed(value: tas, reference: .trueAirspeed, context: context)
+                .convertToCAS()
         }
     }
 
-    private func convertToEAS() -> Measurement<UnitSpeed> {
+    internal func convertToEAS() throws -> Measurement<UnitSpeed> {
         guard let delta = context.relativePressure else {
-            preconditionFailure("Pressure altitude required for EAS conversion")
+            throw SpeedConversionError.missingPressureAltitude
         }
-
+        
         switch reference {
         case .calibratedAirspeed:
             return AirDataEquations.equivalentAirspeed(
                 fromCalibratedAirspeed: value,
                 relativePressure: delta
             )
-
+            
         case .equivalentAirspeed:
             return value
-
+            
         case .trueAirspeed:
             guard let density = context.density else {
-                preconditionFailure("Density/temperature required for EAS conversion from TAS")
+                throw SpeedConversionError.missingDensity
             }
             return AirDataEquations.equivalentAirspeed(
                 fromTrueAirspeed: value,
                 density: density
             )
-
+            
         case .machNumber:
-            let tas = convertToTAS()
-            let speedFromTAS = Speed(value: tas, reference: .trueAirspeed, context: context)
-            return speedFromTAS.eas
+            let tas = try convertToTAS()
+            return try Speed(value: tas, reference: .trueAirspeed, context: context)
+                .convertToEAS()
         }
     }
 
-    private func convertToTAS() -> Measurement<UnitSpeed> {
+    internal func convertToTAS() throws -> Measurement<UnitSpeed> {
         guard let density = context.density else {
-            preconditionFailure("Density/temperature required for TAS conversion")
+            throw SpeedConversionError.missingDensity
         }
-
+        
         switch reference {
         case .calibratedAirspeed, .equivalentAirspeed:
-            let easValue = reference == .equivalentAirspeed ? value : convertToEAS()
+            let easValue = reference == .equivalentAirspeed ? value : try convertToEAS()
             return AirDataEquations.trueAirspeed(
                 fromEquivalentAirspeed: easValue,
                 density: density
             )
-
+            
         case .trueAirspeed:
             return value
-
+            
         case .machNumber:
             guard let speedOfSound = context.speedOfSound else {
-                preconditionFailure("Temperature required for TAS conversion from Mach")
+                throw SpeedConversionError.missingTemperature
             }
             return AirDataEquations.trueAirspeed(
                 fromMachNumber: machValue!,
@@ -153,13 +168,13 @@ public struct Speed: Sendable {
             )
         }
     }
-
-    private func convertToMach() -> Double {
+    
+    internal func convertToMach() throws -> Double {
         guard let speedOfSound = context.speedOfSound else {
-            preconditionFailure("Temperature required for Mach conversion")
+            throw SpeedConversionError.missingTemperature
         }
-
-        let tasValue = reference == .trueAirspeed ? value : convertToTAS()
+        
+        let tasValue = reference == .trueAirspeed ? value : try convertToTAS()
         return AirDataEquations.machNumber(
             fromTrueAirspeed: tasValue,
             speedOfSound: speedOfSound
