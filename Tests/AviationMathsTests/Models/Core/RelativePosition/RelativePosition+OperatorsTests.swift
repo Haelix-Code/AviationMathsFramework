@@ -98,4 +98,23 @@ final class RelativePositionOperatorTests: XCTestCase {
         XCTAssertEqual(result.bearing.degrees, 270, accuracy: 0.001)
     }
 
+    func testSumAndAverage() {
+        let a = RelativePosition(x: .init(meters: 10), y: .init(meters: 0))
+        let b = RelativePosition(x: .init(meters: 0), y: .init(meters: 20))
+        let c = RelativePosition(x: .init(meters: -5), y: .init(meters: 5))
+
+        let sum = [a, b, c].sum()
+        XCTAssertEqual(sum.x.meters, 5, accuracy: 1e-12)
+        XCTAssertEqual(sum.y.meters, 25, accuracy: 1e-12)
+
+        let avg = [a, b, c].average()
+        XCTAssertNotNil(avg)
+        XCTAssertEqual(avg!.x.meters, 5.0 / 3.0, accuracy: 1e-12)
+        XCTAssertEqual(avg!.y.meters, 25.0 / 3.0, accuracy: 1e-12)
+    }
+
+    func testAverage_emptyReturnsNil() {
+        let empty: [RelativePosition] = []
+        XCTAssertNil(empty.average())
+    }
 }
