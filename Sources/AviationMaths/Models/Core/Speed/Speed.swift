@@ -5,7 +5,7 @@ public struct Speed: Sendable {
     public let reference: SpeedReference
     public let context: SpeedContext
     public let machValue: Double?
-        
+
     private var localSpeedOfSound: Double? {
         guard let s = context.speedOfSound else {
             return nil
@@ -65,19 +65,19 @@ public struct Speed: Sendable {
     public var cas: Measurement<UnitSpeed> {
         reference == .calibratedAirspeed ? value : try! convertToCAS()
     }
-    
+
     /// EAS - will crash if context is insufficient
     /// - Warning: Use `easIfPossible` or `asEAS()` for safer alternatives
     public var eas: Measurement<UnitSpeed> {
         reference == .equivalentAirspeed ? value : try! convertToEAS()
     }
-    
+
     /// TAS - will crash if context is insufficient
     /// - Warning: Use `tasIfPossible` or `asTAS()` for safer alternatives
     public var tas: Measurement<UnitSpeed> {
         reference == .trueAirspeed ? value : try! convertToTAS()
     }
-    
+
     /// Mach - will crash if context is insufficient
     /// - Warning: Use `machIfPossible` or `asMach()` for safer alternatives
     public var mach: Double {
@@ -88,22 +88,22 @@ public struct Speed: Sendable {
         guard let delta = context.relativePressure else {
             throw SpeedConversionError.missingPressureAltitude
         }
-        
+
         switch reference {
         case .calibratedAirspeed:
             return value
-            
+
         case .equivalentAirspeed:
             return AirDataEquations.calibratedAirspeed(
                 fromEquivalentAirspeed: value,
                 relativePressure: delta
             )
-            
+
         case .trueAirspeed:
             let eas = try convertToEAS()
             return try Speed(value: eas, reference: .equivalentAirspeed, context: context)
                 .convertToCAS()
-            
+
         case .machNumber:
             let tas = try convertToTAS()
             return try Speed(value: tas, reference: .trueAirspeed, context: context)
@@ -115,17 +115,17 @@ public struct Speed: Sendable {
         guard let delta = context.relativePressure else {
             throw SpeedConversionError.missingPressureAltitude
         }
-        
+
         switch reference {
         case .calibratedAirspeed:
             return AirDataEquations.equivalentAirspeed(
                 fromCalibratedAirspeed: value,
                 relativePressure: delta
             )
-            
+
         case .equivalentAirspeed:
             return value
-            
+
         case .trueAirspeed:
             guard let density = context.density else {
                 throw SpeedConversionError.missingDensity
@@ -134,7 +134,7 @@ public struct Speed: Sendable {
                 fromTrueAirspeed: value,
                 density: density
             )
-            
+
         case .machNumber:
             let tas = try convertToTAS()
             return try Speed(value: tas, reference: .trueAirspeed, context: context)
@@ -146,7 +146,7 @@ public struct Speed: Sendable {
         guard let density = context.density else {
             throw SpeedConversionError.missingDensity
         }
-        
+
         switch reference {
         case .calibratedAirspeed, .equivalentAirspeed:
             let easValue = reference == .equivalentAirspeed ? value : try convertToEAS()
@@ -154,10 +154,10 @@ public struct Speed: Sendable {
                 fromEquivalentAirspeed: easValue,
                 density: density
             )
-            
+
         case .trueAirspeed:
             return value
-            
+
         case .machNumber:
             guard let speedOfSound = context.speedOfSound else {
                 throw SpeedConversionError.missingTemperature
@@ -168,12 +168,12 @@ public struct Speed: Sendable {
             )
         }
     }
-    
+
     internal func convertToMach() throws -> Double {
         guard let speedOfSound = context.speedOfSound else {
             throw SpeedConversionError.missingTemperature
         }
-        
+
         let tasValue = reference == .trueAirspeed ? value : try convertToTAS()
         return AirDataEquations.machNumber(
             fromTrueAirspeed: tasValue,

@@ -3,7 +3,7 @@ import Foundation
 public extension Measurement where UnitType == UnitLength {
     @inlinable
     init(feet value: Double) { self.init(value: value, unit: .feet) }
-    
+
     @inlinable
     init(meters value: Double) { self.init(value: value, unit: .meters) }
 

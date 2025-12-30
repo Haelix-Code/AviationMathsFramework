@@ -135,7 +135,7 @@ final class ISATests: XCTestCase {
 
         XCTAssertEqual(speedOfSound.value, 306.102, accuracy: 0.001)
     }
-    
+
     func testPressureFromQNHAndAMSL_atSeaLevelEqualsQNH() {
         let qnh = Measurement<UnitPressure>(hectopascals: 1013.25)
         let p = ISA.pressureFromQNHAndAMSL(qnh: qnh, amsl: .init(meters: 0))

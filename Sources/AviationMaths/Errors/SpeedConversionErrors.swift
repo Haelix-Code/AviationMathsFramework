@@ -8,7 +8,7 @@ public enum SpeedConversionError: Error, LocalizedError {
     case invalidFunction(String)
     case insufficientContext(String)
     case other(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .missingPressureAltitude:

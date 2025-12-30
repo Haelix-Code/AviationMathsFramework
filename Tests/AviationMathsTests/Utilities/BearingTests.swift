@@ -67,4 +67,3 @@ final class BearingTests: XCTestCase {
         XCTAssertEqual(String(describing: Bearing(degrees: 360)), "000°")
     }
 }
-
