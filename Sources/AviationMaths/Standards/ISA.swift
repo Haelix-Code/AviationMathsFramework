@@ -274,7 +274,7 @@ extension ISA {
         let speedMS = sqrt(ISA.ratioSpecificHeats * ISA.dryAirGasConstant * temperature.kelvin)
         return .init(mps: speedMS)
     }
-    
+
     public static func pressureFromQNHAndAMSL(
         qnh: Measurement<UnitPressure>,
         amsl: Measurement<UnitLength>

@@ -189,7 +189,7 @@ public struct WindTriangle: Sendable {
     ) -> Measurement<UnitSpeed> {
           let deltaDeg = (wind.fromDirection.degrees - heading.degrees)
           let deltaRad = Measurement<UnitAngle>(degrees: deltaDeg).normalizedSigned.radians
-        
+
           // Along-track component (positive = headwind)
           let headwind = wind.speed.knots * cos(deltaRad)
 
@@ -197,5 +197,5 @@ public struct WindTriangle: Sendable {
           let gsKnots = tas.knots - headwind
           return Measurement<UnitSpeed>(knots: gsKnots)
     }
-    
+
 }

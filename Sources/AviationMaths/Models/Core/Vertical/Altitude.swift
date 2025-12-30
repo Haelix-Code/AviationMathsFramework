@@ -237,7 +237,7 @@ extension Altitude {
         }
         return result
     }
-    
+
     func value(in ref: VerticalReference) -> Measurement<UnitLength> {
         switch ref {
         case .agl: return self.agl

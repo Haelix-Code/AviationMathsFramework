@@ -15,7 +15,7 @@ final class AltitudeArithmeticTests: XCTestCase {
             context: context
         )
     }
-    
+
     func testMidpoint_returnsArithmeticMeanInMeters() throws {
         let lower = makeAltitude(meters: 1000)
         let upper = makeAltitude(meters: 3000)

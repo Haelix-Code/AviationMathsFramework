@@ -12,7 +12,6 @@ public extension SpeedContext {
             ?? ac.temperature(at: amsl)
             ?? ISA.temperature(at: amsl) // or SpeedContext.isaTemperature(at:)
 
-
         if let qnh = ac.qnh {
             return SpeedContext.fromQNHAndAMSL(
                 qnh: qnh,

@@ -38,7 +38,7 @@ public extension SpeedContext {
             measuredPressure: measuredPressure
         )
     }
-    
+
     static func fromQNHAndAMSL(
         qnh: Measurement<UnitPressure>,
         amsl: Measurement<UnitLength>,
