@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SpeedContext: Sendable {
+public struct SpeedContext: Sendable, Equatable, Codable {
     public let pressureAltitude: Measurement<UnitLength>?
     public let temperature: Measurement<UnitTemperature>?
     public let deltaISA: Measurement<UnitTemperature>?
