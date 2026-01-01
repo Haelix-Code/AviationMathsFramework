@@ -142,50 +142,49 @@ final class ISATests: XCTestCase {
 
         XCTAssertEqual(p.hectopascals, qnh.hectopascals, accuracy: 1e-6)
     }
-    
+
     func testPressureAboveSeaLevel_AtTropopause_Exactly() {
         let exactlyAt = ISA(altitudeMeters: 11000, deltaISA: 0)
-        
+
         XCTAssertEqual(exactlyAt.pressure.pascals, 22632.65, accuracy: 0.1,
                        "Pressure at tropopause should match ISA standard")
-        
+
         XCTAssertEqual(exactlyAt.temperature.kelvin, 216.65, accuracy: 0.01,
                        "Temperature at tropopause should be 216.65K")
     }
-        
+
     func testPressureAboveSeaLevel_TropopauseBoundary_Continuity() {
         // Test continuity across the tropopause boundary
         let justBelow = ISA(altitudeMeters: 10999, deltaISA: 0)
         let exactly = ISA(altitudeMeters: 11000, deltaISA: 0)
         let justAbove = ISA(altitudeMeters: 11001, deltaISA: 0)
-        
+
         let diffBelow = abs(justBelow.pressure.pascals - exactly.pressure.pascals)
         let diffAbove = abs(exactly.pressure.pascals - justAbove.pressure.pascals)
-        
+
         XCTAssertLessThan(diffBelow, 10,
                           "Pressure should be continuous approaching tropopause from below")
         XCTAssertLessThan(diffAbove, 10,
                           "Pressure should be continuous leaving tropopause")
-        
+
         XCTAssertEqual(justBelow.temperature.kelvin, exactly.temperature.kelvin, accuracy: 0.1)
     }
-    
+
     func testISA_ExactlyAtTropopause() {
         let isa = ISA(altitudeMeters: 11000, deltaISA: 0)
-        
+
         XCTAssertEqual(isa.temperature.kelvin, 216.65, accuracy: 0.01)
         XCTAssertEqual(isa.pressure.pascals, 22632.1, accuracy: 1.0)
         XCTAssertEqual(isa.density.value, 0.36392, accuracy: 0.00001)
     }
-    
-    
+
     func testDensityCalculation_ConsistentWithPressureAndTemperature() {
         let isa = ISA(altitudeMeters: 5000, deltaISA: 0)
-        
+
         let calculatedDensity = isa.pressure.pascals / (ISA.dryAirGasConstant * isa.temperature.kelvin)
-        
+
         XCTAssertEqual(isa.density.value, calculatedDensity, accuracy: 0.0001,
                        "Density should equal P/(R×T)")
     }
-        
+
 }
