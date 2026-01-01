@@ -8,7 +8,7 @@ import Foundation
 /// References:
 /// - ICAO Standard Atmosphere (Doc 7488)
 /// - US Standard Atmosphere 1976
-enum AirDataEquations {
+internal enum AirDataEquations {
 
     private static let gamma: Double = ISA.ratioSpecificHeats  // 1.4
 

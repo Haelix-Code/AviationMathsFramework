@@ -15,30 +15,43 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
 
     /// Surface temperature (at ground elevation)
     public var surfaceTemperature: Measurement<UnitTemperature>? {
-        if let temp = _surfaceTemperature {
-            return temp
+        if let explicitTemp = _surfaceTemperature {
+            return explicitTemp
         }
-        guard let slTemp = _seaLevelTemperature,
-              let elev = groundElevation,
-              let rate = lapseRate else {
+
+        return calculateSurfaceFromSeaLevel()
+    }
+
+    private func calculateSurfaceFromSeaLevel() -> Measurement<UnitTemperature>? {
+        guard let seaLevelTemp = _seaLevelTemperature,
+              let elevation = groundElevation,
+              let lapse = lapseRate else {
             return nil
         }
-        let surfaceTemp = slTemp.kelvin - rate * elev.meters
-        return .init(kelvin: surfaceTemp)
+
+        let surfaceTempKelvin = seaLevelTemp.kelvin - (lapse * elevation.meters)
+        return .init(kelvin: surfaceTempKelvin)
     }
 
     /// Sea level temperature (at height = 0)
     public var seaLevelTemperature: Measurement<UnitTemperature>? {
-        if let temp = _seaLevelTemperature {
-            return temp
+        if let explicitTemp = _seaLevelTemperature {
+            return explicitTemp
         }
-        guard let surfTemp = _surfaceTemperature,
-              let elev = groundElevation,
-              let rate = lapseRate else {
+
+        return calculateSeaLevelFromSurface()
+    }
+
+    private func calculateSeaLevelFromSurface() -> Measurement<UnitTemperature>? {
+        guard let surfaceTemp = _surfaceTemperature,
+              let elevation = groundElevation,
+              let lapse = lapseRate else {
             return nil
         }
-        let slTemp = surfTemp.kelvin + rate * elev.meters
-        return .init(kelvin: slTemp)
+
+        // Temperature increases going down: T_sl = T_surface + (lapse_rate × elevation)
+        let seaLevelTempKelvin = surfaceTemp.kelvin + (lapse * elevation.meters)
+        return .init(kelvin: seaLevelTempKelvin)
     }
 
     /// Whether this context has sufficient data for true altitude calculations

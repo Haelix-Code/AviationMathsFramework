@@ -22,8 +22,8 @@ public struct ISA {
         .init(value: 1.225, unit: .gramsPerLiter)
     public static let seaLevelSpeedOfSound: Measurement<UnitSpeed> =
         .init(value: 340.294, unit: .metersPerSecond)
-    public static let molarMassDryAir: Double = 0.028964
-    public static let idealGasConstant: Double = 8.3144598
+    internal static let molarMassDryAir: Double = 0.028964
+    internal static let idealGasConstant: Double = 8.3144598
 
     // MARK: - Atmospheric Layer Definitions
 
@@ -97,45 +97,96 @@ public struct ISA {
     }
 
     public var pressure: Measurement<UnitPressure> {
-        let altitudeMeters = altitude.meters
-        let g = Self.standardGravity.value
-        let R = Self.dryAirGasConstant
+            let altitudeMeters = altitude.meters
 
-        var pressurePa = Self.seaLevelPressure.value
-        var currentAlt = Self.troposphereBase.meters
-        var currentTemp = Self.seaLevelTemperature.value
+            // Handle negative altitudes (below sea level)
+            if altitudeMeters < 0 {
+                return pressureBelowSeaLevel(altitudeMeters: altitudeMeters)
+            }
 
-        // Layer 1: Troposphere (-5km - 11km)
-        if altitudeMeters >= 0 {
-            let topAlt = min(altitudeMeters, Self.lowerStratosphereBase.meters)
-            let deltaH = topAlt - currentAlt
-            let L = Self.troposphereLapseRate
-            let tempAtTop = currentTemp - L * deltaH
+            // Calculate through troposphere
+            var state = AtmosphericState(
+                pressure: ISA.seaLevelPressure.pascals,
+                temperature: ISA.seaLevelTemperature.kelvin,
+                altitude: 0.0
+            )
 
-            let exponent = g / (L * R)
-            pressurePa *= pow(tempAtTop / currentTemp, exponent)
+            // Apply troposphere layer (0 to tropopause)
+            if altitudeMeters >= 0 {
+                let topOfTroposphere = min(altitudeMeters, Self.lowerStratosphereBase.meters)
+                state = applyTroposphereLayer(from: state, to: topOfTroposphere)
+            }
 
-            currentAlt = topAlt
-            currentTemp = tempAtTop
-        } else {
-            let L = Self.troposphereLapseRate
-            let deltaH = altitudeMeters
-            let tempAtH = Self.seaLevelTemperature.value - L * deltaH
-            let exponent = g / (L * R)
-            pressurePa = Self.seaLevelPressure.value * pow(tempAtH / Self.seaLevelTemperature.value, exponent)
-        }
-
-        // Layer 2: Lower Stratosphere (11 - 20km)
+            // Apply stratosphere layer if above tropopause
         if altitudeMeters > Self.lowerStratosphereBase.meters {
-            let deltaH = altitudeMeters - currentAlt
-            let tempIsothermal = Self.tropopauseTemperature
+                state = applyStratosphereLayer(from: state, to: altitudeMeters)
+            }
 
-            let exponent = -g * deltaH / (R * tempIsothermal)
-            pressurePa *= exp(exponent.value)
+            return .init(pascals: state.pressure)
         }
 
-        return .init(pascals: pressurePa)
-    }
+        /// Calculates pressure below sea level
+        private func pressureBelowSeaLevel(altitudeMeters: Double) -> Measurement<UnitPressure> {
+            let g = ISA.standardGravity.metersPerSecondSquared
+            let R = ISA.dryAirGasConstant
+            let L = 0.0065  // Lapse rate
+
+            let temperatureAtAltitude = ISA.seaLevelTemperature.kelvin - (L * altitudeMeters)
+            let temperatureRatio = temperatureAtAltitude / ISA.seaLevelTemperature.kelvin
+            let exponent = g / (L * R)
+
+            let pressurePa = ISA.seaLevelPressure.pascals * pow(temperatureRatio, exponent)
+            return .init(pascals: pressurePa)
+        }
+
+        /// Applies pressure change through troposphere (temperature decreases with altitude)
+        private func applyTroposphereLayer(
+            from initialState: AtmosphericState,
+            to targetAltitude: Double
+        ) -> AtmosphericState {
+            let g = ISA.standardGravity.metersPerSecondSquared
+            let R = ISA.dryAirGasConstant
+            let L = 0.0065  // Troposphere lapse rate (K/m)
+
+            let deltaAltitude = targetAltitude - initialState.altitude
+            let finalTemperature = initialState.temperature - (L * deltaAltitude)
+            let temperatureRatio = finalTemperature / initialState.temperature
+            let exponent = g / (L * R)
+
+            let finalPressure = initialState.pressure * pow(temperatureRatio, exponent)
+
+            return AtmosphericState(
+                pressure: finalPressure,
+                temperature: finalTemperature,
+                altitude: targetAltitude
+            )
+        }
+
+        /// Applies pressure change through stratosphere (isothermal layer)
+        private func applyStratosphereLayer(
+            from initialState: AtmosphericState,
+            to targetAltitude: Double
+        ) -> AtmosphericState {
+            let g = ISA.standardGravity.metersPerSecondSquared
+            let R = ISA.dryAirGasConstant
+
+            let deltaAltitude = targetAltitude - initialState.altitude
+            let exponent = -g * deltaAltitude / (R * initialState.temperature)
+            let finalPressure = initialState.pressure * exp(exponent)
+
+            return AtmosphericState(
+                pressure: finalPressure,
+                temperature: initialState.temperature,  // Isothermal
+                altitude: targetAltitude
+            )
+        }
+
+        /// Represents atmospheric state at a given altitude
+        private struct AtmosphericState {
+            let pressure: Double      // Pa
+            let temperature: Double   // K
+            let altitude: Double      // m
+        }
 
     public var density: Measurement<UnitConcentrationMass> {
         let pressurePa = pressure.pascals

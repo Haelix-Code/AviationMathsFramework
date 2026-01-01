@@ -37,33 +37,84 @@ public extension [AtmosphericLayer] {
     func temperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature>? {
         guard !isEmpty else { return nil }
 
-        let sortedLayers = self.sorted { $0.altitude.feet < $1.altitude.feet }
+        let sortedLayers = sorted { $0.altitude.feet < $1.altitude.feet }
 
-        guard altitude.feet >= sortedLayers.first!.altitude.feet,
-              altitude.feet <= sortedLayers.last!.altitude.feet else {
+        guard isWithinRange(altitude: altitude, layers: sortedLayers) else {
             return nil
         }
 
-        if let exactLayer = sortedLayers.first(where: { $0.altitude.feet == altitude.feet }) {
-            return exactLayer.temperature
+        if let exactTemp = findExactMatch(altitude: altitude, in: sortedLayers) {
+            return exactTemp
         }
 
-        guard let upperIndex = sortedLayers.firstIndex(where: { $0.altitude.feet > altitude.feet }) else {
+        return interpolateTemperature(at: altitude, from: sortedLayers)
+    }
+
+    private func isWithinRange(
+        altitude: Measurement<UnitLength>,
+        layers: [Element]
+    ) -> Bool {
+        guard let first = layers.first, let last = layers.last else {
+            return false
+        }
+
+        return altitude.feet >= first.altitude.feet &&
+               altitude.feet <= last.altitude.feet
+    }
+
+    private func findExactMatch(
+        altitude: Measurement<UnitLength>,
+        in layers: [Element]
+    ) -> Measurement<UnitTemperature>? {
+        layers.first(where: { $0.altitude.feet == altitude.feet })?.temperature
+    }
+
+    private func interpolateTemperature(
+        at altitude: Measurement<UnitLength>,
+        from layers: [Element]
+    ) -> Measurement<UnitTemperature>? {
+        guard let upperIndex = layers.firstIndex(where: { $0.altitude.feet > altitude.feet }) else {
             return nil
         }
 
         let lowerIndex = upperIndex - 1
-        let lowerLayer = sortedLayers[lowerIndex]
-        let upperLayer = sortedLayers[upperIndex]
+        let lowerLayer = layers[lowerIndex]
+        let upperLayer = layers[upperIndex]
 
-        let altRange = upperLayer.altitude.feet - lowerLayer.altitude.feet
-        let altDelta = altitude.feet - lowerLayer.altitude.feet
-        let fraction = altDelta / altRange
+        // Linear interpolation
+        let fraction = calculateInterpolationFraction(
+            target: altitude.feet,
+            lower: lowerLayer.altitude.feet,
+            upper: upperLayer.altitude.feet
+        )
 
-        let tempRange = upperLayer.temperature.celsius - lowerLayer.temperature.celsius
-        let interpolatedTemp = lowerLayer.temperature.celsius + (fraction * tempRange)
+        let interpolatedCelsius = linearInterpolate(
+            fraction: fraction,
+            lower: lowerLayer.temperature.celsius,
+            upper: upperLayer.temperature.celsius
+        )
 
-        return Measurement<UnitTemperature>(celsius: interpolatedTemp)
+        return Measurement<UnitTemperature>(celsius: interpolatedCelsius)
+    }
+
+    private func calculateInterpolationFraction(
+        target: Double,
+        lower: Double,
+        upper: Double
+    ) -> Double {
+        let range = upper - lower
+        let delta = target - lower
+        return delta / range
+    }
+
+    /// Linear interpolation between two values
+    private func linearInterpolate(
+        fraction: Double,
+        lower: Double,
+        upper: Double
+    ) -> Double {
+        let range = upper - lower
+        return lower + (fraction * range)
     }
 }
 

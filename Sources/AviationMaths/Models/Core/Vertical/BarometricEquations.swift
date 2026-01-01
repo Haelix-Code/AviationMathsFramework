@@ -1,6 +1,6 @@
 import Foundation
 
-enum BarometricEquations {
+internal enum BarometricEquations {
     // MARK: - Standard Barometric Conversions (ISA)
 
     /// Convert pressure to altitude using barometric formula

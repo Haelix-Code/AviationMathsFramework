@@ -4,7 +4,7 @@ public struct Speed: Sendable {
     public let value: Measurement<UnitSpeed>
     public let reference: SpeedReference
     public let context: SpeedContext
-    public let machValue: Double?
+    internal let machValue: Double?
 
     private var localSpeedOfSound: Double? {
         guard let s = context.speedOfSound else {

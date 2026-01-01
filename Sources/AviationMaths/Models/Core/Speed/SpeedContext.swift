@@ -9,44 +9,53 @@ public struct SpeedContext: Sendable {
     private let measuredPressureOverride: Measurement<UnitPressure>?
 
     public var density: Measurement<UnitConcentrationMass>? {
+        // Return directly if explicitly set
         if let density = _density {
             return density
         }
 
-        guard let altitude = pressureAltitude else { return nil }
-        let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
-        let temp: Measurement<UnitTemperature>
-        if let t = temperature {
-            temp = t
-        } else {
-            let delta = deltaISA ?? .init(kelvin: 0)
-            temp = ISA.temperature(at: altitude, deltaISA: delta)
+        guard let altitude = pressureAltitude else {
+            return nil
         }
-        let rho = ISA.densityFromPressureAndTemperature(pressure: pressure, temperature: temp)
 
-        return rho
+        let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
+        let effectiveTemperature = resolveTemperature(at: altitude)
+
+        return ISA.densityFromPressureAndTemperature(
+            pressure: pressure,
+            temperature: effectiveTemperature
+        )
+    }
+
+    private func resolveTemperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature> {
+        if let explicitTemp = temperature {
+            return explicitTemp
+        }
+
+        let deviation = deltaISA ?? .init(kelvin: 0)
+        return ISA.temperature(at: altitude, deltaISA: deviation)
     }
 
     public var speedOfSound: Measurement<UnitSpeed>? {
-        guard let altitude = pressureAltitude else { return nil }
-        let temp: Measurement<UnitTemperature>
-        if let t = temperature {
-            temp = t
-        } else {
-            let delta = deltaISA ?? .init(kelvin: 0)
-            temp = ISA.temperature(at: altitude, deltaISA: delta)
+        guard let altitude = pressureAltitude else {
+            return nil
         }
-        let speed = ISA.speedOfSoundFromTemperature(temperature: temp)
-        return speed
+
+        let effectiveTemperature = resolveTemperature(at: altitude)
+        return ISA.speedOfSoundFromTemperature(temperature: effectiveTemperature)
     }
 
     public var relativePressure: Double? {
-        if let p = measuredPressureOverride {
-            return p.converted(to: .pascals).value / ISA.seaLevelPressure.pascals
+        if let measuredPressure = measuredPressureOverride {
+            return measuredPressure.pascals / ISA.seaLevelPressure.pascals
         }
-        guard let altitude = pressureAltitude else { return nil }
-        let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
-        return pressure.pascals / ISA.seaLevelPressure.pascals
+
+        guard let altitude = pressureAltitude else {
+            return nil
+        }
+
+        let atmosphericPressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
+        return atmosphericPressure.pascals / ISA.seaLevelPressure.pascals
     }
 
     public init(
