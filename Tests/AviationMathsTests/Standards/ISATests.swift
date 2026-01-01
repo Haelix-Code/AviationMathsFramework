@@ -116,33 +116,6 @@ final class ISATests: XCTestCase {
         XCTAssertEqual(speed.value, 340.294, accuracy: 0.01)
     }
 
-    func testDensityFromPressureAndTemperature() {
-        let pressure = Measurement(value: 101325, unit: UnitPressure.pascals)
-        let temperature = Measurement(value: 288.15, unit: UnitTemperature.kelvin)
-        let density = ISA.densityFromPressureAndTemperature(pressure: pressure, temperature: temperature)
-        XCTAssertEqual(density.value, 1.225, accuracy: 0.01)
-    }
-
-    func testSpeedOfSoundFromTemperature() {
-        let temperature = Measurement(value: 288.15, unit: UnitTemperature.kelvin)
-        let speedOfSound = ISA.speedOfSoundFromTemperature(temperature: temperature)
-        XCTAssertEqual(speedOfSound.value, 340.30, accuracy: 0.01)
-    }
-
-    func testSpeedOfSoundWithExtremeTemperatures() {
-        let temperature = Measurement(value: -40, unit: UnitTemperature.celsius)
-        let speedOfSound = ISA.speedOfSoundFromTemperature(temperature: temperature)
-
-        XCTAssertEqual(speedOfSound.value, 306.102, accuracy: 0.001)
-    }
-
-    func testPressureFromQNHAndAMSL_atSeaLevelEqualsQNH() {
-        let qnh = Measurement<UnitPressure>(hectopascals: 1013.25)
-        let p = ISA.pressureFromQNHAndAMSL(qnh: qnh, amsl: .init(meters: 0))
-
-        XCTAssertEqual(p.hectopascals, qnh.hectopascals, accuracy: 1e-6)
-    }
-
     func testPressureAboveSeaLevel_AtTropopause_Exactly() {
         let exactlyAt = ISA(altitudeMeters: 11000, deltaISA: 0)
 

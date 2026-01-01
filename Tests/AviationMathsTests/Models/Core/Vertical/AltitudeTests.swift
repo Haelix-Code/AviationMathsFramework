@@ -110,10 +110,18 @@ final class UnitAltitudeTests: XCTestCase {
     }
 
     func testPAtoAGL_Standard() {
+        var context = AltitudeContext.standardISA
+        context = AltitudeContext(
+            groundElevation: .init(feet: 5000),
+            qnh: context.qnh,
+            seaLevelTemperature: context.seaLevelTemperature,
+            lapseRate: context.lapseRate
+        )
+        
         let thisAltitude = Altitude(
             feet: 15000,
             reference: .pressureAltitude,
-            context: .init(groundElevation: .init(feet: 5000)))
+            context: context)
 
         XCTAssertEqual(thisAltitude.agl.feet, 10000, accuracy: 0.1)
     }

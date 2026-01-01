@@ -5,8 +5,8 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
     public let groundElevation: Measurement<UnitLength>?
     public let qnh: Measurement<UnitPressure>?
 
-    private let _surfaceTemperature: Measurement<UnitTemperature>?
-    private let _seaLevelTemperature: Measurement<UnitTemperature>?
+    internal let _surfaceTemperature: Measurement<UnitTemperature>?
+    internal let _seaLevelTemperature: Measurement<UnitTemperature>?
 
     public let temperatureReferenceAltitudeAMSL: Measurement<UnitLength>?
     public let temperatureAtReference: Measurement<UnitTemperature>?

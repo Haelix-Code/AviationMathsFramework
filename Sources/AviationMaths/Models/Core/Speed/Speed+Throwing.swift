@@ -26,5 +26,18 @@ extension Speed {
         guard reference != .machNumber else { return machValue! }
         return try convertToMach()
     }
+    
+    public func convertedThrowing(to newReference: SpeedReference) throws -> Speed {
+        switch newReference {
+        case .calibratedAirspeed:
+            return Speed(value: try asCAS(), reference: .calibratedAirspeed, context: context)
+        case .equivalentAirspeed:
+            return Speed(value: try asEAS(), reference: .equivalentAirspeed, context: context)
+        case .trueAirspeed:
+            return Speed(value: try asTAS(), reference: .trueAirspeed, context: context)
+        case .machNumber:
+            return Speed(mach: try asMach(), context: context)
+        }
+    }
 
 }

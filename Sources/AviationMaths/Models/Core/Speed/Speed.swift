@@ -85,15 +85,12 @@ public struct Speed: Sendable {
     }
 
     internal func convertToCAS() throws -> Measurement<UnitSpeed> {
-        guard let delta = context.relativePressure else {
-            throw SpeedConversionError.missingPressureAltitude
-        }
-
         switch reference {
         case .calibratedAirspeed:
             return value
 
         case .equivalentAirspeed:
+            let delta = try context.relativePressureThrowing()
             return AirDataEquations.calibratedAirspeed(
                 fromEquivalentAirspeed: value,
                 relativePressure: delta
@@ -112,12 +109,9 @@ public struct Speed: Sendable {
     }
 
     internal func convertToEAS() throws -> Measurement<UnitSpeed> {
-        guard let delta = context.relativePressure else {
-            throw SpeedConversionError.missingPressureAltitude
-        }
-
         switch reference {
         case .calibratedAirspeed:
+            let delta = try context.relativePressureThrowing()
             return AirDataEquations.equivalentAirspeed(
                 fromCalibratedAirspeed: value,
                 relativePressure: delta
@@ -127,9 +121,7 @@ public struct Speed: Sendable {
             return value
 
         case .trueAirspeed:
-            guard let density = context.density else {
-                throw SpeedConversionError.missingDensity
-            }
+            let density = try context.densityThrowing()
             return AirDataEquations.equivalentAirspeed(
                 fromTrueAirspeed: value,
                 density: density
@@ -143,12 +135,9 @@ public struct Speed: Sendable {
     }
 
     internal func convertToTAS() throws -> Measurement<UnitSpeed> {
-        guard let density = context.density else {
-            throw SpeedConversionError.missingDensity
-        }
-
         switch reference {
         case .calibratedAirspeed, .equivalentAirspeed:
+            let density = try context.densityThrowing()
             let easValue = reference == .equivalentAirspeed ? value : try convertToEAS()
             return AirDataEquations.trueAirspeed(
                 fromEquivalentAirspeed: easValue,
@@ -159,9 +148,7 @@ public struct Speed: Sendable {
             return value
 
         case .machNumber:
-            guard let speedOfSound = context.speedOfSound else {
-                throw SpeedConversionError.missingTemperature
-            }
+            let speedOfSound = try context.speedOfSoundThrowing()
             return AirDataEquations.trueAirspeed(
                 fromMachNumber: machValue!,
                 speedOfSound: speedOfSound
@@ -170,10 +157,7 @@ public struct Speed: Sendable {
     }
 
     internal func convertToMach() throws -> Double {
-        guard let speedOfSound = context.speedOfSound else {
-            throw SpeedConversionError.missingTemperature
-        }
-
+        let speedOfSound = try context.speedOfSoundThrowing()
         let tasValue = reference == .trueAirspeed ? value : try convertToTAS()
         return AirDataEquations.machNumber(
             fromTrueAirspeed: tasValue,

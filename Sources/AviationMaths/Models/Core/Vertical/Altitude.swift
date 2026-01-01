@@ -23,21 +23,33 @@ public struct Altitude: Codable, Equatable, Sendable {
 
     // MARK: - Computed Properties for Each Reference
 
-    public var agl: Measurement<UnitLength> {
-        reference == .agl ? value : convertToAGL()
-    }
+    /// Above ground level altitude
+   /// - Warning: This computed property uses `try!` and will crash if context lacks ground elevation.
+   ///   For error handling use `valueThrowing(in: .agl)`, or use `aglIfPossible` for optional return.
+   public var agl: Measurement<UnitLength> {
+       reference == .agl ? value : try! convertToAGLThrowing()
+   }
 
-    public var amsl: Measurement<UnitLength> {
-        reference == .amsl ? value : convertToAMSL()
-    }
+   /// Above mean sea level altitude
+   /// - Warning: This computed property uses `try!` and will crash if context is insufficient.
+   ///   For error handling use `valueThrowing(in: .amsl)`, or use `amslIfPossible` for optional return.
+   public var amsl: Measurement<UnitLength> {
+       reference == .amsl ? value : try! convertToAMSLThrowing()
+   }
 
-    public var pressureAltitude: Measurement<UnitLength> {
-        reference == .pressureAltitude ? value : convertToPressureAltitude()
-    }
+   /// Pressure altitude
+   /// - Warning: This computed property uses `try!` and will crash if context lacks QNH.
+   ///   For error handling use `valueThrowing(in: .pressureAltitude)`, or use `pressureAltitudeIfPossible` for optional return.
+   public var pressureAltitude: Measurement<UnitLength> {
+       reference == .pressureAltitude ? value : try! convertToPressureAltitudeThrowing()
+   }
 
-    public var trueAltitude: Measurement<UnitLength> {
-        reference == .trueAltitude ? value : convertToTrueAltitude()
-    }
+   /// True altitude
+   /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
+   ///   For error handling use `valueThrowing(in: .trueAltitude)`, or use `trueAltitudeIfPossible` for optional return.
+   public var trueAltitude: Measurement<UnitLength> {
+       reference == .trueAltitude ? value : try! convertToTrueAltitudeThrowing()
+   }
 
     // MARK: - Private Helpers
 
