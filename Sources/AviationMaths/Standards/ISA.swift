@@ -118,7 +118,7 @@ public struct ISA {
             }
 
             // Apply stratosphere layer if above tropopause
-        if altitudeMeters > Self.lowerStratosphereBase.meters {
+        if altitudeMeters >= Self.lowerStratosphereBase.meters {
                 state = applyStratosphereLayer(from: state, to: altitudeMeters)
             }
 

@@ -211,8 +211,7 @@ extension Speed {
 
 extension Speed: Equatable {
     public static func == (lhs: Speed, rhs: Speed) -> Bool {
-        // Compare as TAS (the fundamental speed through air)
-        return lhs.tas.mps == rhs.tas.mps
+        return abs(lhs.tas.mps - rhs.tas.mps) < 0.0000001
     }
 }
 

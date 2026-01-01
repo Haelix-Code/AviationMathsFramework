@@ -140,4 +140,80 @@ final class BarometricEquationsTests: XCTestCase {
 
         XCTAssertEqual(recoveredAlt.feet, originalAlt.feet, accuracy: 0.1)
     }
+    
+    func testRoundTrip_StandardAtmosphere_LowAltitude() {
+        let original = Measurement<UnitLength>(meters: 1000)
+        let pressure = BarometricEquations.pressureFromAltitude(altitude: original)
+        let recovered = BarometricEquations.altitudeFromPressure(pressure: pressure)
+        
+        XCTAssertEqual(recovered.meters, original.meters, accuracy: 0.1,
+                      "Round-trip should recover original altitude")
+    }
+    
+    func testRoundTrip_StandardAtmosphere_HighAltitude() {
+        let original = Measurement<UnitLength>(meters: 10000)
+        let pressure = BarometricEquations.pressureFromAltitude(altitude: original)
+        let recovered = BarometricEquations.altitudeFromPressure(pressure: pressure)
+        
+        XCTAssertEqual(recovered.meters, original.meters, accuracy: 1.0,
+                      "Round-trip should recover original altitude")
+    }
+    
+    func testRoundTrip_NonStandardQNH() {
+        let altitude = Measurement<UnitLength>(meters: 2500)
+        let qnh = Measurement<UnitPressure>(hectopascals: 1008)
+        
+        let pressure = BarometricEquations.pressureFromAltitude(
+            altitude: altitude,
+            referencePressure: qnh
+        )
+        
+        let recovered = BarometricEquations.altitudeFromPressure(
+            pressure: pressure,
+            referencePressure: qnh
+        )
+        
+        XCTAssertEqual(recovered.meters, altitude.meters, accuracy: 0.5,
+                      "Round-trip with custom QNH should work")
+    }
+    
+    func testRoundTrip_NonStandardTemperature() {
+        let altitude = Measurement<UnitLength>(meters: 3000)
+        let temp = Measurement<UnitTemperature>(celsius: 25)
+        
+        let pressure = BarometricEquations.pressureFromAltitude(
+            altitude: altitude,
+            temperature: temp
+        )
+        
+        let recovered = BarometricEquations.altitudeFromPressure(
+            pressure: pressure,
+            temperature: temp
+        )
+        
+        XCTAssertEqual(recovered.meters, altitude.meters, accuracy: 0.5,
+                      "Round-trip with custom temperature should work")    }
+
+    
+    func testAccuracy_MultipleRoundTrips() {
+        var altitude = Measurement<UnitLength>(meters: 3500)
+        
+        for _ in 0..<5 {
+            let pressure = BarometricEquations.pressureFromAltitude(altitude: altitude)
+            altitude = BarometricEquations.altitudeFromPressure(pressure: pressure)
+        }
+        
+        XCTAssertEqual(altitude.meters, 3500, accuracy: 1.0,
+                      "Multiple round trips should not accumulate significant error")
+    }
+    
+    func testBarometricEquations_KnownISAValues() {
+        let altitude = Measurement<UnitLength>(meters: 5000)
+        let pressure = BarometricEquations.pressureFromAltitude(altitude: altitude)
+        XCTAssertEqual(pressure.pascals, 54020.5, accuracy: 0.1)
+        
+        let recoveredAlt = BarometricEquations.altitudeFromPressure(pressure: pressure)
+        XCTAssertEqual(recoveredAlt.meters, 5000, accuracy: 0.1)
+    }
+    
 }

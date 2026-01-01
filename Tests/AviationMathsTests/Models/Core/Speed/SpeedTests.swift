@@ -201,4 +201,34 @@ final class SpeedTests: XCTestCase {
         XCTAssertEqual(tasSpeed.reference, .trueAirspeed)
         XCTAssertEqual(tasSpeed.tas.knots, speed.tas.knots)
     }
+    
+    func testSpeedComparison_SamePhysicalSpeed() {
+        let context1 = SpeedContext(
+            pressureAltitude: .init(feet: 10000),
+            deltaISA: .init(kelvin: 0)
+        )
+        let context2 = SpeedContext(
+            pressureAltitude: .init(feet: 20000),
+            deltaISA: .init(kelvin: 10)
+        )
+        
+        let speed1 = Speed(knots: 300, reference: .trueAirspeed, context: context1)
+        let speed2 = Speed(knots: 300, reference: .trueAirspeed, context: context2)
+        
+        XCTAssertEqual(speed1, speed2,
+                      "Same TAS should be equal regardless of context")
+    }
+    
+    func testSpeedComparison_DifferentReferences() {
+        let context = SpeedContext(
+            pressureAltitude: .init(feet: 15000),
+            deltaISA: .init(kelvin: 0)
+        )
+        
+        let speedTAS = Speed(knots: 350, reference: .trueAirspeed, context: context)
+        let speedCAS = Speed(knots: speedTAS.cas.knots, reference: .calibratedAirspeed, context: context)
+        
+        XCTAssertEqual(speedTAS, speedCAS,
+                      "Same physical speed should be equal")    
+    }
 }
