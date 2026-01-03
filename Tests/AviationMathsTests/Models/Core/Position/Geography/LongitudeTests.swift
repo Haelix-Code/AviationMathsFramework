@@ -23,7 +23,7 @@ final class LongitudeTests: XCTestCase {
 
     func testInitWithMeasurement() {
         let angle = Measurement(value: 90.0, unit: UnitAngle.degrees)
-        let lon = Longitude(angle)
+        let lon = Longitude(measurement: angle)
         XCTAssertEqual(lon.decimalDegrees, 90.0)
     }
 

@@ -23,9 +23,11 @@ Complete conversion support between all speed types with validation against indu
 - Support for various altitude references and barometric settings
 
 ### Geometry
-- **CartesianVector** - Two-dimensional vector operations
-- **PolarVector** - Polar coordinate system support
-- **Position2D** - Geodetic position calculations (planned)
+- **GeodesicPosition** - A position which has both a RelativePosition, and Position2D from an Origin
+- **RelativePosition**
+- **CartesianVector** - A form of relative position for two-dimensional vector operations
+- **PolarVector** - A form of relative position in the polar coordinate system 
+- **Position2D** - Latitude/Longitude position calculations
 
 ## Coordinate System Convention
 

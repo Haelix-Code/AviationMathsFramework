@@ -23,7 +23,7 @@ final class LatitudeTests: XCTestCase {
 
     func testInitWithMeasurement() {
         let angle = Measurement(value: 45.0, unit: UnitAngle.degrees)
-        let lat = Latitude(angle)
+        let lat = Latitude(measurement: angle)
         XCTAssertEqual(lat.decimalDegrees, 45.0)
     }
 

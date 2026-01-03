@@ -24,8 +24,8 @@ public struct Latitude: AngularCoordinate {
        self.init(decimalDegrees: value)
    }
 
-    public init(_ angle: Measurement<UnitAngle>) {
-        self.init(decimalDegrees: angle.converted(to: .degrees).value)
+    public init(measurement: Measurement<UnitAngle>) {
+        self.init(decimalDegrees: measurement.converted(to: .degrees).value)
     }
 
     public init(dms: DegreesMinutesSeconds, direction: LatitudeDirection) {
