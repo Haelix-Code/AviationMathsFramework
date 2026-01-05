@@ -4,8 +4,8 @@ public struct RelativePosition: Sendable {
     public let cartesianVector: LengthCartesianVector
     public var polarCoordinate: LengthPolar
 
-    public init(bearing: Measurement<UnitAngle>, range: Measurement<UnitLength>) {
-        self.polarCoordinate = PolarVector(bearing: bearing, magnitude: range)
+    public init(bearing: Measurement<UnitAngle>, range rangeValue: Measurement<UnitLength>) {
+        self.polarCoordinate = PolarVector(bearing: bearing, magnitude: rangeValue)
         self.cartesianVector = polarCoordinate.asCartesianVector
     }
 
