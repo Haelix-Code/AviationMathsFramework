@@ -5,7 +5,7 @@ public struct RelativePosition: Sendable {
     public var polarCoordinate: LengthPolar
 
     public init(bearing: Measurement<UnitAngle>, range rangeValue: Measurement<UnitLength>) {
-        self.polarCoordinate = PolarVector(bearing: bearing, magnitude: rangeValue)
+        self.polarCoordinate = PolarVector(bearing: bearing.converted(to: .radians), magnitude: rangeValue)
         self.cartesianVector = polarCoordinate.asCartesianVector
     }
 

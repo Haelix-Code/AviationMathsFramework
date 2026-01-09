@@ -53,7 +53,7 @@ extension DegreesMinutesSeconds: CustomStringConvertible {
         String(format: "%d° %d' %.2f\"", degrees, minutes, seconds)
     }
 
-    public func formatted(secondsPrecision precision: Int = 2) -> String {
+    public func formatted(secondsPrecision precision: Int = 1) -> String {
         String(format: "%d° %d' %.\(precision)f\"", degrees, minutes, seconds)
     }
 }
@@ -63,7 +63,7 @@ extension DegreesDecimalMinutes: CustomStringConvertible {
         String(format: "%d° %.3f'", degrees, minutes)
     }
 
-    public func formatted(minutesPrecision precision: Int = 3) -> String {
+    public func formatted(minutesPrecision precision: Int = 2) -> String {
         String(format: "%d° %.\(precision)f'", degrees, minutes)
     }
 }
@@ -81,20 +81,20 @@ extension DegreesDecimalMinutes {
 }
 
 extension DegreesMinutesSeconds {
-    public func formatted(direction: String, isLongitude: Bool = false) -> String {
+    public func formatted(direction: String, isLongitude: Bool = false, secondsPrecision precision: Int = 1) -> String {
         let degreeFormat = isLongitude ? "%03d" : "%02d"
         return String(
-            format: "\(degreeFormat)°%02d'%05.2f\"\(direction)",
+            format: "\(degreeFormat)°%02d'%02.\(precision)f\"\(direction)",
             degrees, minutes, seconds
         )
     }
 }
 
 extension DegreesDecimalMinutes {
-    public func formatted(direction: String, isLongitude: Bool = false) -> String {
+    public func formatted(direction: String, isLongitude: Bool = false, minutesPrecision precision: Int = 2) -> String {
         let degreeFormat = isLongitude ? "%03d" : "%02d"
         return String(
-            format: "\(degreeFormat)°%06.3f'\(direction)",
+            format: "\(degreeFormat)°%05.\(precision)f'\(direction)",
             degrees, minutes
         )
     }
