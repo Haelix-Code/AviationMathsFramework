@@ -14,6 +14,11 @@ public struct ISA {
     public static let dryAirGasConstant: Double = 287.058
     public static let ratioSpecificHeats: Double = 1.4
 
+    /// Earth's mean radius for geopotential altitude calculations (ICAO standard)
+    /// Used in the conversion: H = (r × h) / (r + h)
+    public static let earthMeanRadius: Measurement<UnitLength> =
+        .init(value: 6_356_766, unit: .meters)
+
     public static let seaLevelPressure: Measurement<UnitPressure> =
         .init(value: 1.01325e5, unit: .newtonsPerMetersSquared)
     public static let seaLevelTemperature: Measurement<UnitTemperature> =

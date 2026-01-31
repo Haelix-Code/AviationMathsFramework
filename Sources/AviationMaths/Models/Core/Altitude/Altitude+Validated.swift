@@ -25,24 +25,26 @@ public struct ValidatedAltitude: Sendable, Equatable {
     }
     
     // MARK: - Safe Accessors (Guaranteed Non-Crashing)
-    
+
     public var agl: Measurement<UnitLength> { raw.agl }
     public var amsl: Measurement<UnitLength> { raw.amsl }
     public var pressureAltitude: Measurement<UnitLength> { raw.pressureAltitude }
     public var trueAltitude: Measurement<UnitLength> { raw.trueAltitude }
-    
+    public var geopotential: Measurement<UnitLength> { raw.geopotential }
+
     public var reference: VerticalReference { raw.reference }
     public var value: Measurement<UnitLength> { raw.value }
     public var context: AltitudeContext { raw.context }
-    
+
     // MARK: - Conversion
-    
+
     public func value(in reference: VerticalReference) -> Measurement<UnitLength> {
         switch reference {
         case .agl: return raw.agl
         case .amsl: return raw.amsl
         case .pressureAltitude: return raw.pressureAltitude
         case .trueAltitude: return raw.trueAltitude
+        case .geopotential: return raw.geopotential
         }
     }
     

@@ -12,8 +12,8 @@ extension Latitude {
 
 extension Latitude: CustomStringConvertible {
     public var description: String {
-        let dms = degreesMinutesSeconds
-        return dms.formatted(direction: direction.rawValue, isLongitude: false)
+        let ddm = degreesDecimalMinutes
+        return ddm.formatted(direction: direction.rawValue, isLongitude: false)
     }
 }
 

@@ -14,6 +14,7 @@ extension Altitude {
         case .amsl: return try convertToAMSLThrowing()
         case .pressureAltitude: return try convertToPressureAltitudeThrowing()
         case .trueAltitude: return try convertToTrueAltitudeThrowing()
+        case .geopotential: return try convertToGeopotentialThrowing()
         }
     }
     
@@ -32,26 +33,34 @@ extension Altitude {
         switch reference {
         case .agl:
             return value
-            
+
         case .amsl:
             guard let elevation = context.groundElevation else {
                 throw AltitudeConversionError.missingGroundElevation
             }
             return .init(meters: value.meters - elevation.meters)
-            
+
         case .pressureAltitude:
             let amsl = try convertToAMSLThrowing()
             guard let elevation = context.groundElevation else {
                 throw AltitudeConversionError.missingGroundElevation
             }
             return .init(meters: amsl.meters - elevation.meters)
-            
+
         case .trueAltitude:
             let amsl = try convertTrueAltitudeToAMSLThrowing()
             guard let elevation = context.groundElevation else {
                 throw AltitudeConversionError.missingGroundElevation
             }
             return .init(meters: amsl.meters - elevation.meters)
+
+        case .geopotential:
+            // Geopotential → True (pure geometric) → AGL
+            let trueAlt = convertGeopotentialToTrueAltitude()
+            guard let elevation = context.groundElevation else {
+                throw AltitudeConversionError.missingGroundElevation
+            }
+            return .init(meters: trueAlt.meters - elevation.meters)
         }
     }
     
@@ -62,15 +71,21 @@ extension Altitude {
                 throw AltitudeConversionError.missingGroundElevation
             }
             return .init(meters: value.meters + elevation.meters)
-            
+
         case .amsl:
             return value
-            
+
         case .pressureAltitude:
             return try convertPressureAltitudeToAMSLThrowing()
-            
+
         case .trueAltitude:
             return try convertTrueAltitudeToAMSLThrowing()
+
+        case .geopotential:
+            // Geopotential → True (pure geometric) → AMSL
+            let trueAlt = convertGeopotentialToTrueAltitude()
+            return try Altitude(value: trueAlt, reference: .trueAltitude, context: context)
+                .convertToAMSLThrowing()
         }
     }
     
@@ -78,13 +93,19 @@ extension Altitude {
         switch reference {
         case .pressureAltitude:
             return value
-            
+
         case .agl, .amsl:
             return try convertAMSLToPressureAltitudeThrowing()
-            
+
         case .trueAltitude:
             let amsl = try convertTrueAltitudeToAMSLThrowing()
             return try Altitude(value: amsl, reference: .amsl, context: context)
+                .convertToPressureAltitudeThrowing()
+
+        case .geopotential:
+            // Geopotential → True (pure geometric) → PA
+            let trueAlt = convertGeopotentialToTrueAltitude()
+            return try Altitude(value: trueAlt, reference: .trueAltitude, context: context)
                 .convertToPressureAltitudeThrowing()
         }
     }
@@ -130,17 +151,21 @@ extension Altitude {
                 temperature: ISA.seaLevelTemperature,
                 lapseRate: ISA.troposphereLapseRate
             )
-            
+
             guard let qnh = context.qnh else {
                 throw AltitudeConversionError.missingQNH
             }
-            
+
             return BarometricEquations.trueAltitudeFromPressure(
                 pressure: pressure,
                 referencePressure: qnh,
                 referenceTemperature: seaLevelTemp,
                 lapseRate: lapseRate
             )
+
+        case .geopotential:
+            // Geopotential → True is a pure geometric transformation
+            return convertGeopotentialToTrueAltitude()
         }
     }
     
@@ -192,27 +217,53 @@ extension Altitude {
         guard let seaLevelTemp = context.seaLevelTemperature else {
             throw AltitudeConversionError.missingTemperatureProfile
         }
-        
+
         guard let lapseRate = context.lapseRate else {
             throw AltitudeConversionError.missingTemperatureProfile
         }
-        
+
         guard let qnh = context.qnh else {
             throw AltitudeConversionError.missingQNH
         }
-        
+
         let pressure = BarometricEquations.pressureFromTrueAltitude(
             trueAltitude: value,
             referencePressure: qnh,
             referenceTemperature: seaLevelTemp,
             lapseRate: lapseRate
         )
-        
+
         return BarometricEquations.altitudeFromPressure(
             pressure: pressure,
             referencePressure: qnh,
             temperature: ISA.seaLevelTemperature,
             lapseRate: ISA.troposphereLapseRate
         )
+    }
+
+    // MARK: - Geopotential Conversion
+
+    /// Convert to geopotential altitude
+    /// Geopotential requires true altitude, which requires a temperature profile
+    internal func convertToGeopotentialThrowing() throws -> Measurement<UnitLength> {
+        switch reference {
+        case .geopotential:
+            return value
+
+        case .trueAltitude:
+            // True → Geopotential is a pure geometric transformation
+            let r = ISA.earthMeanRadius.meters
+            let h = value.meters
+            let H = (r * h) / (r + h)
+            return .init(meters: H)
+
+        case .agl, .amsl, .pressureAltitude:
+            // First convert to true altitude, then to geopotential
+            let trueAlt = try convertToTrueAltitudeThrowing()
+            let r = ISA.earthMeanRadius.meters
+            let h = trueAlt.meters
+            let H = (r * h) / (r + h)
+            return .init(meters: H)
+        }
     }
 }

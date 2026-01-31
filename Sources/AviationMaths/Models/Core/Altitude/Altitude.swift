@@ -51,6 +51,15 @@ public struct Altitude: Codable, Equatable, Sendable {
        reference == .trueAltitude ? value : try! convertToTrueAltitudeThrowing()
    }
 
+   /// Geopotential altitude (accounting for gravity variation with height)
+   /// Geopotential altitude uses a constant gravity model (g₀ = 9.80665 m/s²).
+   /// This is the altitude reference used internally by the ISA standard atmosphere.
+   /// - Note: This conversion requires true altitude, which in turn requires a temperature profile.
+   /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
+   public var geopotential: Measurement<UnitLength> {
+       reference == .geopotential ? value : try! convertToGeopotentialThrowing()
+   }
+
     // MARK: - Private Helpers
 
     private var referenceQNH: Measurement<UnitPressure> {
@@ -75,6 +84,8 @@ public struct Altitude: Codable, Equatable, Sendable {
             return value - groundElev
         case .pressureAltitude, .trueAltitude:
             return convertToAMSL() - groundElev
+        case .geopotential:
+            return convertGeopotentialToTrueAltitude() - groundElev
         }
     }
 
@@ -94,6 +105,12 @@ public struct Altitude: Codable, Equatable, Sendable {
 
         case .trueAltitude:
             return convertTrueAltitudeToAMSL()
+
+        case .geopotential:
+            // Geopotential → True → AMSL
+            return Altitude(value: convertGeopotentialToTrueAltitude(),
+                          reference: .trueAltitude,
+                          context: context).convertToAMSL()
         }
     }
 
@@ -146,6 +163,12 @@ public struct Altitude: Codable, Equatable, Sendable {
         case .trueAltitude:
             // True → AMSL → PA
             return convertTrueAltitudeToAMSL().asPressureAltitude(context: context)
+
+        case .geopotential:
+            // Geopotential → True → AMSL → PA
+            let trueAlt = convertGeopotentialToTrueAltitude()
+            return Altitude(value: trueAlt, reference: .trueAltitude, context: context)
+                .convertToPressureAltitude()
         }
     }
 
@@ -210,7 +233,52 @@ public struct Altitude: Codable, Equatable, Sendable {
                 referenceTemperature: seaLevelTemp,
                 lapseRate: referenceLapseRate
             )
+
+        case .geopotential:
+            // Geopotential is a pure geometric transformation of True altitude
+            return convertGeopotentialToTrueAltitude()
         }
+    }
+
+    // MARK: - Geopotential Conversion Methods
+
+    /// Convert true altitude (geometric) to geopotential altitude
+    /// Formula: H = (r × h) / (r + h)
+    /// where r = Earth's mean radius, h = geometric altitude
+    internal func convertToGeopotential() -> Measurement<UnitLength> {
+        switch reference {
+        case .geopotential:
+            return value
+
+        case .trueAltitude:
+            return convertTrueAltitudeToGeopotential(value)
+
+        case .agl, .amsl, .pressureAltitude:
+            // First convert to true altitude, then to geopotential
+            let trueAlt = convertToTrueAltitude()
+            return convertTrueAltitudeToGeopotential(trueAlt)
+        }
+    }
+
+    /// Convert geopotential altitude to true altitude (geometric)
+    /// Formula: h = (r × H) / (r - H)
+    /// where r = Earth's mean radius, H = geopotential altitude
+    internal func convertGeopotentialToTrueAltitude() -> Measurement<UnitLength> {
+        let r = ISA.earthMeanRadius.meters
+        let H = value.meters
+
+        // h = (r × H) / (r - H)
+        let h = (r * H) / (r - H)
+        return .init(meters: h)
+    }
+
+    private func convertTrueAltitudeToGeopotential(_ trueAlt: Measurement<UnitLength>) -> Measurement<UnitLength> {
+        let r = ISA.earthMeanRadius.meters
+        let h = trueAlt.meters
+
+        // H = (r × h) / (r + h)
+        let H = (r * h) / (r + h)
+        return .init(meters: H)
     }
 }
 
@@ -237,6 +305,7 @@ extension Altitude {
         case .amsl: newValue = amsl
         case .pressureAltitude: newValue = pressureAltitude
         case .trueAltitude: newValue = trueAltitude
+        case .geopotential: newValue = geopotential
         }
         return Altitude(value: newValue, reference: newReference, context: context)
     }
@@ -256,6 +325,7 @@ extension Altitude {
         case .amsl: return self.amsl
         case .pressureAltitude: return self.pressureAltitude
         case .trueAltitude: return self.trueAltitude
+        case .geopotential: return self.geopotential
         }
     }
 }

@@ -12,6 +12,9 @@ extension Altitude {
             return context.canCalculatePressureAltitude && context.canCalculateAGL
         case .trueAltitude:
             return context.canCalculateTrueAltitude && context.canCalculateAGL
+        case .geopotential:
+            // Geopotential → True (always possible) → AGL (needs ground elevation)
+            return context.canCalculateAGL
         }
     }
 
@@ -24,6 +27,9 @@ extension Altitude {
         case .pressureAltitude:
             return context.canCalculatePressureAltitude
         case .trueAltitude:
+            return context.canCalculateTrueAltitude
+        case .geopotential:
+            // Geopotential → True (always possible) → AMSL (needs temp profile)
             return context.canCalculateTrueAltitude
         }
     }
@@ -38,6 +44,9 @@ extension Altitude {
             return true
         case .trueAltitude:
             return context.canCalculateTrueAltitude && context.canCalculatePressureAltitude
+        case .geopotential:
+            // Geopotential → True (always) → PA (needs temp profile + QNH)
+            return context.canCalculateTrueAltitude && context.canCalculatePressureAltitude
         }
     }
 
@@ -51,6 +60,26 @@ extension Altitude {
             return context.canCalculatePressureAltitude && context.canCalculateTrueAltitude
         case .trueAltitude:
             return true
+        case .geopotential:
+            // Geopotential to True is a pure geometric transformation, always possible
+            return true
+        }
+    }
+
+    /// Geopotential altitude requires true altitude, which requires a temperature profile
+    public var canConvertToGeopotential: Bool {
+        switch reference {
+        case .geopotential:
+            return true
+        case .trueAltitude:
+            // True to Geopotential is a pure geometric transformation, always possible
+            return true
+        case .agl:
+            return context.canCalculateAGL && context.canCalculateTrueAltitude
+        case .amsl:
+            return context.canCalculateTrueAltitude
+        case .pressureAltitude:
+            return context.canCalculatePressureAltitude && context.canCalculateTrueAltitude
         }
     }
 
@@ -60,6 +89,7 @@ extension Altitude {
         case .amsl: return canConvertToAMSL
         case .pressureAltitude: return canConvertToPressureAltitude
         case .trueAltitude: return canConvertToTrueAltitude
+        case .geopotential: return canConvertToGeopotential
         }
     }
 
@@ -83,6 +113,11 @@ extension Altitude {
     public var trueAltitudeIfPossible: Measurement<UnitLength>? {
         guard canConvertToTrueAltitude else { return nil }
         return convertToTrueAltitude()
+    }
+
+    public var geopotentialIfPossible: Measurement<UnitLength>? {
+        guard canConvertToGeopotential else { return nil }
+        return convertToGeopotential()
     }
 
 }
