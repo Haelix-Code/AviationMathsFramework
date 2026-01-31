@@ -83,8 +83,9 @@ extension DegreesDecimalMinutes {
 extension DegreesMinutesSeconds {
     public func formatted(direction: String, isLongitude: Bool = false, secondsPrecision precision: Int = 1) -> String {
         let degreeFormat = isLongitude ? "%03d" : "%02d"
+        let totalWidth = precision + 3
         return String(
-            format: "\(degreeFormat)°%02d'%02.\(precision)f\"\(direction)",
+            format: "\(degreeFormat)°%02d'%0\(totalWidth).\(precision)f\"\(direction)",
             degrees, minutes, seconds
         )
     }
@@ -93,8 +94,9 @@ extension DegreesMinutesSeconds {
 extension DegreesDecimalMinutes {
     public func formatted(direction: String, isLongitude: Bool = false, minutesPrecision precision: Int = 2) -> String {
         let degreeFormat = isLongitude ? "%03d" : "%02d"
+        let totalWidth = precision + 3
         return String(
-            format: "\(degreeFormat)°%05.\(precision)f'\(direction)",
+            format: "\(degreeFormat)°%0\(totalWidth).\(precision)f'\(direction)",
             degrees, minutes
         )
     }

@@ -5,10 +5,10 @@ import XCTest
 final class LineCircleIntersectionTests: XCTestCase {
     
     func test_linePassesThroughCircle_returnsTwoIntersections() {
-        // Line along x-axis through circle centred at (0, 100m) with radius 50m
+        // Line along x-axis through circle centred at (0, 30m) with radius 50m
         let lineOrigin = RelativePosition.zero
         let lineDirection = RelativePosition(bearing: .init(degrees: 90), range: .init(meters: 1))
-        let circleCentre = RelativePosition(x: .init(meters: 0), y: .init(meters: 100))
+        let circleCentre = RelativePosition(x: .init(meters: 0), y: .init(meters: 30))
         let radius = Measurement<UnitLength>(meters: 50)
         
         let result = LineCircle.intersect(

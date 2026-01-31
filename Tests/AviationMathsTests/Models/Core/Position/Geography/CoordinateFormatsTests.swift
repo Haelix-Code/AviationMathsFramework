@@ -24,8 +24,8 @@ final class CoordinateFormatsTests: XCTestCase {
 
     func testDMSFormattedWithDirection() {
         let dms = DegreesMinutesSeconds(degrees: 5, minutes: 7, seconds: 9.12)
-        XCTAssertEqual(dms.formatted(direction: "N"), "05°07'09.12\"N")
-        XCTAssertEqual(dms.formatted(direction: "E", isLongitude: true), "005°07'09.12\"E")
+        XCTAssertEqual(dms.formatted(direction: "N", secondsPrecision: 2), "05°07'09.12\"N")
+        XCTAssertEqual(dms.formatted(direction: "E", isLongitude: true), "005°07'09.1\"E")
     }
 
     func testDDMAsDecimalDegrees() {
@@ -48,8 +48,8 @@ final class CoordinateFormatsTests: XCTestCase {
 
     func testDDMFormattedWithDirection() {
         let ddm = DegreesDecimalMinutes(degrees: 5, minutes: 7.123)
-        XCTAssertEqual(ddm.formatted(direction: "S"), "05°07.123'S")
-        XCTAssertEqual(ddm.formatted(direction: "W", isLongitude: true), "005°07.123'W")
+        XCTAssertEqual(ddm.formatted(direction: "S"), "05°07.12'S")
+        XCTAssertEqual(ddm.formatted(direction: "W", isLongitude: true, minutesPrecision: 3), "005°07.123'W")
     }
 
     func testCrossConversionConsistency() {
