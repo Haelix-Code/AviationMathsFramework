@@ -35,7 +35,7 @@ public enum LongitudeDirection: String, Codable, CaseIterable, Sendable {
     }
 
     public init(decimalDegrees: Double) {
-        self = decimalDegrees >= 0 ? .east : .west
+        self = decimalDegrees > 0 ? .east : .west
     }
 
     public var name: String {
