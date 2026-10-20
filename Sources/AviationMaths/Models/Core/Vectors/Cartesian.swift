@@ -54,7 +54,12 @@ extension CartesianVector: Vector {
 
     /// Angle between this vector and another (always positive, 0-180°)
     public func angle(between other: CartesianVector<UnitType>) -> Measurement<UnitAngle> {
-        let ratio = max(-1, min(1, dot(other) / (magnitude.value * other.magnitude.value)))
+        let magnitudeProduct = magnitude.value * other.magnitude.value
+        guard magnitudeProduct > 0 else {
+            // Matches Vector.angle(to:)'s convention for a zero vector, rather than NaN.
+            return Measurement(value: 0, unit: .radians)
+        }
+        let ratio = max(-1, min(1, dot(other) / magnitudeProduct))
         return Measurement(value: acos(ratio), unit: .radians)
     }
     /// Returns bearing (0° = North, clockwise) and magnitude

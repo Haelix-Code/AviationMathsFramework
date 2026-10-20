@@ -38,7 +38,8 @@ public extension PolarVector {
         let m1 = magnitude.value
         let m2 = other.magnitude.value
         guard m1 > 0, m2 > 0 else {
-            return Measurement(value: .nan, unit: .radians)
+            // Matches Vector.angle(to:)'s convention for a zero vector, rather than NaN.
+            return Measurement(value: 0, unit: .radians)
         }
         let ratio = max(-1, min(1, dot / (m1 * m2)))
         return Measurement(value: acos(ratio), unit: .radians)

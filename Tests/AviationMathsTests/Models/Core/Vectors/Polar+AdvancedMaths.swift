@@ -36,11 +36,13 @@ final class PolarVectorAdvancedMathTests: XCTestCase {
         XCTAssertEqual(angle.degrees, 90, accuracy: 1e-12)
     }
 
-    func testAngleBetween_zeroMagnitude_returnsNaN() {
+    /// Now returns 0 for a zero-magnitude vector, matching `Vector.angle(to:)`'s and
+    /// `CartesianVector.angle(between:)`'s convention, instead of NaN.
+    func testAngleBetween_zeroMagnitude_returnsZero() {
         let a = PolarVector(bearing: .init(degrees: 0), magnitude: .init(meters: 0))
         let b = PolarVector(bearing: .init(degrees: 90), magnitude: .init(meters: 1))
 
         let angle = a.angleBetween(b)
-        XCTAssertTrue(angle.radians.isNaN)
+        XCTAssertEqual(angle.radians, 0)
     }
 }
