@@ -5,11 +5,13 @@ public extension SpeedContext {
         let amsl = altitude.amsl
         let ac = altitude.context
 
-        // Prefer a measured reference temperature if present; otherwise, use
-        // the context's derived temperature (surface + lapse) or ISA fallback.
+        // Prefer the context's lapse-adjusted temperature at the *actual*
+        // altitude; `temperatureAtReference` alone is only valid verbatim if
+        // amsl happens to equal temperatureReferenceAltitudeAMSL, so it's a
+        // last resort before falling back to the ISA standard atmosphere.
         let t: Measurement<UnitTemperature> =
-            ac.temperatureAtReference
-            ?? ac.temperature(at: amsl)
+            ac.temperature(at: amsl)
+            ?? ac.temperatureAtReference
             ?? ISA.temperature(at: amsl) // or SpeedContext.isaTemperature(at:)
 
         if let qnh = ac.qnh {
