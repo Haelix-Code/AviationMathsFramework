@@ -35,7 +35,9 @@ public enum LongitudeDirection: String, Codable, CaseIterable, Sendable {
     }
 
     public init(decimalDegrees: Double) {
-        self = decimalDegrees > 0 ? .east : .west
+        // Matches LatitudeDirection's convention of treating the 0° boundary
+        // as the positive side (north/east), rather than leaving it unowned.
+        self = decimalDegrees >= 0 ? .east : .west
     }
 
     public var name: String {
