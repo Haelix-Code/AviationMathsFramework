@@ -15,6 +15,13 @@ public struct SpeedContext: Sendable, Equatable, Codable {
             return density
         }
 
+        if let measuredPressure = measuredPressureOverride, let explicitTemp = temperature {
+            return ISA.densityFromPressureAndTemperature(
+                pressure: measuredPressure,
+                temperature: explicitTemp
+            )
+        }
+
         guard let altitude = pressureAltitude else {
             return nil
         }
@@ -29,6 +36,10 @@ public struct SpeedContext: Sendable, Equatable, Codable {
     }
 
     public var speedOfSound: Measurement<UnitSpeed>? {
+        if let explicitTemp = temperature {
+            return ISA.speedOfSoundFromTemperature(temperature: explicitTemp)
+        }
+
         guard let altitude = pressureAltitude else {
             return nil
         }
@@ -60,6 +71,13 @@ public struct SpeedContext: Sendable, Equatable, Codable {
             return density
         }
 
+        if let measuredPressure = measuredPressureOverride, let explicitTemp = temperature {
+            return ISA.densityFromPressureAndTemperature(
+                pressure: measuredPressure,
+                temperature: explicitTemp
+            )
+        }
+
         guard let altitude = pressureAltitude else {
             throw ContextCalculationError.insufficientData(
                 calculation: "density",
@@ -75,11 +93,15 @@ public struct SpeedContext: Sendable, Equatable, Codable {
             temperature: effectiveTemperature
         )
     }
-    
+
     /// Returns speed of sound, throwing an error if it cannot be calculated
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
     /// - Returns: Speed of sound
     public func speedOfSoundThrowing() throws -> Measurement<UnitSpeed> {
+        if let explicitTemp = temperature {
+            return ISA.speedOfSoundFromTemperature(temperature: explicitTemp)
+        }
+
         guard let altitude = pressureAltitude else {
             throw ContextCalculationError.insufficientData(
                 calculation: "speedOfSound",
