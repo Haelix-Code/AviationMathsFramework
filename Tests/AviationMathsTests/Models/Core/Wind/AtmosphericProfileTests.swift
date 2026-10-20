@@ -25,6 +25,8 @@ final class AtmosphericProfileTests: XCTestCase {
     }
 
     func testWindAt_delegatesToInterpolation() {
+        let lower = Wind(feet: 0, knots: 10, fromDirection: 180)
+        let upper = Wind(feet: 10000, knots: 30, fromDirection: 200)
         let profile = AtmosphericProfile {
             AtmosphericLayer.layer(altitude: 0, windFrom: 180, speed: 10, temperature: 20)
             AtmosphericLayer.layer(altitude: 10000, windFrom: 200, speed: 30, temperature: 0)
@@ -32,8 +34,13 @@ final class AtmosphericProfileTests: XCTestCase {
 
         let w = profile.wind(at: .init(feet: 5000))
         XCTAssertNotNil(w)
-        XCTAssertEqual(w!.speed.knots, 20, accuracy: 1e-10)
-        XCTAssertEqual(w!.fromDirection.degrees, 190, accuracy: 1e-10)
+
+        // Component-wise (u/v) interpolation is the correct physical answer
+        // for winds that differ in direction, not a separate average of
+        // speed and direction.
+        let expectedPolar = ((lower.vector + upper.vector) / 2).asPolar
+        XCTAssertEqual(w!.speed.knots, expectedPolar.magnitude.knots, accuracy: 1e-10)
+        XCTAssertEqual(w!.fromDirection.degrees, expectedPolar.bearing.reciprocal.degrees, accuracy: 1e-10)
     }
 
     func testCodable_roundTrip() throws {

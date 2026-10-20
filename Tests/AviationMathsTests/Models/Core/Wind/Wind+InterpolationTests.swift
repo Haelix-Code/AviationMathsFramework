@@ -66,15 +66,21 @@ final class WindInterpolationTests: XCTestCase {
     }
 
     func testInterpolated_acceptsUnsortedInput() {
-        let winds = [
-            Wind(feet: 10000, knots: 30, fromDirection: 200),
-            Wind(feet: 0, knots: 10, fromDirection: 180)
-        ]
+        let lower = Wind(feet: 0, knots: 10, fromDirection: 180)
+        let upper = Wind(feet: 10000, knots: 30, fromDirection: 200)
+        let winds = [upper, lower] // intentionally unsorted
 
         let mid = winds.interpolated(at: .init(feet: 5000))
         XCTAssertNotNil(mid)
-        XCTAssertEqual(mid!.speed.knots, 20, accuracy: 1e-10)
-        XCTAssertEqual(mid!.fromDirection.degrees, 190, accuracy: 1e-10)
+
+        // Component-wise (u/v) interpolation is the correct physical answer;
+        // these directions differ, so it is not the same as averaging speed
+        // and direction separately.
+        let expectedVector = (lower.vector + upper.vector) / 2
+        let expectedPolar = expectedVector.asPolar
+
+        XCTAssertEqual(mid!.speed.knots, expectedPolar.magnitude.knots, accuracy: 1e-10)
+        XCTAssertEqual(mid!.fromDirection.degrees, expectedPolar.bearing.reciprocal.degrees, accuracy: 1e-10)
     }
 
     /// 360/30 at the surface and 120/30 at 10,000ft are two winds of equal

@@ -30,21 +30,19 @@ extension Array where Element == Wind {
         let altRange = upper.altitude.meters - lower.altitude.meters
         let fraction = (altitude.meters - lower.altitude.meters) / altRange
 
-        // Interpolate speed (simple linear)
-        let speedInterp = lower.speed.knots + fraction * (upper.speed.knots - lower.speed.knots)
-
-        // Interpolate direction (handle 360° wrap)
-        var dirDiff = upper.fromDirection.degrees - lower.fromDirection.degrees
-        if dirDiff > 180 { dirDiff -= 360 }
-        if dirDiff < -180 { dirDiff += 360 }
-        var dirInterp = lower.fromDirection.degrees + fraction * dirDiff
-        if dirInterp < 0 { dirInterp += 360 }
-        if dirInterp >= 360 { dirInterp -= 360 }
+        // Interpolate the wind as a vector (u/v components), not speed and
+        // direction separately: two winds of equal speed but different
+        // direction partially (or fully) cancel, which a separate speed/
+        // direction interpolation can never represent.
+        let lowerVector = lower.vector
+        let upperVector = upper.vector
+        let interpolatedVector = lowerVector + (upperVector - lowerVector) * fraction
+        let interpolatedPolar = interpolatedVector.asPolar
 
         return Wind(
             altitude: altitude,
-            fromDirection: .init(degrees: dirInterp),
-            speed: .init(knots: speedInterp)
+            fromDirection: interpolatedPolar.bearing.reciprocal,
+            speed: interpolatedPolar.magnitude
         )
     }
 }
