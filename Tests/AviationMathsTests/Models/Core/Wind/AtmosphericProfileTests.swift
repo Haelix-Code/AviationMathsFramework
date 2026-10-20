@@ -13,6 +13,23 @@ final class AtmosphericProfileTests: XCTestCase {
         XCTAssertEqual(profile.layers.map { $0.altitude.feet }, [5000.0, 10000.0, 15000.0])
     }
 
+    func testBuilder_SupportsIfElseAndFor() {
+        let includeHigh = true
+        let profile = AtmosphericProfile {
+            AtmosphericLayer.layer(altitude: 10000, windFrom: 280, speed: 40, temperature: 0)
+            if includeHigh {
+                AtmosphericLayer.layer(altitude: 15000, windFrom: 290, speed: 55, temperature: -10)
+            } else {
+                AtmosphericLayer.layer(altitude: 12000, windFrom: 285, speed: 45, temperature: -5)
+            }
+            for feet in [5000.0, 2000.0] {
+                AtmosphericLayer.layer(altitude: feet, windFrom: 250, speed: 25, temperature: 10)
+            }
+        }
+
+        XCTAssertEqual(profile.layers.map { $0.altitude.feet }, [2000.0, 5000.0, 10000.0, 15000.0])
+    }
+
     func testInitWithLayers_sortsLayersByAltitude() {
         let layers = [
             AtmosphericLayer.layer(altitude: 8000, windFrom: 240, speed: 35, temperature: 2),

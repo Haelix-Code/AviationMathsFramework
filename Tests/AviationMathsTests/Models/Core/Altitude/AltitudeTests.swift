@@ -224,9 +224,6 @@ final class UnitAltitudeTests: XCTestCase {
         )
     }
 
-    /// Same mismatch for the
-    /// `.geopotential` case, which `canConvertToTrueAltitude` also always
-    /// allows (a pure geometric transform, no temperature profile needed).
     func testCanConvertToTrueAltitude_AgreesWithThrowingConversion_FromGeopotential() {
         let incompleteContext = AltitudeContext() // no seaLevelTemperature, no lapseRate
         let altitude = Altitude(feet: 5000, reference: .geopotential, context: incompleteContext)
@@ -260,9 +257,6 @@ final class UnitAltitudeTests: XCTestCase {
         )
     }
 
-    /// `.agl` is defined as `amsl − groundElevation` (barometric/QFE-style), so converting
-    /// from `.geopotential` to `.agl` must route through indicated AMSL, not the raw
-    /// geometric true altitude — otherwise it mixes two different datums.
     func testConvertToAGL_FromGeopotential_MatchesTheEquivalentTrueAltitudeConversion() {
         let context = AltitudeContext(
             groundElevation: .init(feet: 500),
@@ -372,4 +366,17 @@ final class UnitAltitudeTests: XCTestCase {
         )),
         ("standardISA", .standardISA)
     ]
+
+    func testBothTemperaturesGiven_SurfaceTakesPrecedence() throws {
+        let context = AltitudeContext(
+            groundElevation: .init(meters: 1000),
+            surfaceTemperature: .init(celsius: 0),
+            seaLevelTemperature: .init(celsius: 30),
+            lapseRate: ISA.troposphereLapseRate
+        )
+
+        XCTAssertEqual(try XCTUnwrap(context.surfaceTemperature).celsius, 0, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(context.seaLevelTemperature).celsius, 6.5, accuracy: 1e-9)
+        XCTAssertEqual(try context.seaLevelTemperatureThrowing().celsius, 6.5, accuracy: 1e-9)
+    }
 }
