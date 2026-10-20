@@ -5,7 +5,8 @@ extension PolarVector: Hashable {
     }
 }
 
-extension PolarVector: Codable where UnitType: Codable {
+/// Encodes the magnitude in `UnitType`'s base unit, so no unit needs to be `Codable`.
+extension PolarVector: Codable {
     enum CodingKeys: String, CodingKey {
         case bearing, magnitude
     }

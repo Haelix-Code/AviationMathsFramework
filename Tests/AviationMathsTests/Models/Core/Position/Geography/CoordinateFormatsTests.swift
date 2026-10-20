@@ -52,17 +52,37 @@ final class CoordinateFormatsTests: XCTestCase {
         XCTAssertEqual(ddm.formatted(direction: "W", isLongitude: true, minutesPrecision: 3), "005°07.123'W")
     }
 
-    /// `DegreesMinutesSeconds(decimalDegrees:)` computes minutes/seconds by
-    /// truncation with no carry step. For 10.1°, floating-point noise in
-    /// `(unsigned - deg) * 60` lands the minutes fraction just under 6, giving
-    /// minutes = 5 and seconds that round to 60.00 when formatted — instead of
-    /// rolling over to minutes = 6, seconds = 0.
     func testDMSInitFromDecimalDegrees_RollsOverSecondsAndMinutes() {
         let dms = DegreesMinutesSeconds(decimalDegrees: 10.1)
 
         XCTAssertEqual(dms.degrees, 10)
         XCTAssertEqual(dms.minutes, 6, "0.1\u{00B0} is exactly 6 minutes; seconds must not round up into a 60th minute")
         XCTAssertEqual(dms.seconds, 0, accuracy: 0.01)
+    }
+
+    func testLatitudeAndLongitudeDescription_CarryMinutesIntoDegrees() {
+        XCTAssertEqual(Latitude(decimalDegrees: 51.99999).description, "52°00.00'N")
+        XCTAssertEqual(Longitude(decimalDegrees: -0.9999999).description, "001°00.00'W")
+    }
+
+    func testDMSFormatted_CarriesSecondsAtDisplayedPrecision() {
+        let dms = DegreesMinutesSeconds(degrees: 10, minutes: 59, seconds: 59.97)
+
+        XCTAssertEqual(dms.formatted(direction: "N"), "11°00'00.0\"N")
+        XCTAssertEqual(DegreesMinutesSeconds(degrees: 10, minutes: 59, seconds: 59.996).description, "11° 0' 0.00\"")
+    }
+
+    func testDDMFormatted_CarriesMinutesAtDisplayedPrecision() {
+        let ddm = DegreesDecimalMinutes(degrees: 12, minutes: 59.9996)
+
+        XCTAssertEqual(ddm.formatted(minutesPrecision: 2), "13° 0.00'")
+        XCTAssertEqual(ddm.description, "13° 0.000'")
+    }
+
+    func testDMSInitFromDecimalDegrees_KeepsFullPrecision() {
+        let dms = DegreesMinutesSeconds(decimalDegrees: 51.123456789)
+
+        XCTAssertEqual(dms.asDecimalDegrees, 51.123456789, accuracy: 1e-10)
     }
 
     func testCrossConversionConsistency() {
