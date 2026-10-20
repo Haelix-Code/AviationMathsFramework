@@ -54,9 +54,10 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
         return .init(kelvin: seaLevelTempKelvin)
     }
 
-    /// Whether this context has sufficient data for true altitude calculations
+    /// Whether this context has sufficient data for true altitude calculations: a
+    /// temperature profile, and QNH to fix the pressure at sea level.
     public var canCalculateTrueAltitude: Bool {
-        seaLevelTemperature != nil && lapseRate != nil
+        seaLevelTemperature != nil && lapseRate != nil && qnh != nil
     }
 
     /// Whether this context has sufficient data for AGL calculations

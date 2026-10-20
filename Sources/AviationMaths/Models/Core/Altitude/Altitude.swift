@@ -73,6 +73,8 @@ public struct Altitude: Codable, Equatable, Sendable {
     // MARK: - Conversion Methods
 
     internal func convertToAGL() -> Measurement<UnitLength> {
+        if reference == .agl { return value }
+
         guard let groundElev = context.groundElevation else {
             preconditionFailure("Ground elevation required for AGL conversion")
         }

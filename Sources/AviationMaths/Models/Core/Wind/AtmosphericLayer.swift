@@ -143,7 +143,9 @@ extension AtmosphericLayer: Decodable {
 
         // `altitude` is derived from `wind.altitude`, not stored separately, so a
         // payload where the two disagree is corrupt rather than silently resolvable.
-        guard altitude == wind.altitude else {
+        // `Wind` encodes its altitude in feet, so a metric altitude comes back a few
+        // ulps off; compare to within a micrometre rather than exactly.
+        guard abs(altitude.meters - wind.altitude.meters) <= 1e-6 else {
             throw DecodingError.dataCorruptedError(
                 forKey: .altitude, in: container,
                 debugDescription: "altitude (\(altitude)) does not match wind.altitude (\(wind.altitude))"

@@ -2,14 +2,18 @@ import Foundation
 
 extension Speed {
 
+    // Each mirrors the route the matching `convertTo…` takes, so they can't disagree.
+
     public var canConvertToCAS: Bool {
         switch reference {
         case .calibratedAirspeed:
             return true
-        case .equivalentAirspeed, .trueAirspeed:
+        case .equivalentAirspeed:
             return context.relativePressure != nil
+        case .trueAirspeed:
+            return context.density != nil && context.relativePressure != nil
         case .machNumber:
-            return context.speedOfSound != nil && context.relativePressure != nil
+            return context.speedOfSound != nil && context.density != nil && context.relativePressure != nil
         }
     }
 
@@ -30,7 +34,9 @@ extension Speed {
         switch reference {
         case .trueAirspeed:
             return true
-        case .calibratedAirspeed, .equivalentAirspeed:
+        case .calibratedAirspeed:
+            return context.density != nil && context.relativePressure != nil
+        case .equivalentAirspeed:
             return context.density != nil
         case .machNumber:
             return context.speedOfSound != nil
@@ -38,7 +44,16 @@ extension Speed {
     }
 
     public var canConvertToMach: Bool {
-        context.speedOfSound != nil
+        switch reference {
+        case .machNumber:
+            return true
+        case .calibratedAirspeed:
+            return context.relativePressure != nil
+        case .equivalentAirspeed:
+            return context.density != nil && context.speedOfSound != nil
+        case .trueAirspeed:
+            return context.speedOfSound != nil
+        }
     }
 
     public func canConvert(to targetReference: SpeedReference) -> Bool {

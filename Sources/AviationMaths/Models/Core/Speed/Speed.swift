@@ -157,6 +157,16 @@ public struct Speed: Sendable {
     }
 
     internal func convertToMach() throws -> Double {
+        switch reference {
+        case .machNumber:
+            return machValue!
+        case .calibratedAirspeed:
+            let delta = try context.relativePressureThrowing()
+            return AirDataEquations.machNumber(fromCalibratedAirspeed: value, relativePressure: delta)
+        case .equivalentAirspeed, .trueAirspeed:
+            break
+        }
+
         let speedOfSound = try context.speedOfSoundThrowing()
         let tasValue = reference == .trueAirspeed ? value : try convertToTAS()
         return AirDataEquations.machNumber(

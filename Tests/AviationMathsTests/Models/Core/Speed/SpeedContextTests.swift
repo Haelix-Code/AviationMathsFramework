@@ -373,4 +373,17 @@ final class SpeedContextTests: XCTestCase {
             )
         }
     }
+
+    func testAtAltitude_WithoutQNH_ReturnsContextWithoutPressure() {
+        let context = AltitudeContext(
+            groundElevation: .surface,
+            seaLevelTemperature: .init(celsius: 15),
+            lapseRate: ISA.troposphereLapseRate
+        )
+
+        let speedContext = SpeedContext.at(altitude: Altitude(feet: 5000, reference: .amsl, context: context))
+
+        XCTAssertNil(speedContext.relativePressure)
+        XCTAssertNotNil(speedContext.temperature)
+    }
 }

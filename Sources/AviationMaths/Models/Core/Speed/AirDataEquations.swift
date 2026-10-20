@@ -64,14 +64,22 @@ internal enum AirDataEquations {
         return (low + high) / 2.0
     }
 
+    /// Mach from CAS needs only the pressure ratio: CAS fixes qc, and qc/p fixes Mach.
+    static func machNumber(
+        fromCalibratedAirspeed cas: Measurement<UnitSpeed>,
+        relativePressure delta: Double
+    ) -> Double {
+        let machAtSeaLevel = cas.mps / seaLevelSpeedOfSound
+        let qcAtSeaLevel = impactPressureCoefficient(fromMach: machAtSeaLevel)
+        let qcAtAltitude = qcAtSeaLevel / delta
+        return machNumber(fromImpactPressureCoefficient: qcAtAltitude)
+    }
+
     static func equivalentAirspeed(
         fromCalibratedAirspeed cas: Measurement<UnitSpeed>,
         relativePressure delta: Double
     ) -> Measurement<UnitSpeed> {
-        let machAtSeaLevel = cas.mps / seaLevelSpeedOfSound
-        let qcAtSeaLevel = impactPressureCoefficient(fromMach: machAtSeaLevel)
-        let qcAtAltitude = qcAtSeaLevel / delta
-        let machAtAltitude = machNumber(fromImpactPressureCoefficient: qcAtAltitude)
+        let machAtAltitude = machNumber(fromCalibratedAirspeed: cas, relativePressure: delta)
         let eas = machAtAltitude * seaLevelSpeedOfSound * sqrt(delta)
 
         return .init(mps: eas)

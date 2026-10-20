@@ -193,11 +193,6 @@ final class AtmosphericLayerTests: XCTestCase {
         XCTAssertNil(layers.temperature(at: .init(feet: 3000)))
     }
 
-    /// `altitude` is derived from `wind.altitude`, so a hand-crafted payload where
-    /// the two JSON fields disagree is corrupt data, not something to silently
-    /// resolve in either field's favor. Mutates a validly-encoded layer's top-level
-    /// `altitude.value` rather than hand-writing JSON, since `Measurement`'s default
-    /// Codable shape (unlike `Wind`'s custom one) embeds the full unit converter.
     func testDecode_AltitudeDisagreesWithWindAltitude_Throws() throws {
         let layer = AtmosphericLayer(
             altitude: .init(feet: 1000),
@@ -230,5 +225,25 @@ final class AtmosphericLayerTests: XCTestCase {
         let data = try JSONEncoder().encode(layer)
         let decoded = try JSONDecoder().decode(AtmosphericLayer.self, from: data)
         XCTAssertEqual(decoded, layer)
+    }
+
+    func testCodableRoundTrip_ArbitraryMetricAltitudes() throws {
+        var failures: [Double] = []
+
+        for i in 0..<500 {
+            let meters = Double(i) * 1.37 + 0.123
+            let layer = AtmosphericLayer(
+                altitude: .init(meters: meters),
+                fromDirection: .init(degrees: 270),
+                speed: .init(knots: 15),
+                temperature: .init(celsius: 5)
+            )
+            let data = try JSONEncoder().encode(layer)
+            if (try? JSONDecoder().decode(AtmosphericLayer.self, from: data)) == nil {
+                failures.append(meters)
+            }
+        }
+
+        XCTAssertEqual(failures, [], "\(failures.count) of 500 layers failed to decode their own encoding")
     }
 }

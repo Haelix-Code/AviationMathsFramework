@@ -170,11 +170,7 @@ final class SpeedTests: XCTestCase {
         )
 
         let speed = Speed(mach: 2.0, context: context)
-
-        // At Mach 2.0 the local flow is genuinely supersonic, so CAS must use
-        // the Rayleigh pitot relation (M1 fix) rather than the subsonic
-        // isentropic formula. 829.822 was the old (wrong) subsonic-everywhere
-        // result; 717.027 is the corrected value.
+        
         XCTAssertEqual(speed.cas.knots, 717.027, accuracy: 0.01)
         XCTAssertEqual(speed.eas.knots, 641.752, accuracy: 0.001)
         XCTAssertEqual(speed.tas.knots, 1152.849, accuracy: 0.001)
@@ -236,10 +232,6 @@ final class SpeedTests: XCTestCase {
                       "Same physical speed should be equal")
     }
 
-    /// `==` compares `tas.mps` with a 1e-7 tolerance, but `hash(into:)` combines
-    /// the raw `tas.mps` double with no tolerance. Two speeds that differ by
-    /// less than the equality tolerance compare equal but hash differently,
-    /// which violates Hashable's contract that equal values must hash equally.
     func testHashable_AgreesWithEquatable_ForValuesWithinEqualityTolerance() {
         let context = SpeedContext.standardISA
         let a = Speed(mps: 100.0, reference: .trueAirspeed, context: context)
@@ -251,5 +243,53 @@ final class SpeedTests: XCTestCase {
             a.hashValue, b.hashValue,
             "Equal speeds must hash equally, but hash(into:) has no tolerance while == does"
         )
+    }
+
+    func testCanConvertAndIfPossible_AgreeWithThrowingConversion_ForEveryReferenceAndContext() {
+        let contexts: [(name: String, context: SpeedContext)] = [
+            ("empty", SpeedContext()),
+            ("temperatureOnly", SpeedContext(temperature: .init(celsius: 0))),
+            ("densityOnly", SpeedContext(density: .init(value: 0.9, unit: .gramsPerLiter))),
+            ("measuredPressureOnly", SpeedContext(measuredPressure: .init(hectopascals: 500))),
+            ("pressureAltitude", SpeedContext(pressureAltitude: .init(feet: 10000))),
+            ("standardISA", .standardISA)
+        ]
+
+        func ifPossibleIsNil(_ speed: Speed, _ target: SpeedReference) -> Bool {
+            switch target {
+            case .calibratedAirspeed: return speed.casIfPossible == nil
+            case .equivalentAirspeed: return speed.easIfPossible == nil
+            case .trueAirspeed: return speed.tasIfPossible == nil
+            case .machNumber: return speed.machIfPossible == nil
+            }
+        }
+
+        for (name, context) in contexts {
+            for source in SpeedReference.allCases {
+                let speed = source == .machNumber
+                    ? Speed(mach: 0.7, context: context)
+                    : Speed(knots: 250, reference: source, context: context)
+
+                for target in SpeedReference.allCases {
+                    let label = "\(name): \(source.abbreviation) → \(target.abbreviation)"
+                    let succeeds = (try? speed.convertedThrowing(to: target)) != nil
+
+                    XCTAssertEqual(speed.canConvert(to: target), succeeds, "canConvert, \(label)")
+                    XCTAssertEqual(ifPossibleIsNil(speed, target), !succeeds, "IfPossible, \(label)")
+                }
+            }
+        }
+    }
+
+    func testMach_FromCAS_NeedsOnlyPressureRatio() throws {
+        let altitude = Measurement<UnitLength>(feet: 35000)
+        let reference = Speed(knots: 250, reference: .calibratedAirspeed, context: SpeedContext(pressureAltitude: altitude))
+        let pressureOnly = Speed(
+            knots: 250,
+            reference: .calibratedAirspeed,
+            context: SpeedContext(measuredPressure: ISA.pressure(at: altitude))
+        )
+
+        XCTAssertEqual(try XCTUnwrap(pressureOnly.machIfPossible), reference.mach, accuracy: 1e-6)
     }
 }
