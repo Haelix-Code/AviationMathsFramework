@@ -17,10 +17,23 @@ public struct DegreesMinutesSeconds: Equatable, Hashable, Codable, Sendable {
 
     public init(decimalDegrees: Double) {
         let unsigned = abs(decimalDegrees)
-        let deg = Int(unsigned)
+        var deg = Int(unsigned)
         let minutesDecimal = (unsigned - Double(deg)) * 60.0
-        let min = Int(minutesDecimal)
-        let sec = (minutesDecimal - Double(min)) * 60.0
+        var min = Int(minutesDecimal)
+        var sec = (minutesDecimal - Double(min)) * 60.0
+
+        // Round before carrying: floating-point noise can land seconds just
+        // under 60 (e.g. 59.999999999987), which must still roll over into
+        // minutes (and minutes into degrees) rather than display as "60.00s".
+        sec = (sec * 100).rounded() / 100
+        if sec >= 60 {
+            sec -= 60
+            min += 1
+        }
+        if min >= 60 {
+            min -= 60
+            deg += 1
+        }
 
         self.init(degrees: deg, minutes: min, seconds: sec)
     }
