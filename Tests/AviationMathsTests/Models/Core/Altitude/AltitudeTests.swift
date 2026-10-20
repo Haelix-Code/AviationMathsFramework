@@ -211,4 +211,67 @@ final class UnitAltitudeTests: XCTestCase {
         let expectedSLTemp = 15 + (6.5/1000 * 800 * 0.3048)
         XCTAssertEqual(context.seaLevelTemperature!.celsius, expectedSLTemp, accuracy: 0.1)
     }
+
+    /// `canConvertToTrueAltitude` unconditionally returns `true` when the
+    /// altitude is already `.trueAltitude` (no conversion needed at all) or
+    /// `.geopotential` (a pure geometric transform). But
+    /// `convertToTrueAltitudeThrowing()` guards on `seaLevelTemperature` and
+    /// `lapseRate` *before* switching on `reference`, so it throws even for
+    /// those two cases when the context lacks a temperature profile — despite
+    /// `canConvertToTrueAltitude` promising success. Uses the throwing path
+    /// (not the trapping `trueAltitudeIfPossible`/`trueAltitude`) so the
+    /// contract violation surfaces as a test failure, not a process crash.
+    func testCanConvertToTrueAltitude_AgreesWithThrowingConversion_WhenAlreadyTrueAltitude() {
+        let incompleteContext = AltitudeContext() // no seaLevelTemperature, no lapseRate
+        let altitude = Altitude(feet: 5000, reference: .trueAltitude, context: incompleteContext)
+
+        XCTAssertTrue(altitude.canConvertToTrueAltitude, "No profile is needed: it's already true altitude")
+
+        XCTAssertNoThrow(
+            try altitude.valueThrowing(in: .trueAltitude),
+            "canConvertToTrueAltitude promised this would succeed"
+        )
+    }
+
+    /// Same mismatch for the
+    /// `.geopotential` case, which `canConvertToTrueAltitude` also always
+    /// allows (a pure geometric transform, no temperature profile needed).
+    func testCanConvertToTrueAltitude_AgreesWithThrowingConversion_FromGeopotential() {
+        let incompleteContext = AltitudeContext() // no seaLevelTemperature, no lapseRate
+        let altitude = Altitude(feet: 5000, reference: .geopotential, context: incompleteContext)
+
+        XCTAssertTrue(altitude.canConvertToTrueAltitude)
+
+        XCTAssertNoThrow(
+            try altitude.valueThrowing(in: .trueAltitude),
+            "canConvertToTrueAltitude promised this would succeed"
+        )
+    }
+
+    /// `==` picks AGL vs AMSL as the comparison basis only when *both* sides
+    /// have ground elevation; `hash(into:)` picks its basis from only `self`.
+    /// So two altitudes that `==` reports equal (via the AMSL fallback, since
+    /// one side lacks ground elevation) can still hash differently, because
+    /// the side that *does* have ground elevation hashes on AGL instead.
+    /// This violates Hashable's contract that equal values must hash equally.
+    func testHashable_AgreesWithEquatable_WhenOnlyOneSideHasGroundElevation() {
+        let withGround = Altitude(
+            value: .init(meters: 1500),
+            reference: .amsl,
+            context: .init(groundElevation: .init(meters: 1000))
+        )
+        let withoutGround = Altitude(
+            value: .init(meters: 1500),
+            reference: .amsl,
+            context: .init() // no ground elevation
+        )
+
+        // Equatable falls back to AMSL since `withoutGround` has none: 1500 == 1500.
+        XCTAssertEqual(withGround, withoutGround)
+
+        XCTAssertEqual(
+            withGround.hashValue, withoutGround.hashValue,
+            "Equal altitudes must hash equally, but hash(into:) picks AGL vs AMSL per-side instead of matching =="
+        )
+    }
 }

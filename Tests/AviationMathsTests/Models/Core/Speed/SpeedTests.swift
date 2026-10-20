@@ -231,4 +231,21 @@ final class SpeedTests: XCTestCase {
         XCTAssertEqual(speedTAS, speedCAS,
                       "Same physical speed should be equal")
     }
+
+    /// `==` compares `tas.mps` with a 1e-7 tolerance, but `hash(into:)` combines
+    /// the raw `tas.mps` double with no tolerance. Two speeds that differ by
+    /// less than the equality tolerance compare equal but hash differently,
+    /// which violates Hashable's contract that equal values must hash equally.
+    func testHashable_AgreesWithEquatable_ForValuesWithinEqualityTolerance() {
+        let context = SpeedContext.standardISA
+        let a = Speed(mps: 100.0, reference: .trueAirspeed, context: context)
+        let b = Speed(mps: 100.0 + 5e-8, reference: .trueAirspeed, context: context)
+
+        XCTAssertEqual(a, b, "Within the 1e-7 equality tolerance, these must compare equal")
+
+        XCTAssertEqual(
+            a.hashValue, b.hashValue,
+            "Equal speeds must hash equally, but hash(into:) has no tolerance while == does"
+        )
+    }
 }

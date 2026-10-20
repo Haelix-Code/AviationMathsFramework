@@ -314,6 +314,35 @@ final class SpeedContextTests: XCTestCase {
         }
     }
 
+    /// The context has a measured temperature of -10°C, but taken at 10,000ft
+    /// AMSL (`temperatureReferenceAltitudeAMSL`), not at the aircraft's actual
+    /// altitude of 5,000ft. `SpeedContext.at(altitude:)` currently prefers
+    /// `ac.temperatureAtReference` unconditionally, using -10°C as if it were
+    /// the temperature at 5,000ft. The correct temperature at 5,000ft, found by
+    /// applying the context's own (lapse-rate-derived) temperature model via
+    /// `AltitudeContext.temperature(at:)`, is +2.5°C.
+    func testAtAltitude_UsesLapseAdjustedTemperature_NotRawTemperatureAtReference() {
+        let context = AltitudeContext(
+            groundElevation: .surface,
+            qnh: ISA.seaLevelPressure,
+            surfaceTemperature: ISA.seaLevelTemperature,
+            temperatureReferenceAltitudeAMSL: .init(feet: 10000),
+            temperatureAtReference: .init(celsius: -10),
+            lapseRate: nil // derive it from the surface/reference temperature pair above
+        )
+        let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: context)
+
+        let correctTemperature = context.temperature(at: altitude.amsl)
+        XCTAssertNotNil(correctTemperature, "Lapse rate should be derivable from the context above")
+
+        let speedContext = SpeedContext.at(altitude: altitude)
+        XCTAssertNotNil(speedContext.temperature)
+
+        if let correct = correctTemperature, let actual = speedContext.temperature {
+            XCTAssertEqual(actual.celsius, correct.celsius, accuracy: 0.1)
+        }
+    }
+
     func testValidatedSpeedContext_AtQNHAltitude_DoesNotThrow() throws {
         // Uses .standardISA, which is a *complete* AltitudeContext (ground
         // elevation, QNH, sea-level temperature, surface temperature and lapse

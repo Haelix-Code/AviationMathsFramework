@@ -228,4 +228,26 @@ final class AirDataEquationsTests: XCTestCase {
     }
 
     private let seaLevelSpeedOfSound = ISA.seaLevelSpeedOfSound.mps
+
+    /// `impactPressureCoefficient(fromMach:)` always applies the subsonic pitot
+    /// relation, which is only valid for M < 1. At M ≥ 1 air crosses a shock
+    /// ahead of the probe and the correct relation is the Rayleigh supersonic
+    /// pitot formula:
+    ///   qc/p = [ (γ+1)²M² / (4γM² - 2(γ-1)) ]^(γ/(γ-1)) · [ (1-γ+2γM²) / (γ+1) ] - 1
+    /// computed here directly from the same γ the production code uses, so this
+    /// is the correct supersonic value, not a guess.
+    func testImpactPressureCoefficient_Supersonic_MatchesRayleighFormula() {
+        let gamma = ISA.ratioSpecificHeats
+        let mach = 1.2
+
+        let term1 = pow((gamma + 1) * (gamma + 1) * mach * mach /
+                         (4 * gamma * mach * mach - 2 * (gamma - 1)), gamma / (gamma - 1))
+        let term2 = (1 - gamma + 2 * gamma * mach * mach) / (gamma + 1)
+        let correctQc = term1 * term2 - 1
+
+        let actualQc = AirDataEquations.impactPressureCoefficient(fromMach: mach)
+
+        XCTAssertEqual(actualQc, correctQc, accuracy: 0.001,
+                      "Above Mach 1, impact pressure must use the Rayleigh (shock) relation, not the subsonic one")
+    }
 }

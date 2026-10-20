@@ -290,4 +290,43 @@ final class WindTriangleTests: XCTestCase {
         XCTAssertEqual(ground.bearing.degrees, 0, accuracy: 0.1)
     }
 
+    /// `headingForTrack` only checks that the *crosswind* component doesn't
+    /// exceed TAS; it never checks whether the resulting groundspeed along the
+    /// track is positive. With a pure headwind faster than TAS, the crosswind
+    /// component is ~0 (so the guard trivially passes), but flying the
+    /// returned heading actually yields a ground track reversed 180° from the
+    /// one requested. Whatever `headingForTrack` returns (nil, or a heading),
+    /// that heading must actually achieve the requested track when flown.
+    func testHeadingForTrack_HeadwindExceedingTAS_MustNotClaimUnachievableTrack() {
+        let track = Measurement<UnitAngle>(degrees: 0)
+        let tas = Measurement<UnitSpeed>(knots: 50)
+        let wind = Wind(feet: 0, knots: 100, fromDirection: 0) // pure headwind, faster than TAS
+
+        guard let result = WindTriangle.headingForTrack(track: track, tas: tas, wind: wind) else {
+            return // nil ("no solution") is an acceptable answer here
+        }
+
+        let achieved = WindTriangle.groundVectorPolar(heading: result.polar.bearing, tas: tas, wind: wind)
+        XCTAssertEqual(
+            achieved.bearing.degrees, track.degrees, accuracy: 1,
+            "headingForTrack returned heading \(result.polar.bearing.degrees)\u{00B0} claiming track " +
+            "\(track.degrees)\u{00B0}, but flying it actually gives track \(achieved.bearing.degrees)\u{00B0}"
+        )
+    }
+
+    /// With TAS = 0, the crosswind-component guard divides by `tas.knots` (0),
+    /// and with no crosswind at all (pure tailwind here) that's a 0/0 that
+    /// produces NaN rather than failing the guard. With zero airspeed, no
+    /// heading can achieve any track, so the correct answer is nil, not a
+    /// result carrying NaN bearing/WCA.
+    func testHeadingForTrack_ZeroTAS_ReturnsNilInsteadOfNaN() {
+        let track = Measurement<UnitAngle>(degrees: 0)
+        let tas = Measurement<UnitSpeed>(knots: 0)
+        let wind = Wind(feet: 0, knots: 10, fromDirection: 180) // pure tailwind: zero crosswind component
+
+        let result = WindTriangle.headingForTrack(track: track, tas: tas, wind: wind)
+
+        XCTAssertNil(result, "Zero TAS cannot achieve any track; must return nil, not a NaN-filled result")
+    }
+
 }

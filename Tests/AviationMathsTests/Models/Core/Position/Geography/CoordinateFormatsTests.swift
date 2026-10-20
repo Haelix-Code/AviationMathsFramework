@@ -52,6 +52,19 @@ final class CoordinateFormatsTests: XCTestCase {
         XCTAssertEqual(ddm.formatted(direction: "W", isLongitude: true, minutesPrecision: 3), "005°07.123'W")
     }
 
+    /// `DegreesMinutesSeconds(decimalDegrees:)` computes minutes/seconds by
+    /// truncation with no carry step. For 10.1°, floating-point noise in
+    /// `(unsigned - deg) * 60` lands the minutes fraction just under 6, giving
+    /// minutes = 5 and seconds that round to 60.00 when formatted — instead of
+    /// rolling over to minutes = 6, seconds = 0.
+    func testDMSInitFromDecimalDegrees_RollsOverSecondsAndMinutes() {
+        let dms = DegreesMinutesSeconds(decimalDegrees: 10.1)
+
+        XCTAssertEqual(dms.degrees, 10)
+        XCTAssertEqual(dms.minutes, 6, "0.1\u{00B0} is exactly 6 minutes; seconds must not round up into a 60th minute")
+        XCTAssertEqual(dms.seconds, 0, accuracy: 0.01)
+    }
+
     func testCrossConversionConsistency() {
         let dms = DegreesMinutesSeconds(degrees: 10, minutes: 30, seconds: 30)
         let ddm = dms.asDegreesDecimalMinutes

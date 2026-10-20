@@ -251,4 +251,63 @@ final class BarometricEquationsTests: XCTestCase {
         )
     }
 
+    /// `pressureFromTrueAltitude`'s formula divides by `lapseRate` (via the
+    /// exponent `g/(R·L)`), which an isothermal layer (L = 0, producible by
+    /// `AltitudeContext` from two equal temperatures) turns into `pow(1, inf)`.
+    /// That happens to stay finite but pins the pressure at the reference value
+    /// regardless of altitude — wrong. The correct isothermal relation is the
+    /// exponential barometric formula: P = P₀·exp(-g·h / (R·T₀)).
+    func testPressureFromTrueAltitude_IsothermalLapseRate_MatchesExponentialFormula() {
+        let referencePressure = ISA.seaLevelPressure
+        let referenceTemperature = ISA.seaLevelTemperature
+        let trueAltitude = Measurement<UnitLength>(meters: 1000)
+
+        let g = ISA.standardGravity.metersPerSecondSquared
+        let R = ISA.dryAirGasConstant
+        let correctPressurePa = referencePressure.pascals *
+            exp(-g * trueAltitude.meters / (R * referenceTemperature.kelvin))
+
+        let actualPressure = BarometricEquations.pressureFromTrueAltitude(
+            trueAltitude: trueAltitude,
+            referencePressure: referencePressure,
+            referenceTemperature: referenceTemperature,
+            lapseRate: 0.0
+        )
+
+        XCTAssertEqual(
+            actualPressure.pascals, correctPressurePa, accuracy: 1,
+            "An isothermal layer (lapseRate 0) must use the exponential barometric formula, not divide by L"
+        )
+    }
+
+    /// `trueAltitudeFromPressure`'s inverse formula computes `(T0/L) * (1 - pow(ratio, R*L/g))`;
+    /// with L = 0 that's `Infinity * 0`, which is NaN for every input pressure,
+    /// regardless of what altitude it actually corresponds to. The correct
+    /// isothermal inverse is h = (R·T₀/g)·ln(P₀/P).
+    func testTrueAltitudeFromPressure_IsothermalLapseRate_MatchesLogFormula() {
+        let referencePressure = ISA.seaLevelPressure
+        let referenceTemperature = ISA.seaLevelTemperature
+        let g = ISA.standardGravity.metersPerSecondSquared
+        let R = ISA.dryAirGasConstant
+
+        let correctAltitudeMeters = 1000.0
+        let pressure = Measurement<UnitPressure>(
+            pascals: referencePressure.pascals *
+                exp(-g * correctAltitudeMeters / (R * referenceTemperature.kelvin))
+        )
+
+        let actualAltitude = BarometricEquations.trueAltitudeFromPressure(
+            pressure: pressure,
+            referencePressure: referencePressure,
+            referenceTemperature: referenceTemperature,
+            lapseRate: 0.0
+        )
+
+        XCTAssertTrue(actualAltitude.meters.isFinite, "Isothermal lapse rate must not produce NaN/Infinity")
+        XCTAssertEqual(
+            actualAltitude.meters, correctAltitudeMeters, accuracy: 1,
+            "An isothermal layer (lapseRate 0) must use the exponential/log barometric formula, not divide by L"
+        )
+    }
+
 }
