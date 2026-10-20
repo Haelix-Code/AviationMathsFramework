@@ -92,6 +92,13 @@ internal enum BarometricEquations {
         let T0 = referenceTemperature.kelvin
         let L = lapseRate
 
+        guard abs(L) > 1e-9 else {
+            // Isothermal layer: the lapse-rate formula divides by L, so use
+            // the exponential barometric formula instead.
+            let pressure = referencePressure.pascals * exp(-g * h / (R * T0))
+            return .init(pascals: pressure)
+        }
+
         let base = 1.0 - (L * h / T0)
         let exponent = g / (R * L)
 
@@ -114,6 +121,13 @@ internal enum BarometricEquations {
         let p0 = referencePressure.pascals
         let T0 = referenceTemperature.kelvin
         let L = lapseRate
+
+        guard abs(L) > 1e-9 else {
+            // Isothermal layer: (T0/L)*(1-pow(ratio,0)) is Infinity*0 = NaN for
+            // every input, so use the inverse of the exponential formula instead.
+            let altitude = (R * T0 / g) * log(p0 / p)
+            return .init(meters: altitude)
+        }
 
         let pressureRatio = p / p0
         let exponent = R * L / g
