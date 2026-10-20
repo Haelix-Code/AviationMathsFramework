@@ -85,7 +85,11 @@ public struct Altitude: Codable, Equatable, Sendable {
         case .pressureAltitude, .trueAltitude:
             return convertToAMSL() - groundElev
         case .geopotential:
-            return convertGeopotentialToTrueAltitude() - groundElev
+            // Route through indicated AMSL (not the raw geometric true altitude) so AGL
+            // stays consistent with the .pressureAltitude/.trueAltitude cases above.
+            let trueAlt = convertGeopotentialToTrueAltitude()
+            let amsl = Altitude(value: trueAlt, reference: .trueAltitude, context: context).convertToAMSL()
+            return amsl - groundElev
         }
     }
 
@@ -254,10 +258,15 @@ public struct Altitude: Codable, Equatable, Sendable {
         case .geopotential:
             return value
 
+        case .pressureAltitude:
+            // Pressure altitude is, by the ISA model's own definition, already a
+            // geopotential quantity — no temperature profile needed or used.
+            return value
+
         case .trueAltitude:
             return convertTrueAltitudeToGeopotential(value)
 
-        case .agl, .amsl, .pressureAltitude:
+        case .agl, .amsl:
             // First convert to true altitude, then to geopotential
             let trueAlt = convertToTrueAltitude()
             return convertTrueAltitudeToGeopotential(trueAlt)

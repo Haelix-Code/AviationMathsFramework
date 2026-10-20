@@ -55,12 +55,16 @@ extension Altitude {
             return .init(meters: amsl.meters - elevation.meters)
 
         case .geopotential:
-            // Geopotential → True (pure geometric) → AGL
+            // Geopotential → True → indicated AMSL → AGL, consistent with the
+            // .pressureAltitude/.trueAltitude cases above (not the raw geometric
+            // true altitude, which would mix a geometric and a QNH-indicated datum).
             let trueAlt = convertGeopotentialToTrueAltitude()
+            let amsl = try Altitude(value: trueAlt, reference: .trueAltitude, context: context)
+                .convertToAMSLThrowing()
             guard let elevation = context.groundElevation else {
                 throw AltitudeConversionError.missingGroundElevation
             }
-            return .init(meters: trueAlt.meters - elevation.meters)
+            return .init(meters: amsl.meters - elevation.meters)
         }
     }
     
@@ -258,6 +262,11 @@ extension Altitude {
         case .geopotential:
             return value
 
+        case .pressureAltitude:
+            // Pressure altitude is, by the ISA model's own definition, already a
+            // geopotential quantity — no temperature profile needed or used.
+            return value
+
         case .trueAltitude:
             // True → Geopotential is a pure geometric transformation
             let r = ISA.earthMeanRadius.meters
@@ -265,7 +274,7 @@ extension Altitude {
             let H = (r * h) / (r + h)
             return .init(meters: H)
 
-        case .agl, .amsl, .pressureAltitude:
+        case .agl, .amsl:
             // First convert to true altitude, then to geopotential
             let trueAlt = try convertToTrueAltitudeThrowing()
             let r = ISA.earthMeanRadius.meters

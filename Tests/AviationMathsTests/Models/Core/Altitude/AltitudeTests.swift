@@ -274,4 +274,41 @@ final class UnitAltitudeTests: XCTestCase {
             "Equal altitudes must hash equally, but hash(into:) picks AGL vs AMSL per-side instead of matching =="
         )
     }
+
+    /// By the ISA model's own definition, pressure altitude (referenced to 1013.25 hPa)
+    /// is numerically the same quantity as geopotential altitude — the conversion should
+    /// be a no-op and must not require a temperature profile.
+    func testConvertToGeopotential_FromPressureAltitude_IsIdentityAndNeedsNoTemperatureProfile() {
+        let incompleteContext = AltitudeContext() // no seaLevelTemperature, no lapseRate
+        let altitude = Altitude(feet: 18000, reference: .pressureAltitude, context: incompleteContext)
+
+        XCTAssertTrue(altitude.canConvertToGeopotential)
+        XCTAssertEqual(try altitude.valueThrowing(in: .geopotential).feet, 18000, accuracy: 1e-6)
+    }
+
+    /// `.agl` is defined as `amsl − groundElevation` (barometric/QFE-style), so converting
+    /// from `.geopotential` to `.agl` must route through indicated AMSL, not the raw
+    /// geometric true altitude — otherwise it mixes two different datums.
+    func testConvertToAGL_FromGeopotential_MatchesTheEquivalentTrueAltitudeConversion() {
+        let context = AltitudeContext(
+            groundElevation: .init(feet: 500),
+            qnh: .init(hectopascals: 1013.25),
+            seaLevelTemperature: .init(celsius: 20),
+            lapseRate: ISA.troposphereLapseRate
+        )
+
+        let trueAltitude = Altitude(feet: 5500, reference: .trueAltitude, context: context)
+        let geopotentialEquivalent = Altitude(
+            value: trueAltitude.geopotential,
+            reference: .geopotential,
+            context: context
+        )
+
+        XCTAssertEqual(
+            geopotentialEquivalent.agl.feet,
+            trueAltitude.agl.feet,
+            accuracy: 1e-6,
+            "Geopotential → AGL must agree with the equivalent True altitude → AGL conversion"
+        )
+    }
 }
