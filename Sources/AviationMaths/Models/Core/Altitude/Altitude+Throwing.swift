@@ -111,40 +111,52 @@ extension Altitude {
     }
     
     internal func convertToTrueAltitudeThrowing() throws -> Measurement<UnitLength> {
-        guard let seaLevelTemp = context.seaLevelTemperature else {
-            throw AltitudeConversionError.missingTemperatureProfile
-        }
-        
-        guard let lapseRate = context.lapseRate else {
-            throw AltitudeConversionError.missingTemperatureProfile
-        }
-
         switch reference {
         case .trueAltitude:
             return value
-            
+
+        case .geopotential:
+            // Geopotential → True is a pure geometric transformation
+            return convertGeopotentialToTrueAltitude()
+
         case .agl, .amsl:
+            guard let seaLevelTemp = context.seaLevelTemperature else {
+                throw AltitudeConversionError.missingTemperatureProfile
+            }
+
+            guard let lapseRate = context.lapseRate else {
+                throw AltitudeConversionError.missingTemperatureProfile
+            }
+
             let amslValue = reference == .agl ? try convertToAMSLThrowing() : value
-            
+
             guard let qnh = context.qnh else {
                 throw AltitudeConversionError.missingQNH
             }
-            
+
             let pressure = BarometricEquations.pressureFromAltitude(
                 altitude: amslValue,
                 referencePressure: qnh,
                 temperature: ISA.seaLevelTemperature,
                 lapseRate: ISA.troposphereLapseRate
             )
-            
+
             return BarometricEquations.trueAltitudeFromPressure(
                 pressure: pressure,
                 referencePressure: qnh,
                 referenceTemperature: seaLevelTemp,
                 lapseRate: lapseRate
             )
-            
+
         case .pressureAltitude:
+            guard let seaLevelTemp = context.seaLevelTemperature else {
+                throw AltitudeConversionError.missingTemperatureProfile
+            }
+
+            guard let lapseRate = context.lapseRate else {
+                throw AltitudeConversionError.missingTemperatureProfile
+            }
+
             let pressure = BarometricEquations.pressureFromAltitude(
                 altitude: value,
                 referencePressure: ISA.seaLevelPressure,
@@ -162,10 +174,6 @@ extension Altitude {
                 referenceTemperature: seaLevelTemp,
                 lapseRate: lapseRate
             )
-
-        case .geopotential:
-            // Geopotential → True is a pure geometric transformation
-            return convertGeopotentialToTrueAltitude()
         }
     }
     

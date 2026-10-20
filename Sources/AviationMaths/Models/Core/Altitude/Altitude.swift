@@ -192,15 +192,19 @@ public struct Altitude: Codable, Equatable, Sendable {
     }
 
     internal func convertToTrueAltitude() -> Measurement<UnitLength> {
-        guard let seaLevelTemp = context.seaLevelTemperature else {
-            preconditionFailure("Temperature profile required for True Altitude conversion")
-        }
-
         switch reference {
         case .trueAltitude:
             return value
 
+        case .geopotential:
+            // Geopotential is a pure geometric transformation of True altitude
+            return convertGeopotentialToTrueAltitude()
+
         case .agl, .amsl:
+            guard let seaLevelTemp = context.seaLevelTemperature else {
+                preconditionFailure("Temperature profile required for True Altitude conversion")
+            }
+
             // AMSL → Pressure (using QNH with ISA) → True (using actual temp profile)
             let amslValue = reference == .agl ? convertToAMSL() : value
 
@@ -219,6 +223,10 @@ public struct Altitude: Codable, Equatable, Sendable {
             )
 
         case .pressureAltitude:
+            guard let seaLevelTemp = context.seaLevelTemperature else {
+                preconditionFailure("Temperature profile required for True Altitude conversion")
+            }
+
             // PA → Pressure (using ISA) → True (using actual temp profile)
             let pressure = BarometricEquations.pressureFromAltitude(
                 altitude: value,
@@ -233,10 +241,6 @@ public struct Altitude: Codable, Equatable, Sendable {
                 referenceTemperature: seaLevelTemp,
                 lapseRate: referenceLapseRate
             )
-
-        case .geopotential:
-            // Geopotential is a pure geometric transformation of True altitude
-            return convertGeopotentialToTrueAltitude()
         }
     }
 
