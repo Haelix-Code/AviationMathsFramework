@@ -43,7 +43,7 @@ extension Longitude {
 extension Longitude: CustomStringConvertible {
     public var description: String {
         let ddm = degreesDecimalMinutes
-        return ddm.formatted(direction: direction.rawValue, isLongitude: false)
+        return ddm.formatted(direction: direction.rawValue, isLongitude: true)
     }
 }
 
