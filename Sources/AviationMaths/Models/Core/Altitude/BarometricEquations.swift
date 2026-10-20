@@ -3,79 +3,45 @@ import Foundation
 internal enum BarometricEquations {
     // MARK: - Standard Barometric Conversions (ISA)
 
-    /// Altitude (above the 0-reference of `temperature`/`referencePressure`) at which the
-    /// lapse-rate layer ends and the ISA model switches to an isothermal layer.
-    /// Matches the troposphere/lower-stratosphere boundary used by `ISA`.
-    private static let lapseLayerCeilingMeters: Double = 11_000
-
-    /// Convert pressure to altitude using the two-layer barometric model: a lapse-rate
-    /// layer from the reference up to `lapseLayerCeilingMeters`, then an isothermal layer
-    /// above it (at the temperature the lapse-rate layer reaches at that ceiling).
-    /// Below the ceiling: h = (T₀/L) * (1 - (P/P₀)^(R*L/g))
-    /// Above it: h = Ht + (R*Tt/g) * ln(Pt/P), where Tt, Pt are the temperature/pressure at Ht.
+    /// Convert pressure to altitude through the ICAO layers (see `LayeredAtmosphere`),
+    /// starting from `referencePressure` and `temperature` at height 0 with `lapseRate`
+    /// in the bottom layer. The defaults are the ISA itself.
     package static func altitudeFromPressure(
         pressure: Measurement<UnitPressure>,
         referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
         temperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
         lapseRate: Double = ISA.troposphereLapseRate
     ) -> Measurement<UnitLength> {
-        let g = ISA.standardGravity.metersPerSecondSquared
-        let R = ISA.dryAirGasConstant
-        let T0 = temperature.kelvin
-        let P0 = referencePressure.pascals
-        let P = pressure.pascals
-
-        let exponent = (R * lapseRate) / g
-        func lapseLayerAltitude(forPressure p: Double) -> Double {
-            T0 / lapseRate * (1 - pow(p / P0, exponent))
-        }
-
-        let Ht = lapseLayerCeilingMeters
-        let Tt = T0 - lapseRate * Ht
-        let Pt = P0 * pow((T0 - lapseRate * Ht) / T0, g / (lapseRate * R))
-
-        guard P < Pt else {
-            return .init(meters: lapseLayerAltitude(forPressure: P))
-        }
-
-        let altitude = Ht - (R * Tt / g) * log(P / Pt)
-        return .init(meters: altitude)
+        let atmosphere = LayeredAtmosphere(
+            baseTemperature: temperature.kelvin,
+            basePressure: referencePressure.pascals,
+            lowestLayerLapseRate: lapseRate
+        )
+        return .init(meters: atmosphere.altitude(atPressure: pressure.pascals))
     }
 
-    /// Convert altitude to pressure using the two-layer barometric model: a lapse-rate
-    /// layer from the reference up to `lapseLayerCeilingMeters`, then an isothermal layer
-    /// above it (at the temperature the lapse-rate layer reaches at that ceiling).
-    /// Below the ceiling: P = P₀ * ((T₀ - L*h)/T₀)^(g/(L*R))
-    /// Above it: P = Pt * exp(-g*(h - Ht)/(R*Tt)), where Tt, Pt are the temperature/pressure at Ht.
+    /// Convert altitude to pressure through the ICAO layers (see `LayeredAtmosphere`),
+    /// starting from `referencePressure` and `temperature` at height 0 with `lapseRate`
+    /// in the bottom layer. The defaults are the ISA itself.
     package static func pressureFromAltitude(
         altitude: Measurement<UnitLength>,
         referencePressure: Measurement<UnitPressure> = ISA.seaLevelPressure,
         temperature: Measurement<UnitTemperature> = ISA.seaLevelTemperature,
         lapseRate: Double = ISA.troposphereLapseRate
     ) -> Measurement<UnitPressure> {
-        let g = ISA.standardGravity.metersPerSecondSquared
-        let R = ISA.dryAirGasConstant
-        let T0 = temperature.kelvin
-        let P0 = referencePressure.pascals
-        let h = altitude.meters
-
-        let exponent = g / (lapseRate * R)
-        func lapseLayerPressure(at height: Double) -> Double {
-            P0 * pow((T0 - lapseRate * height) / T0, exponent)
-        }
-
-        let Ht = lapseLayerCeilingMeters
-        guard h > Ht else {
-            return .init(pascals: lapseLayerPressure(at: h))
-        }
-
-        let Tt = T0 - lapseRate * Ht
-        let Pt = lapseLayerPressure(at: Ht)
-        let pressureAtAltitude = Pt * exp(-g * (h - Ht) / (R * Tt))
-        return .init(pascals: pressureAtAltitude)
+        let atmosphere = LayeredAtmosphere(
+            baseTemperature: temperature.kelvin,
+            basePressure: referencePressure.pascals,
+            lowestLayerLapseRate: lapseRate
+        )
+        return .init(pascals: atmosphere.pressure(at: altitude.meters))
     }
 
     // MARK: - True Altitude Conversions (Non-Standard Atmosphere)
+
+    /// Height above which the true-altitude temperature profile stops using the context's
+    /// lapse rate and follows the ISA layers offset by the ΔISA reached there (ISA + ΔISA).
+    private static let tropopauseMeters: Double = 11_000
 
     /// Convert true altitude to pressure using actual temperature profile
     /// Based on: maths.service.ts:: convertVerticalPressurePaTempCToAltitudePA
@@ -91,6 +57,13 @@ internal enum BarometricEquations {
         let h = trueAltitude.meters
         let T0 = referenceTemperature.kelvin
         let L = lapseRate
+
+        guard h <= tropopauseMeters else {
+            let atmosphere = LayeredAtmosphere(
+                baseTemperature: T0, basePressure: referencePressure.pascals, lowestLayerLapseRate: L
+            )
+            return .init(pascals: atmosphere.pressure(at: h))
+        }
 
         guard abs(L) > 1e-9 else {
             // Isothermal layer: the lapse-rate formula divides by L, so use
@@ -121,6 +94,11 @@ internal enum BarometricEquations {
         let p0 = referencePressure.pascals
         let T0 = referenceTemperature.kelvin
         let L = lapseRate
+
+        let atmosphere = LayeredAtmosphere(baseTemperature: T0, basePressure: p0, lowestLayerLapseRate: L)
+        guard p >= atmosphere.pressure(at: tropopauseMeters) else {
+            return .init(meters: atmosphere.altitude(atPressure: p))
+        }
 
         guard abs(L) > 1e-9 else {
             // Isothermal layer: (T0/L)*(1-pow(ratio,0)) is Infinity*0 = NaN for

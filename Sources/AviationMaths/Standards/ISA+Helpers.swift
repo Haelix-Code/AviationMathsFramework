@@ -19,20 +19,13 @@ extension ISA {
         return .init(mps: speedMS)
     }
 
+    /// Static pressure at `amsl` under the same QNH model `Altitude` uses for `.amsl`, so
+    /// the two agree at every height, including above the tropopause.
     public static func pressureFromQNHAndAMSL(
         qnh: Measurement<UnitPressure>,
         amsl: Measurement<UnitLength>
     ) -> Measurement<UnitPressure> {
-        let h = amsl.converted(to: .meters).value
-        let T0 = ISA.seaLevelTemperature.kelvin
-        let L  = ISA.troposphereLapseRate
-        let g  = ISA.standardGravity
-        let R  = ISA.dryAirGasConstant
-
-        let tempRatio = max(1e-9, (T0 - L * h) / T0)
-        let exponent = g.metersPerSecondSquared / (L * R)
-        let p = qnh.converted(to: .pascals).value * pow(tempRatio, exponent)
-        return .init(value: p, unit: .pascals)
+        BarometricEquations.pressureFromAltitude(altitude: amsl, referencePressure: qnh)
     }
 
 }

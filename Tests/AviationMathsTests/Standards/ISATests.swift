@@ -33,7 +33,8 @@ final class ISATests: XCTestCase {
         XCTAssertEqual(isa.densityAltitude.value, 20000)
         XCTAssertEqual(isa.relativeDensity, 0.071865, accuracy: 0.001)
         XCTAssertEqual(isa.speedOfSound.value, 295.07, accuracy: 0.01)
-        XCTAssertEqual(isa.lapseRate, 0)
+        // 20 km is the base of the ICAO 20–32 km layer (+1 K/km), which starts AT its base
+        XCTAssertEqual(isa.lapseRate, -0.001)
     }
 
     func testSeaLevel_DeltaISA() {
@@ -63,10 +64,11 @@ final class ISATests: XCTestCase {
         XCTAssertEqual(isa.temperature.kelvin, 236.65, accuracy: 0.01)
         XCTAssertEqual(isa.pressure.pascals, 5475.16, accuracy: 0.01)
         XCTAssertEqual(isa.density.value, 0.08059, accuracy: 0.001)
-        XCTAssertEqual(isa.densityAltitude.value, 20559.97, accuracy: 0.1)
+        // Lands in the ICAO 20–32 km layer (+1 K/km), not an extrapolated isothermal layer
+        XCTAssertEqual(isa.densityAltitude.value, 20544.73, accuracy: 0.1)
         XCTAssertEqual(isa.relativeDensity, 0.065792, accuracy: 0.001)
         XCTAssertEqual(isa.speedOfSound.value, 308.39, accuracy: 0.01)
-        XCTAssertEqual(isa.lapseRate, 0)
+        XCTAssertEqual(isa.lapseRate, -0.001)
     }
 
     func testTropopauseBoundary() {

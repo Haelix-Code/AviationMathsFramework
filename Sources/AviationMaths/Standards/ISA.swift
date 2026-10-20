@@ -4,6 +4,8 @@ import Foundation
 ///
 /// Implements the ICAO Standard Atmosphere (ISO 2533:1975) for altitudes from 0 to 20,000 meters,
 /// covering the troposphere (0-11km) and lower stratosphere (11-20km).
+/// Above 20 km it continues through the remaining ICAO Doc 7488 layers to 80 km
+/// (see `LayeredAtmosphere`), and extrapolates the top layer beyond that.
 /// All units used in calculations are SI.
 public struct ISA {
 
@@ -34,7 +36,13 @@ public struct ISA {
 
     private static let troposphereBase: Measurement<UnitLength> = .init(value: 0, unit: .meters)
     private static let lowerStratosphereBase: Measurement<UnitLength> = .init(value: 11_000, unit: .meters)
-    private static let modelUpperLimit: Measurement<UnitLength> = .init(value: 20_000, unit: .meters)
+    /// Base of the ICAO layers above the lower stratosphere, which `LayeredAtmosphere` handles.
+    private static let upperLayersBase: Measurement<UnitLength> = .init(value: 20_000, unit: .meters)
+
+    /// The geopotential altitudes ICAO Doc 7488 defines the standard atmosphere over.
+    /// Below it altitudes are clamped to −5 km; above it the top layer is extrapolated.
+    public static let validAltitudeRange: ClosedRange<Measurement<UnitLength>> =
+        Measurement(meters: -5_000)...Measurement(meters: 80_000)
     public static let troposphereLapseRate: Double = 0.0065  // K/m
     private static let lowerStratosphereLapseRate: Double = 0.0
     private static let tropopauseTemperature: Measurement<UnitTemperature> = .init(
@@ -55,8 +63,6 @@ public struct ISA {
 
         if altitudeMeters < -5000 {
             self.altitude = .init(meters: -5000)
-        } else if altitudeMeters > Self.modelUpperLimit.meters {
-            self.altitude = Self.modelUpperLimit
         } else {
             self.altitude = altitude
         }
@@ -93,9 +99,12 @@ public struct ISA {
             // Troposphere: T = T₀ - L × h (temperature decreases with altitude)
             standardTemp = Self.seaLevelTemperature.value -
                           Self.troposphereLapseRate * altitudeMeters
-        } else {
+        } else if altitudeMeters < Self.upperLayersBase.meters {
             // Lower stratosphere: isothermal at tropopause temperature
             standardTemp = Self.tropopauseTemperature.kelvin
+        } else {
+            // Upper ICAO layers
+            standardTemp = LayeredAtmosphere.standard.temperature(at: altitudeMeters)
         }
 
         return .init(kelvin: standardTemp + deltaK)
@@ -107,6 +116,11 @@ public struct ISA {
             // Handle negative altitudes (below sea level)
             if altitudeMeters < 0 {
                 return pressureBelowSeaLevel(altitudeMeters: altitudeMeters)
+            }
+
+            // Upper ICAO layers
+            if altitudeMeters >= Self.upperLayersBase.meters {
+                return .init(pascals: LayeredAtmosphere.standard.pressure(at: altitudeMeters))
             }
 
             // Calculate through troposphere
@@ -232,9 +246,12 @@ public struct ISA {
             let ratio = rho / rho0
             let h = (T0 / L) * (1.0 - pow(ratio, 1.0 / exponent))
             return .init(meters: h)
-        } else {
+        } else if rho >= LayeredAtmosphere.standard.density(at: Self.upperLayersBase.meters) {
             let h = Ht - ((R * Tt) / g) * log(rho / rhot)
             return .init(meters: h)
+        } else {
+            // Upper ICAO layers
+            return .init(meters: LayeredAtmosphere.standard.altitude(atDensity: rho))
         }
     }
 
@@ -249,7 +266,9 @@ public struct ISA {
         let altitudeMeters = altitude.meters
         // Matches the `>=` boundary `temperature` and `pressure` use: the isothermal
         // lower-stratosphere layer starts AT 11,000 m, not strictly above it.
-        if altitudeMeters >= Self.lowerStratosphereBase.meters {
+        if altitudeMeters >= Self.upperLayersBase.meters {
+            return LayeredAtmosphere.standard.lapseRate(at: altitudeMeters)
+        } else if altitudeMeters >= Self.lowerStratosphereBase.meters {
             return Self.lowerStratosphereLapseRate
         } else {
             return Self.troposphereLapseRate

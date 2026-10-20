@@ -208,11 +208,20 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
 
     // MARK: - Temperature Calculation
 
-    /// Calculate temperature at any altitude using the temperature model
+    /// Calculate temperature at any altitude using the temperature model: the lapse rate
+    /// up to 11 km, then the ISA layers offset by the ΔISA reached at 11 km (ISA + ΔISA).
     public func temperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature>? {
         guard let slTemp = seaLevelTemperature,
               let rate = lapseRate else {
             return nil
+        }
+        guard altitude.meters <= 11_000 else {
+            let atmosphere = LayeredAtmosphere(
+                baseTemperature: slTemp.kelvin,
+                basePressure: ISA.seaLevelPressure.pascals,
+                lowestLayerLapseRate: rate
+            )
+            return .init(kelvin: atmosphere.temperature(at: altitude.meters))
         }
         let tempAtAlt = slTemp.kelvin - rate * altitude.meters
         return .init(kelvin: tempAtAlt)

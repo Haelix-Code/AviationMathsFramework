@@ -353,4 +353,24 @@ final class SpeedContextTests: XCTestCase {
 
         XCTAssertNoThrow(try ValidatedSpeedContext(at: validatedAltitude))
     }
+
+    func testAtAltitude_AboveTropopause_MatchesISA() throws {
+        for feet in [39_000.0, 45_000] {
+            let altitude = Altitude(feet: feet, reference: .pressureAltitude, context: .standardISA)
+            let isa = ISA(altitudeFeet: feet)
+
+            let speedContext = SpeedContext.at(altitude: altitude)
+
+            XCTAssertEqual(
+                try XCTUnwrap(speedContext.temperature).kelvin, isa.temperature.kelvin, accuracy: 0.01,
+                "Temperature at PA \(feet) ft"
+            )
+            XCTAssertEqual(
+                try XCTUnwrap(speedContext.relativePressure),
+                isa.pressure.pascals / ISA.seaLevelPressure.pascals,
+                accuracy: 1e-5,
+                "Relative pressure at PA \(feet) ft"
+            )
+        }
+    }
 }
