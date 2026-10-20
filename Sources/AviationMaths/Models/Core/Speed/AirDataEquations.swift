@@ -18,12 +18,50 @@ internal enum AirDataEquations {
 
     package static func impactPressureCoefficient(fromMach mach: Double) -> Double {
         let gamma = ISA.ratioSpecificHeats
-        return pow(1.0 + (gamma - 1.0) / 2.0 * pow(mach, 2),
-                      gamma / (gamma - 1.0)) - 1.0
+        if mach < 1.0 {
+            return pow(1.0 + (gamma - 1.0) / 2.0 * pow(mach, 2),
+                          gamma / (gamma - 1.0)) - 1.0
+        }
+        return rayleighImpactPressureCoefficient(mach: mach, gamma: gamma)
+    }
+
+    /// Rayleigh supersonic pitot relation (air crosses a shock ahead of the probe).
+    private static func rayleighImpactPressureCoefficient(mach: Double, gamma: Double) -> Double {
+        let m2 = mach * mach
+        let shockTerm = pow(
+            ((gamma + 1.0) * (gamma + 1.0) * m2) / (4.0 * gamma * m2 - 2.0 * (gamma - 1.0)),
+            gamma / (gamma - 1.0)
+        )
+        let staticTerm = (1.0 - gamma + 2.0 * gamma * m2) / (gamma + 1.0)
+        return shockTerm * staticTerm - 1.0
     }
 
     static func machNumber(fromImpactPressureCoefficient qc: Double) -> Double {
-        return sqrt(5.0 * (pow(qc + 1.0, 2.0/7.0) - 1.0))
+        let gamma = ISA.ratioSpecificHeats
+        let subsonicMax = rayleighImpactPressureCoefficient(mach: 1.0, gamma: gamma)
+        if qc <= subsonicMax {
+            return sqrt(5.0 * (pow(qc + 1.0, 2.0/7.0) - 1.0))
+        }
+        return supersonicMachNumber(fromImpactPressureCoefficient: qc, gamma: gamma)
+    }
+
+    /// Rayleigh's forward relation has no closed-form inverse; qc/p is monotonic
+    /// in M for M ≥ 1, so bisection finds the Mach number it corresponds to.
+    private static func supersonicMachNumber(fromImpactPressureCoefficient qc: Double, gamma: Double) -> Double {
+        var low = 1.0
+        var high = 10.0
+        while rayleighImpactPressureCoefficient(mach: high, gamma: gamma) < qc {
+            high *= 2.0
+        }
+        for _ in 0..<100 {
+            let mid = (low + high) / 2.0
+            if rayleighImpactPressureCoefficient(mach: mid, gamma: gamma) < qc {
+                low = mid
+            } else {
+                high = mid
+            }
+        }
+        return (low + high) / 2.0
     }
 
     static func equivalentAirspeed(

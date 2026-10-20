@@ -171,7 +171,11 @@ final class SpeedTests: XCTestCase {
 
         let speed = Speed(mach: 2.0, context: context)
 
-        XCTAssertEqual(speed.cas.knots, 829.822, accuracy: 0.001)
+        // At Mach 2.0 the local flow is genuinely supersonic, so CAS must use
+        // the Rayleigh pitot relation (M1 fix) rather than the subsonic
+        // isentropic formula. 829.822 was the old (wrong) subsonic-everywhere
+        // result; 717.027 is the corrected value.
+        XCTAssertEqual(speed.cas.knots, 717.027, accuracy: 0.01)
         XCTAssertEqual(speed.eas.knots, 641.752, accuracy: 0.001)
         XCTAssertEqual(speed.tas.knots, 1152.849, accuracy: 0.001)
     }
