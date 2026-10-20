@@ -10,13 +10,16 @@ public struct CodableLength: Codable, Equatable, Sendable {
     private static let decodeMap: [String: UnitLength] = [
         "m": .meters, "meter": .meters, "meters": .meters,
         "ft": .feet, "foot": .feet, "feet": .feet,
-        "yd": .yards, "yard": .yards, "yards": .yards
+        "yd": .yards, "yard": .yards, "yards": .yards,
+        "nm": .nauticalMiles, "nmi": .nauticalMiles,
+        "nauticalmile": .nauticalMiles, "nauticalmiles": .nauticalMiles
     ]
 
     private static let encodeNames: [UnitLength: String] = [
         .meters: "m",
         .feet: "ft",
-        .yards: "yd"
+        .yards: "yd",
+        .nauticalMiles: "nm"
     ]
 
     enum CodingKeys: String, CodingKey {

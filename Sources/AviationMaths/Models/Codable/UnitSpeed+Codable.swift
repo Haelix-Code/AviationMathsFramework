@@ -11,14 +11,16 @@ public struct CodableSpeed: Codable, Equatable, Sendable {
         "kt": .knots, "kts": .knots, "knot": .knots, "knots": .knots,
         "m/s": .metersPerSecond, "mps": .metersPerSecond,
         "km/h": .kilometersPerHour, "kph": .kilometersPerHour,
-        "fps": .feetPerSecond
+        "fps": .feetPerSecond,
+        "mph": .milesPerHour
     ]
 
     private static let encodeNames: [UnitSpeed: String] = [
         .knots: "knots",
         .metersPerSecond: "m/s",
         .kilometersPerHour: "km/h",
-        .feetPerSecond: "fps"
+        .feetPerSecond: "fps",
+        .milesPerHour: "mph"
     ]
 
     private enum CodingKeys: String, CodingKey {
