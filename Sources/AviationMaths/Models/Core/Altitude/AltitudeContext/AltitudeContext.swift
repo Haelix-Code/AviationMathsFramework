@@ -33,13 +33,10 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
         return .init(kelvin: surfaceTempKelvin)
     }
 
-    /// Sea level temperature (at height = 0)
+    /// Sea level temperature (at height = 0). When a surface temperature is also given,
+    /// and it can be extrapolated down, it takes precedence (see `init`).
     public var seaLevelTemperature: Measurement<UnitTemperature>? {
-        if let explicitTemp = _seaLevelTemperature {
-            return explicitTemp
-        }
-
-        return calculateSeaLevelFromSurface()
+        calculateSeaLevelFromSurface() ?? _seaLevelTemperature
     }
 
     private func calculateSeaLevelFromSurface() -> Measurement<UnitTemperature>? {
