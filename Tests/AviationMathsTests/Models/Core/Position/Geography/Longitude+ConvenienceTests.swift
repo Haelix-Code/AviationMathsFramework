@@ -58,4 +58,17 @@ final class LongitudeConvenienceTests: XCTestCase {
             "Longitude must pad to 3 degree digits, got: \(lon.description)"
         )
     }
+
+    func testDecode_OutOfRangeValue_ThrowsInsteadOfCrashing() throws {
+        let data = Data("181.0".utf8)
+        XCTAssertThrowsError(try JSONDecoder().decode(Longitude.self, from: data)) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
+    func testDecode_InRangeValue_RoundTrips() throws {
+        let data = try JSONEncoder().encode(Longitude(decimalDegrees: -120.0))
+        let decoded = try JSONDecoder().decode(Longitude.self, from: data)
+        XCTAssertEqual(decoded.decimalDegrees, -120.0)
+    }
 }
