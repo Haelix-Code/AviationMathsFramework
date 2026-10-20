@@ -96,6 +96,21 @@ final class AirDataEquationsTests: XCTestCase {
         XCTAssertEqual(tas.knots, 233, accuracy: 1.0)
     }
 
+    /// `density` must be converted to a known unit before use, not read via `.value`
+    /// (which reads whatever unit the Measurement happens to be in). The same physical
+    /// density expressed in a different `UnitConcentrationMass` unit must give the
+    /// same TAS.
+    func testEAStoTAS_DensityInDifferentUnit_MatchesGramsPerLiterResult() {
+        let eas = Measurement<UnitSpeed>(knots: 200)
+        let densityGPerL = Measurement<UnitConcentrationMass>(value: 0.9, unit: .gramsPerLiter)
+        let densityMgPerDl = densityGPerL.converted(to: .milligramsPerDeciliter)
+
+        let tasFromGPerL = AirDataEquations.trueAirspeed(fromEquivalentAirspeed: eas, density: densityGPerL)
+        let tasFromMgPerDl = AirDataEquations.trueAirspeed(fromEquivalentAirspeed: eas, density: densityMgPerDl)
+
+        XCTAssertEqual(tasFromMgPerDl.knots, tasFromGPerL.knots, accuracy: 1e-6)
+    }
+
     func testTAStoEAS_RoundTrip() {
         let originalEAS = Measurement<UnitSpeed>(knots: 200)
         let density = Measurement<UnitConcentrationMass>(value: 0.9, unit: .gramsPerLiter)
