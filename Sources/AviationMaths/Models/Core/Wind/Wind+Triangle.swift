@@ -77,6 +77,10 @@ public struct WindTriangle: Sendable {
         tas: Measurement<UnitSpeed>,
         wind: Wind
     ) -> (polar: SpeedPolar, wca: Measurement<UnitAngle>)? {
+        // With zero airspeed no heading can achieve any track; without this
+        // guard a zero/zero crosswind ratio below produces NaN instead of nil.
+        guard tas.knots > 0 else { return nil }
+
         let windTo = wind.toDirection.radians
         let trackRad = track.radians
         let crosswindComponent = wind.speed.knots * sin(windTo - trackRad)
@@ -93,6 +97,13 @@ public struct WindTriangle: Sendable {
         let heading = Measurement<UnitAngle>(degrees: track.degrees + wca.degrees).normalized
 
         let ground = groundVectorPolar(heading: heading, tas: tas, wind: wind)
+
+        // The crosswind check above doesn't rule out a headwind stronger than
+        // TAS, which reverses the achieved track instead of just slowing it.
+        // Verify the achieved track actually matches the requested one.
+        let trackError = Measurement<UnitAngle>(degrees: ground.bearing.degrees - track.degrees)
+            .normalizedSigned.degrees
+        guard abs(trackError) < 1.0 else { return nil }
 
         return (polar: PolarVector(bearing: heading, magnitude: ground.magnitude), wca: wca)
     }
