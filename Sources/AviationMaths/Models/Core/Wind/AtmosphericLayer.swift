@@ -2,12 +2,14 @@ import Foundation
 
 /// Represents atmospheric conditions at a specific altitude.
 public struct AtmosphericLayer: Equatable, Sendable {
-    public let altitude: Measurement<UnitLength>
     public let wind: Wind
     public let temperature: Measurement<UnitTemperature>
 
+    /// Always `wind.altitude` — there is only one altitude for a layer, not two
+    /// independently-settable ones that could drift apart.
+    public var altitude: Measurement<UnitLength> { wind.altitude }
+
     public init(wind: Wind, temperature: Measurement<UnitTemperature>) {
-        self.altitude = wind.altitude
         self.wind = wind
         self.temperature = temperature
     }
@@ -18,7 +20,6 @@ public struct AtmosphericLayer: Equatable, Sendable {
         speed: Measurement<UnitSpeed>,
         temperature: Measurement<UnitTemperature>
     ) {
-        self.altitude = altitude
         self.wind = Wind(altitude: altitude, fromDirection: fromDirection, speed: speed)
         self.temperature = temperature
     }
@@ -140,7 +141,15 @@ extension AtmosphericLayer: Decodable {
         let wind = try container.decode(Wind.self, forKey: .wind)
         let temperature = try container.decode(Measurement<UnitTemperature>.self, forKey: .temperature)
 
-        self.altitude = altitude
+        // `altitude` is derived from `wind.altitude`, not stored separately, so a
+        // payload where the two disagree is corrupt rather than silently resolvable.
+        guard altitude == wind.altitude else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .altitude, in: container,
+                debugDescription: "altitude (\(altitude)) does not match wind.altitude (\(wind.altitude))"
+            )
+        }
+
         self.wind = wind
         self.temperature = temperature
     }
