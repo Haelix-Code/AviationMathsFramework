@@ -266,4 +266,28 @@ final class WindTriangleTests: XCTestCase {
         XCTAssertEqual(crosswind.knots, -20, accuracy: 0.1, "Negative = from left")
     }
 
+    /// TAS is supplied in m/s, wind speed in knots. `groundVector` adds the two
+    /// vectors via the default `Vector.+`, which currently sums `.value` without
+    /// unit conversion. Heading and wind-to-direction are both due north (000°),
+    /// so this is a pure tailwind: the two magnitudes should add after converting
+    /// wind to the same unit as TAS.
+    ///
+    /// Correct: 100 m/s + (20 kt → m/s) = 100 + 10.28888... = 110.28888... m/s.
+    /// Buggy (today): 100 + 20 = 120 m/s (wind's raw knot value added as if m/s).
+    func testGroundVector_MixedUnits_TailwindAddsConvertedSpeed() {
+        let heading = Measurement<UnitAngle>(degrees: 0)
+        let tas = Measurement<UnitSpeed>(value: 100, unit: .metersPerSecond)
+        let wind = Wind(
+            altitude: .init(feet: 0),
+            fromDirection: .init(degrees: 180), // wind blows FROM south, i.e. TO north: tailwind
+            speed: .init(knots: 20)
+        )
+
+        let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
+
+        let expectedMps = 100 + Measurement<UnitSpeed>(knots: 20).mps
+        XCTAssertEqual(ground.magnitude.converted(to: .metersPerSecond).value, expectedMps, accuracy: 0.01)
+        XCTAssertEqual(ground.bearing.degrees, 0, accuracy: 0.1)
+    }
+
 }

@@ -215,4 +215,40 @@ final class BarometricEquationsTests: XCTestCase {
         XCTAssertEqual(recoveredAlt.meters, 5000, accuracy: 0.1)
     }
 
+    /// `BarometricEquations.pressureFromAltitude` always applies the single
+    /// troposphere formula, even above the 11 km tropopause where the ISA
+    /// model switches to an isothermal layer. `ISA.pressure(at:)` already
+    /// implements the correct two-layer model (verified in the review against
+    /// ICAO published pressures), so it is the ground truth here.
+    ///
+    /// At 15,000 m the review measured ~4% error from using the single-layer
+    /// formula; this test pins the correct value to a tight tolerance so it
+    /// fails against today's single-layer implementation.
+    func testPressureFromAltitude_AboveTropopause_MatchesTwoLayerISA() {
+        let altitude = Measurement<UnitLength>(meters: 15000)
+
+        let correctPressure = ISA.pressure(at: altitude)
+        let actualPressure = BarometricEquations.pressureFromAltitude(altitude: altitude)
+
+        XCTAssertEqual(
+            actualPressure.pascals, correctPressure.pascals, accuracy: 1,
+            "Above 11km, pressureFromAltitude must switch to the isothermal stratosphere model"
+        )
+    }
+
+    /// Same issue, inverse direction: `altitudeFromPressure` must recover the
+    /// correct altitude for a pressure drawn from the two-layer ISA model above
+    /// the tropopause, not the single-layer troposphere extrapolation.
+    func testAltitudeFromPressure_AboveTropopause_MatchesTwoLayerISA() {
+        let correctAltitude = Measurement<UnitLength>(meters: 15000)
+        let pressureAt15km = ISA.pressure(at: correctAltitude)
+
+        let recoveredAltitude = BarometricEquations.altitudeFromPressure(pressure: pressureAt15km)
+
+        XCTAssertEqual(
+            recoveredAltitude.meters, correctAltitude.meters, accuracy: 1,
+            "Above 11km, altitudeFromPressure must switch to the isothermal stratosphere model"
+        )
+    }
+
 }

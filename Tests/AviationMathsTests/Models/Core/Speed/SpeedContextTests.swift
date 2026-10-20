@@ -288,4 +288,40 @@ final class SpeedContextTests: XCTestCase {
 
         XCTAssertEqual(context.density!.value, 1.04, accuracy: 0.01)
     }
+
+    /// `SpeedContext.at(altitude:)` routes a QNH-bearing altitude through
+    /// `fromQNHAndAMSL`, which builds the context via the measured-pressure
+    /// initializer with `pressureAltitude: nil`. Since `speedOfSound` requires
+    /// `pressureAltitude` to be non-nil (even though temperature alone is
+    /// sufficient for `a = √(γRT)`), Mach conversions are unreachable for any
+    /// altitude created with a QNH context — which is the common case.
+    ///
+    /// Correct: pressureAltitude should be derivable (QNH → ISA pressure →
+    /// pressure altitude), and speedOfSound should be computable from the known
+    /// temperature regardless.
+    func testAtAltitude_WithQNH_ProducesPressureAltitudeAndSpeedOfSound() {
+        let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: .standardISA)
+
+        let speedContext = SpeedContext.at(altitude: altitude)
+
+        XCTAssertNotNil(speedContext.pressureAltitude, "QNH is known, so pressure altitude should be derivable")
+        XCTAssertNotNil(speedContext.speedOfSound, "Temperature is known, so speed of sound should be derivable")
+        if let pa = speedContext.pressureAltitude {
+            XCTAssertEqual(pa.feet, 5000, accuracy: 1)
+        }
+        if let sos = speedContext.speedOfSound {
+            XCTAssertEqual(sos.mps, ISA.speedOfSound(at: .init(feet: 5000)).mps, accuracy: 1)
+        }
+    }
+
+    func testValidatedSpeedContext_AtQNHAltitude_DoesNotThrow() throws {
+        // Uses .standardISA, which is a *complete* AltitudeContext (ground
+        // elevation, QNH, sea-level temperature, surface temperature and lapse
+        // rate all present), so that ValidatedAltitude's own (unrelated,
+        // fatalError-based) completeness check does not fire and mask H1.
+        let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: .standardISA)
+        let validatedAltitude = ValidatedAltitude(altitude)
+
+        XCTAssertNoThrow(try ValidatedSpeedContext(at: validatedAltitude))
+    }
 }
