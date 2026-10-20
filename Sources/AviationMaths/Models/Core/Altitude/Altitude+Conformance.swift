@@ -1,21 +1,14 @@
 extension Altitude {
     public static func == (lhs: Altitude, rhs: Altitude) -> Bool {
-        // Compare in AMSL unless both have ground elevation (then use AGL)
-        if lhs.context.groundElevation != nil && rhs.context.groundElevation != nil {
-            return lhs.agl.meters == rhs.agl.meters
-        } else {
-            return lhs.amsl.meters == rhs.amsl.meters
-        }
+        // AMSL is always the comparison basis, so == and hash(into:) can never
+        // disagree about which quantity they're comparing/hashing.
+        lhs.amsl.meters == rhs.amsl.meters
     }
 }
 
 extension Altitude: Hashable {
     public func hash(into hasher: inout Hasher) {
-        if context.groundElevation != nil {
-            hasher.combine(agl.meters)
-        } else {
-            hasher.combine(amsl.meters)
-        }
+        hasher.combine(amsl.meters)
     }
 }
 
@@ -23,10 +16,6 @@ extension Altitude: Hashable {
 
 extension Altitude: Comparable {
     public static func < (lhs: Altitude, rhs: Altitude) -> Bool {
-        if lhs.context.groundElevation != nil && rhs.context.groundElevation != nil {
-            return lhs.agl.meters < rhs.agl.meters
-        } else {
-            return lhs.amsl.meters < rhs.amsl.meters
-        }
+        lhs.amsl.meters < rhs.amsl.meters
     }
 }
