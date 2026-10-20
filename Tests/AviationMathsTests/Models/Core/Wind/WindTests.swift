@@ -88,4 +88,38 @@ final class WindTests: XCTestCase {
         XCTAssertEqual(polar.magnitude.knots, 35, accuracy: 0.001)
         XCTAssertEqual(polar.bearing.degrees, w.toDirection.degrees, accuracy: 0.001)
     }
+
+    /// The primary initializer normalizes `fromDirection`; this convenience init must too.
+    func testConvenienceInit_NormalizesFromDirection() {
+        let w = Wind(feet: 0, knots: 10, fromDirection: 370)
+        XCTAssertEqual(w.fromDirection.degrees, 10, accuracy: 0.0001)
+
+        let negative = Wind(feet: 0, knots: 10, fromDirection: -30)
+        XCTAssertEqual(negative.fromDirection.degrees, 330, accuracy: 0.0001)
+    }
+
+    func testDecode_UnknownAltitudeUnit_Throws() {
+        let json = """
+        {"altitude": {"value": 1000, "unit": "yd"}, "speed": {"value": 10, "unit": "kn"}, "direction": {"value": 0, "unit": "°"}}
+        """
+        XCTAssertThrowsError(try JSONDecoder().decode(Wind.self, from: Data(json.utf8))) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
+    func testDecode_UnknownSpeedUnit_Throws() {
+        let json = """
+        {"altitude": {"value": 1000, "unit": "ft"}, "speed": {"value": 10, "unit": "mph"}, "direction": {"value": 0, "unit": "°"}}
+        """
+        XCTAssertThrowsError(try JSONDecoder().decode(Wind.self, from: Data(json.utf8))) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
+    func testCodable_RoundTrip() throws {
+        let w = Wind(feet: 3500, knots: 25, fromDirection: 180)
+        let data = try JSONEncoder().encode(w)
+        let decoded = try JSONDecoder().decode(Wind.self, from: data)
+        XCTAssertEqual(decoded, w)
+    }
 }
