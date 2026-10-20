@@ -4,7 +4,8 @@
 ///   the same QNH/ISA assumption as `.amsl`, not a radar-altimeter geometric height. Like real
 ///   QFE, it shares AMSL's non-ISA error — that is expected, not a bug.
 /// - `.pressureAltitude` is referenced to the ISA standard pressure (1013.25 hPa) rather than
-///   local QNH, and by the ISA model's own definition is numerically equal to `.geopotential`.
+///   local QNH. It equals `.geopotential` only on a standard day; otherwise converting between
+///   them goes through `.trueAltitude` and needs the temperature profile.
 /// - `.trueAltitude` is the temperature-corrected *geometric* altitude above sea level — the
 ///   only reference here that depends on the actual (non-ISA) temperature profile.
 /// - `.geopotential` is `.trueAltitude` adjusted for the variation of gravity with height

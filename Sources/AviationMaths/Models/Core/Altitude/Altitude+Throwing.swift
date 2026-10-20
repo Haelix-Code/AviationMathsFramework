@@ -262,11 +262,6 @@ extension Altitude {
         case .geopotential:
             return value
 
-        case .pressureAltitude:
-            // Pressure altitude is, by the ISA model's own definition, already a
-            // geopotential quantity — no temperature profile needed or used.
-            return value
-
         case .trueAltitude:
             // True → Geopotential is a pure geometric transformation
             let r = ISA.earthMeanRadius.meters
@@ -274,7 +269,7 @@ extension Altitude {
             let H = (r * h) / (r + h)
             return .init(meters: H)
 
-        case .agl, .amsl:
+        case .agl, .amsl, .pressureAltitude:
             // First convert to true altitude, then to geopotential
             let trueAlt = try convertToTrueAltitudeThrowing()
             let r = ISA.earthMeanRadius.meters
