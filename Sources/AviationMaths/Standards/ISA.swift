@@ -56,7 +56,7 @@ public struct ISA {
         if altitudeMeters < -5000 {
             self.altitude = .init(meters: -5000)
         } else if altitudeMeters > Self.modelUpperLimit.meters {
-            self.altitude = altitude
+            self.altitude = Self.modelUpperLimit
         } else {
             self.altitude = altitude
         }
@@ -247,7 +247,9 @@ public struct ISA {
 
     public var lapseRate: Double {
         let altitudeMeters = altitude.meters
-        if altitudeMeters > Self.lowerStratosphereBase.meters {
+        // Matches the `>=` boundary `temperature` and `pressure` use: the isothermal
+        // lower-stratosphere layer starts AT 11,000 m, not strictly above it.
+        if altitudeMeters >= Self.lowerStratosphereBase.meters {
             return Self.lowerStratosphereLapseRate
         } else {
             return Self.troposphereLapseRate

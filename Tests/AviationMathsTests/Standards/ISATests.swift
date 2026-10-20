@@ -75,7 +75,10 @@ final class ISATests: XCTestCase {
         let above = ISA(altitudeMeters: 11001)
 
         XCTAssertEqual(below.lapseRate, 0.0065)
-        XCTAssertEqual(at.lapseRate, 0.0065)
+        // At exactly 11,000 m, `temperature`/`pressure` already treat this as the
+        // isothermal lower-stratosphere layer (see the `.kelvin` assertion below);
+        // `lapseRate` must agree rather than reporting the troposphere rate.
+        XCTAssertEqual(at.lapseRate, 0)
         XCTAssertEqual(above.lapseRate, 0)
         XCTAssertEqual(at.temperature.kelvin, 216.65, accuracy: 0.0001)
     }
