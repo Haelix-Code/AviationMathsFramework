@@ -10,14 +10,22 @@ final class CodableLengthTests: XCTestCase {
         XCTAssertEqual(decoded, value)
     }
 
-    /// `UnitLength.nauticalMiles.symbol` is "NM", which the old decodeMap didn't
-    /// recognise (lowercased to "nm"), so a value encoded in nautical miles could
-    /// not be decoded back.
     func testRoundTrip_NauticalMiles() throws {
         let value = CodableLength(.init(value: 50, unit: .nauticalMiles))
         let data = try JSONEncoder().encode(value)
         let decoded = try JSONDecoder().decode(CodableLength.self, from: data)
         XCTAssertEqual(decoded.measurement.converted(to: .nauticalMiles).value, 50, accuracy: 1e-9)
+    }
+
+    func testRoundTrip_EveryUnit_PreservesLength() throws {
+        let units: [UnitLength] = [.meters, .feet, .yards, .nauticalMiles, .kilometers, .miles, .centimeters]
+
+        for unit in units {
+            let value = CodableLength(.init(value: 2.5, unit: unit))
+            let data = try JSONEncoder().encode(value)
+            let decoded = try JSONDecoder().decode(CodableLength.self, from: data)
+            XCTAssertEqual(decoded.measurement.meters, value.measurement.meters, accuracy: 1e-9, unit.symbol)
+        }
     }
 
     func testDecode_UnknownUnit_Throws() {
