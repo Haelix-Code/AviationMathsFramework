@@ -209,7 +209,7 @@ final class BarometricEquationsTests: XCTestCase {
     func testBarometricEquations_KnownISAValues() {
         let altitude = Measurement<UnitLength>(meters: 5000)
         let pressure = BarometricEquations.pressureFromAltitude(altitude: altitude)
-        XCTAssertEqual(pressure.pascals, 54020.5, accuracy: 0.1)
+        XCTAssertEqual(pressure.pascals, 54019.89, accuracy: 0.1)
 
         let recoveredAlt = BarometricEquations.altitudeFromPressure(pressure: pressure)
         XCTAssertEqual(recoveredAlt.meters, 5000, accuracy: 0.1)

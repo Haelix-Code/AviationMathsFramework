@@ -27,7 +27,7 @@ final class ISAHelperTests: XCTestCase {
         let temperature = Measurement(value: -40, unit: UnitTemperature.celsius)
         let speedOfSound = ISA.speedOfSoundFromTemperature(temperature: temperature)
 
-        XCTAssertEqual(speedOfSound.value, 306.102, accuracy: 0.001)
+        XCTAssertEqual(speedOfSound.value, 306.100, accuracy: 0.001)
     }
 
     func testPressureFromQNHAndAMSL_atSeaLevelEqualsQNH() {

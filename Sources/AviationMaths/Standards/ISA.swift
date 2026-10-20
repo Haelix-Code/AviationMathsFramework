@@ -13,7 +13,8 @@ public struct ISA {
 
     public static let standardGravity: Measurement<UnitAcceleration> =
         .init(value: 9.80665, unit: .metersPerSecondSquared)
-    public static let dryAirGasConstant: Double = 287.058
+    /// Specific gas constant for dry air, J/(kg·K) (ICAO Doc 7488 / ESDU 77022)
+    public static let dryAirGasConstant: Double = 287.05287
     public static let ratioSpecificHeats: Double = 1.4
 
     /// Earth's mean radius for geopotential altitude calculations (ICAO standard)
