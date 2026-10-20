@@ -88,4 +88,14 @@ final class PolarVectorTests: XCTestCase {
         XCTAssertEqual(cart.x.knots, 70.71, accuracy: 0.01)
         XCTAssertEqual(cart.y.knots, 70.71, accuracy: 0.01)
     }
+
+    func testCodable_RoundTrip() throws {
+        let polar = LengthPolar(bearing: .init(degrees: 135), magnitude: .init(feet: 1000))
+
+        let data = try JSONEncoder().encode(polar)
+        let decoded = try JSONDecoder().decode(LengthPolar.self, from: data)
+
+        XCTAssertEqual(decoded.bearing.degrees, 135, accuracy: 1e-9)
+        XCTAssertEqual(decoded.magnitude.feet, 1000, accuracy: 1e-9)
+    }
 }
