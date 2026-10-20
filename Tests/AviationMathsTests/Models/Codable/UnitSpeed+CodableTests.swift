@@ -10,14 +10,29 @@ final class CodableSpeedTests: XCTestCase {
         XCTAssertEqual(decoded, value)
     }
 
-    /// `mph` was missing from both `decodeMap` and `encodeNames`, so a value encoded
-    /// in miles per hour fell back to `raw.unit.symbol` ("mph") on encode but then
-    /// failed to decode since "mph" wasn't a recognised key.
     func testRoundTrip_MilesPerHour() throws {
         let value = CodableSpeed(.init(value: 60, unit: .milesPerHour))
         let data = try JSONEncoder().encode(value)
         let decoded = try JSONDecoder().decode(CodableSpeed.self, from: data)
         XCTAssertEqual(decoded.measurement.converted(to: .milesPerHour).value, 60, accuracy: 1e-9)
+    }
+
+    func testDecode_KnSymbol() throws {
+        let json = """
+        {"value": 25, "unit": "kn"}
+        """
+        let decoded = try JSONDecoder().decode(CodableSpeed.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.measurement.knots, 25, accuracy: 1e-9)
+    }
+
+    func testRoundTrip_UnmappedUnit_PreservesSpeed() throws {
+        let millimetresPerSecond = UnitSpeed(symbol: "mm/s", converter: UnitConverterLinear(coefficient: 0.001))
+        let value = CodableSpeed(.init(value: 2500, unit: millimetresPerSecond))
+
+        let data = try JSONEncoder().encode(value)
+        let decoded = try JSONDecoder().decode(CodableSpeed.self, from: data)
+
+        XCTAssertEqual(decoded.measurement.mps, 2.5, accuracy: 1e-9)
     }
 
     func testDecode_UnknownUnit_Throws() {
