@@ -94,7 +94,7 @@ internal enum AirDataEquations {
         fromEquivalentAirspeed eas: Measurement<UnitSpeed>,
         density: Measurement<UnitConcentrationMass>
     ) -> Measurement<UnitSpeed> {
-        let densityRatio = seaLevelDensity / density.value
+        let densityRatio = seaLevelDensity / density.converted(to: .gramsPerLiter).value
         let tas = eas.mps * sqrt(densityRatio)
         return .init(mps: tas)
     }
@@ -103,7 +103,7 @@ internal enum AirDataEquations {
         fromTrueAirspeed tas: Measurement<UnitSpeed>,
         density: Measurement<UnitConcentrationMass>
     ) -> Measurement<UnitSpeed> {
-        let densityRatio = density.value / seaLevelDensity
+        let densityRatio = density.converted(to: .gramsPerLiter).value / seaLevelDensity
         let eas = tas.mps * sqrt(densityRatio)
         return .init(mps: eas)
     }
