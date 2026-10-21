@@ -30,8 +30,17 @@ public extension SpeedContext {
             pressure: measuredPressure,
             temperature: measuredTemperature
         )
+        // Pressure altitude is the altitude in the *standard* atmosphere that
+        // yields this pressure, independent of the measured temperature. Without
+        // it, speedOfSound/Mach are unreachable even though temperature is known.
+        let derivedPressureAltitude = BarometricEquations.altitudeFromPressure(
+            pressure: measuredPressure,
+            referencePressure: ISA.seaLevelPressure,
+            temperature: ISA.seaLevelTemperature,
+            lapseRate: ISA.troposphereLapseRate
+        )
         self.init(
-            pressureAltitude: nil,
+            pressureAltitude: derivedPressureAltitude,
             temperature: measuredTemperature,
             deltaISA: nil,
             density: rho,

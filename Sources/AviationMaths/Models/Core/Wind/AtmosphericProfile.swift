@@ -2,8 +2,14 @@ import Foundation
 
 @resultBuilder
 public struct AtmosphericProfileBuilder {
-    public static func buildBlock(_ layers: AtmosphericLayer...) -> [AtmosphericLayer] {
-        layers.sorted { $0.altitude.meters < $1.altitude.meters }
+    /// Lifts each layer into an array, so `if`, `switch` and `for` results (already
+    /// arrays) can sit alongside plain layers in a block.
+    public static func buildExpression(_ layer: AtmosphericLayer) -> [AtmosphericLayer] {
+        [layer]
+    }
+
+    public static func buildBlock(_ components: [AtmosphericLayer]...) -> [AtmosphericLayer] {
+        components.flatMap { $0 }.sorted { $0.altitude.meters < $1.altitude.meters }
     }
 
     public static func buildArray(_ components: [[AtmosphericLayer]]) -> [AtmosphericLayer] {

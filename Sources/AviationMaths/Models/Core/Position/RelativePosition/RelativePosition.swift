@@ -2,7 +2,7 @@ import Foundation
 
 public struct RelativePosition: Sendable {
     public let cartesianVector: LengthCartesianVector
-    public var polarCoordinate: LengthPolar
+    public let polarCoordinate: LengthPolar
 
     public init(bearing: Measurement<UnitAngle>, range rangeValue: Measurement<UnitLength>) {
         self.polarCoordinate = PolarVector(bearing: bearing.converted(to: .radians), magnitude: rangeValue)

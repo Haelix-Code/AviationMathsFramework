@@ -13,8 +13,9 @@ extension Altitude {
         case .trueAltitude:
             return context.canCalculateTrueAltitude && context.canCalculateAGL
         case .geopotential:
-            // Geopotential → True (always possible) → AGL (needs ground elevation)
-            return context.canCalculateAGL
+            // Geopotential → True (always) → indicated AMSL (needs temp profile) → AGL
+            // (needs ground elevation), matching the .trueAltitude case above.
+            return context.canCalculateTrueAltitude && context.canCalculateAGL
         }
     }
 

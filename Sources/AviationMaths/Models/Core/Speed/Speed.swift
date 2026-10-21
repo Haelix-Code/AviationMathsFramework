@@ -157,6 +157,16 @@ public struct Speed: Sendable {
     }
 
     internal func convertToMach() throws -> Double {
+        switch reference {
+        case .machNumber:
+            return machValue!
+        case .calibratedAirspeed:
+            let delta = try context.relativePressureThrowing()
+            return AirDataEquations.machNumber(fromCalibratedAirspeed: value, relativePressure: delta)
+        case .equivalentAirspeed, .trueAirspeed:
+            break
+        }
+
         let speedOfSound = try context.speedOfSoundThrowing()
         let tasValue = reference == .trueAirspeed ? value : try convertToTAS()
         return AirDataEquations.machNumber(
@@ -201,7 +211,10 @@ extension Speed: Equatable {
 
 extension Speed: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(tas.mps)
+        // Quantize at 1e-6, a decade coarser than =='s 1e-7 tolerance, so values
+        // within that tolerance land in the same bucket instead of hashing
+        // differently purely from floating-point noise.
+        hasher.combine((tas.mps * 1_000_000).rounded())
     }
 }
 

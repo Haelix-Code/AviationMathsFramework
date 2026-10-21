@@ -23,6 +23,14 @@ final class CardinalDirectionTests: XCTestCase {
         XCTAssertEqual(LongitudeDirection(decimalDegrees: -15), .west)
     }
 
+    func testLongitudeDirectionInitFromDecimalDegrees_Zero_MatchesLatitudeConvention() {
+        // LatitudeDirection treats the 0° boundary as the positive side
+        // (equator counts as north); LongitudeDirection must do the same
+        // (prime meridian counts as east) for the two to be consistent.
+        XCTAssertEqual(LatitudeDirection(decimalDegrees: 0), .north)
+        XCTAssertEqual(LongitudeDirection(decimalDegrees: 0), .east)
+    }
+
     func testLongitudeDirectionFromBearing() {
         // Bearings in East range
         XCTAssertEqual(LongitudeDirection.from(bearing: 0), .east)

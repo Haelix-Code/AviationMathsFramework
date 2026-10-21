@@ -266,4 +266,67 @@ final class WindTriangleTests: XCTestCase {
         XCTAssertEqual(crosswind.knots, -20, accuracy: 0.1, "Negative = from left")
     }
 
+    /// TAS is supplied in m/s, wind speed in knots. `groundVector` adds the two
+    /// vectors via the default `Vector.+`, which currently sums `.value` without
+    /// unit conversion. Heading and wind-to-direction are both due north (000°),
+    /// so this is a pure tailwind: the two magnitudes should add after converting
+    /// wind to the same unit as TAS.
+    ///
+    /// Correct: 100 m/s + (20 kt → m/s) = 100 + 10.28888... = 110.28888... m/s.
+    /// Buggy (today): 100 + 20 = 120 m/s (wind's raw knot value added as if m/s).
+    func testGroundVector_MixedUnits_TailwindAddsConvertedSpeed() {
+        let heading = Measurement<UnitAngle>(degrees: 0)
+        let tas = Measurement<UnitSpeed>(value: 100, unit: .metersPerSecond)
+        let wind = Wind(
+            altitude: .init(feet: 0),
+            fromDirection: .init(degrees: 180), // wind blows FROM south, i.e. TO north: tailwind
+            speed: .init(knots: 20)
+        )
+
+        let ground = WindTriangle.groundVectorPolar(heading: heading, tas: tas, wind: wind)
+
+        let expectedMps = 100 + Measurement<UnitSpeed>(knots: 20).mps
+        XCTAssertEqual(ground.magnitude.converted(to: .metersPerSecond).value, expectedMps, accuracy: 0.01)
+        XCTAssertEqual(ground.bearing.degrees, 0, accuracy: 0.1)
+    }
+
+    /// `headingForTrack` only checks that the *crosswind* component doesn't
+    /// exceed TAS; it never checks whether the resulting groundspeed along the
+    /// track is positive. With a pure headwind faster than TAS, the crosswind
+    /// component is ~0 (so the guard trivially passes), but flying the
+    /// returned heading actually yields a ground track reversed 180° from the
+    /// one requested. Whatever `headingForTrack` returns (nil, or a heading),
+    /// that heading must actually achieve the requested track when flown.
+    func testHeadingForTrack_HeadwindExceedingTAS_MustNotClaimUnachievableTrack() {
+        let track = Measurement<UnitAngle>(degrees: 0)
+        let tas = Measurement<UnitSpeed>(knots: 50)
+        let wind = Wind(feet: 0, knots: 100, fromDirection: 0) // pure headwind, faster than TAS
+
+        guard let result = WindTriangle.headingForTrack(track: track, tas: tas, wind: wind) else {
+            return // nil ("no solution") is an acceptable answer here
+        }
+
+        let achieved = WindTriangle.groundVectorPolar(heading: result.polar.bearing, tas: tas, wind: wind)
+        XCTAssertEqual(
+            achieved.bearing.degrees, track.degrees, accuracy: 1,
+            "headingForTrack returned heading \(result.polar.bearing.degrees)\u{00B0} claiming track " +
+            "\(track.degrees)\u{00B0}, but flying it actually gives track \(achieved.bearing.degrees)\u{00B0}"
+        )
+    }
+
+    /// With TAS = 0, the crosswind-component guard divides by `tas.knots` (0),
+    /// and with no crosswind at all (pure tailwind here) that's a 0/0 that
+    /// produces NaN rather than failing the guard. With zero airspeed, no
+    /// heading can achieve any track, so the correct answer is nil, not a
+    /// result carrying NaN bearing/WCA.
+    func testHeadingForTrack_ZeroTAS_ReturnsNilInsteadOfNaN() {
+        let track = Measurement<UnitAngle>(degrees: 0)
+        let tas = Measurement<UnitSpeed>(knots: 0)
+        let wind = Wind(feet: 0, knots: 10, fromDirection: 180) // pure tailwind: zero crosswind component
+
+        let result = WindTriangle.headingForTrack(track: track, tas: tas, wind: wind)
+
+        XCTAssertNil(result, "Zero TAS cannot achieve any track; must return nil, not a NaN-filled result")
+    }
+
 }

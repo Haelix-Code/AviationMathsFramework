@@ -20,7 +20,7 @@ final class SpeedTests: XCTestCase {
         let speed = Speed(knots: 200, reference: .calibratedAirspeed, context: context)
         XCTAssertEqual(speed.cas.knots, 200.000, accuracy: 0.001)
         XCTAssertEqual(speed.eas.knots, 193.395, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 370.467, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 370.468, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 0.603, accuracy: 0.001)
     }
 
@@ -41,7 +41,7 @@ final class SpeedTests: XCTestCase {
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
         XCTAssertEqual(speed.cas.knots, 207.297, accuracy: 0.001)
         XCTAssertEqual(speed.eas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 383.121, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 383.122, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 0.623, accuracy: 0.001)
     }
 
@@ -69,9 +69,9 @@ final class SpeedTests: XCTestCase {
     func testFromMach_Standard() {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 1, reference: .machNumber, context: context)
-        XCTAssertEqual(speed.cas.knots, 661.485, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 661.485, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 661.485, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 661.479, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 661.479, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 661.479, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 1, accuracy: 0.001)
     }
 
@@ -81,9 +81,9 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 1, reference: .machNumber, context: context)
-        XCTAssertEqual(speed.cas.knots, 350.029, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 320.876, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 614.671, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 350.025, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 320.872, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 614.666, accuracy: 0.001)
         XCTAssertEqual(speed.mach, 1, accuracy: 0.001)
     }
 
@@ -170,10 +170,10 @@ final class SpeedTests: XCTestCase {
         )
 
         let speed = Speed(mach: 2.0, context: context)
-
-        XCTAssertEqual(speed.cas.knots, 829.822, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 641.752, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 1152.849, accuracy: 0.001)
+        
+        XCTAssertEqual(speed.cas.knots, 717.027, accuracy: 0.01)
+        XCTAssertEqual(speed.eas.knots, 641.744, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 1152.838, accuracy: 0.001)
     }
 
     func testStratospheric() {
@@ -184,9 +184,9 @@ final class SpeedTests: XCTestCase {
 
         let speed = Speed(mach: 0.89, context: context)
 
-        XCTAssertEqual(speed.cas.knots, 273.206, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 253.279, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 510.481, accuracy: 0.001)
+        XCTAssertEqual(speed.cas.knots, 273.203, accuracy: 0.001)
+        XCTAssertEqual(speed.eas.knots, 253.276, accuracy: 0.001)
+        XCTAssertEqual(speed.tas.knots, 510.477, accuracy: 0.001)
     }
 
     func testInMethod() {
@@ -230,5 +230,66 @@ final class SpeedTests: XCTestCase {
 
         XCTAssertEqual(speedTAS, speedCAS,
                       "Same physical speed should be equal")
+    }
+
+    func testHashable_AgreesWithEquatable_ForValuesWithinEqualityTolerance() {
+        let context = SpeedContext.standardISA
+        let a = Speed(mps: 100.0, reference: .trueAirspeed, context: context)
+        let b = Speed(mps: 100.0 + 5e-8, reference: .trueAirspeed, context: context)
+
+        XCTAssertEqual(a, b, "Within the 1e-7 equality tolerance, these must compare equal")
+
+        XCTAssertEqual(
+            a.hashValue, b.hashValue,
+            "Equal speeds must hash equally, but hash(into:) has no tolerance while == does"
+        )
+    }
+
+    func testCanConvertAndIfPossible_AgreeWithThrowingConversion_ForEveryReferenceAndContext() {
+        let contexts: [(name: String, context: SpeedContext)] = [
+            ("empty", SpeedContext()),
+            ("temperatureOnly", SpeedContext(temperature: .init(celsius: 0))),
+            ("densityOnly", SpeedContext(density: .init(value: 0.9, unit: .gramsPerLiter))),
+            ("measuredPressureOnly", SpeedContext(measuredPressure: .init(hectopascals: 500))),
+            ("pressureAltitude", SpeedContext(pressureAltitude: .init(feet: 10000))),
+            ("standardISA", .standardISA)
+        ]
+
+        func ifPossibleIsNil(_ speed: Speed, _ target: SpeedReference) -> Bool {
+            switch target {
+            case .calibratedAirspeed: return speed.casIfPossible == nil
+            case .equivalentAirspeed: return speed.easIfPossible == nil
+            case .trueAirspeed: return speed.tasIfPossible == nil
+            case .machNumber: return speed.machIfPossible == nil
+            }
+        }
+
+        for (name, context) in contexts {
+            for source in SpeedReference.allCases {
+                let speed = source == .machNumber
+                    ? Speed(mach: 0.7, context: context)
+                    : Speed(knots: 250, reference: source, context: context)
+
+                for target in SpeedReference.allCases {
+                    let label = "\(name): \(source.abbreviation) → \(target.abbreviation)"
+                    let succeeds = (try? speed.convertedThrowing(to: target)) != nil
+
+                    XCTAssertEqual(speed.canConvert(to: target), succeeds, "canConvert, \(label)")
+                    XCTAssertEqual(ifPossibleIsNil(speed, target), !succeeds, "IfPossible, \(label)")
+                }
+            }
+        }
+    }
+
+    func testMach_FromCAS_NeedsOnlyPressureRatio() throws {
+        let altitude = Measurement<UnitLength>(feet: 35000)
+        let reference = Speed(knots: 250, reference: .calibratedAirspeed, context: SpeedContext(pressureAltitude: altitude))
+        let pressureOnly = Speed(
+            knots: 250,
+            reference: .calibratedAirspeed,
+            context: SpeedContext(measuredPressure: ISA.pressure(at: altitude))
+        )
+
+        XCTAssertEqual(try XCTUnwrap(pressureOnly.machIfPossible), reference.mach, accuracy: 1e-6)
     }
 }

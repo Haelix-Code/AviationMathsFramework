@@ -33,13 +33,10 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
         return .init(kelvin: surfaceTempKelvin)
     }
 
-    /// Sea level temperature (at height = 0)
+    /// Sea level temperature (at height = 0). When a surface temperature is also given,
+    /// and it can be extrapolated down, it takes precedence (see `init`).
     public var seaLevelTemperature: Measurement<UnitTemperature>? {
-        if let explicitTemp = _seaLevelTemperature {
-            return explicitTemp
-        }
-
-        return calculateSeaLevelFromSurface()
+        calculateSeaLevelFromSurface() ?? _seaLevelTemperature
     }
 
     private func calculateSeaLevelFromSurface() -> Measurement<UnitTemperature>? {
@@ -54,9 +51,10 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
         return .init(kelvin: seaLevelTempKelvin)
     }
 
-    /// Whether this context has sufficient data for true altitude calculations
+    /// Whether this context has sufficient data for true altitude calculations: a
+    /// temperature profile, and QNH to fix the pressure at sea level.
     public var canCalculateTrueAltitude: Bool {
-        seaLevelTemperature != nil && lapseRate != nil
+        seaLevelTemperature != nil && lapseRate != nil && qnh != nil
     }
 
     /// Whether this context has sufficient data for AGL calculations
@@ -208,11 +206,20 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
 
     // MARK: - Temperature Calculation
 
-    /// Calculate temperature at any altitude using the temperature model
+    /// Calculate temperature at any altitude using the temperature model: the lapse rate
+    /// up to 11 km, then the ISA layers offset by the ΔISA reached at 11 km (ISA + ΔISA).
     public func temperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature>? {
         guard let slTemp = seaLevelTemperature,
               let rate = lapseRate else {
             return nil
+        }
+        guard altitude.meters <= 11_000 else {
+            let atmosphere = LayeredAtmosphere(
+                baseTemperature: slTemp.kelvin,
+                basePressure: ISA.seaLevelPressure.pascals,
+                lowestLayerLapseRate: rate
+            )
+            return .init(kelvin: atmosphere.temperature(at: altitude.meters))
         }
         let tempAtAlt = slTemp.kelvin - rate * altitude.meters
         return .init(kelvin: tempAtAlt)

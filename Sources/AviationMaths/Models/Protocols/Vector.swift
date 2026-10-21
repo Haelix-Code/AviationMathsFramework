@@ -21,15 +21,15 @@ public protocol Vector<UnitType>: Hashable, Sendable {
 extension Vector {
     public static func + (lhs: Self, rhs: Self) -> Self {
         Self(
-            x: Measurement(value: lhs.x.value + rhs.x.value, unit: lhs.x.unit),
-            y: Measurement(value: lhs.y.value + rhs.y.value, unit: lhs.y.unit)
+            x: Measurement(value: lhs.x.value + rhs.x.converted(to: lhs.x.unit).value, unit: lhs.x.unit),
+            y: Measurement(value: lhs.y.value + rhs.y.converted(to: lhs.y.unit).value, unit: lhs.y.unit)
         )
     }
 
     public static func - (lhs: Self, rhs: Self) -> Self {
         Self(
-            x: Measurement(value: lhs.x.value - rhs.x.value, unit: lhs.x.unit),
-            y: Measurement(value: lhs.y.value - rhs.y.value, unit: lhs.y.unit)
+            x: Measurement(value: lhs.x.value - rhs.x.converted(to: lhs.x.unit).value, unit: lhs.x.unit),
+            y: Measurement(value: lhs.y.value - rhs.y.converted(to: lhs.y.unit).value, unit: lhs.y.unit)
         )
     }
 
@@ -72,14 +72,15 @@ extension Vector {
         magnitude.value == 0
     }
 
+    /// Dot product, in `x.unit` squared.
     public func dot(_ other: Self) -> Double {
-        x.value * other.x.value +
-        y.value * other.y.value
+        x.value * other.x.converted(to: x.unit).value +
+        y.converted(to: x.unit).value * other.y.converted(to: x.unit).value
     }
 
     public func angle(to other: Self) -> Measurement<UnitAngle> {
         let dotProduct = dot(other)
-        let magnitudeProduct = magnitude.value * other.magnitude.value
+        let magnitudeProduct = magnitude.converted(to: x.unit).value * other.magnitude.converted(to: x.unit).value
         guard magnitudeProduct > 0 else {
             return Measurement(value: 0, unit: .radians)
         }

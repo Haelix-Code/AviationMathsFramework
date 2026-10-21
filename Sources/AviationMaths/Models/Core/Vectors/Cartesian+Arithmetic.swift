@@ -2,7 +2,8 @@ import Foundation
 
 extension CartesianVector {
     func dot(_ other: CartesianVector<UnitType>) -> Measurement<UnitType> {
-        let v = x.value * other.x.value + y.value * other.y.value
+        let v = x.value * other.x.converted(to: x.unit).value +
+                y.converted(to: x.unit).value * other.y.converted(to: x.unit).value
         return Measurement(value: v, unit: x.unit)
     }
 }

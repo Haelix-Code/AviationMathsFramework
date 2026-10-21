@@ -288,4 +288,102 @@ final class SpeedContextTests: XCTestCase {
 
         XCTAssertEqual(context.density!.value, 1.04, accuracy: 0.01)
     }
+
+    /// `SpeedContext.at(altitude:)` routes a QNH-bearing altitude through
+    /// `fromQNHAndAMSL`, which builds the context via the measured-pressure
+    /// initializer with `pressureAltitude: nil`. Since `speedOfSound` requires
+    /// `pressureAltitude` to be non-nil (even though temperature alone is
+    /// sufficient for `a = √(γRT)`), Mach conversions are unreachable for any
+    /// altitude created with a QNH context — which is the common case.
+    ///
+    /// Correct: pressureAltitude should be derivable (QNH → ISA pressure →
+    /// pressure altitude), and speedOfSound should be computable from the known
+    /// temperature regardless.
+    func testAtAltitude_WithQNH_ProducesPressureAltitudeAndSpeedOfSound() {
+        let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: .standardISA)
+
+        let speedContext = SpeedContext.at(altitude: altitude)
+
+        XCTAssertNotNil(speedContext.pressureAltitude, "QNH is known, so pressure altitude should be derivable")
+        XCTAssertNotNil(speedContext.speedOfSound, "Temperature is known, so speed of sound should be derivable")
+        if let pa = speedContext.pressureAltitude {
+            XCTAssertEqual(pa.feet, 5000, accuracy: 1)
+        }
+        if let sos = speedContext.speedOfSound {
+            XCTAssertEqual(sos.mps, ISA.speedOfSound(at: .init(feet: 5000)).mps, accuracy: 1)
+        }
+    }
+
+    /// The context has a measured temperature of -10°C, but taken at 10,000ft
+    /// AMSL (`temperatureReferenceAltitudeAMSL`), not at the aircraft's actual
+    /// altitude of 5,000ft. `SpeedContext.at(altitude:)` currently prefers
+    /// `ac.temperatureAtReference` unconditionally, using -10°C as if it were
+    /// the temperature at 5,000ft. The correct temperature at 5,000ft, found by
+    /// applying the context's own (lapse-rate-derived) temperature model via
+    /// `AltitudeContext.temperature(at:)`, is +2.5°C.
+    func testAtAltitude_UsesLapseAdjustedTemperature_NotRawTemperatureAtReference() {
+        let context = AltitudeContext(
+            groundElevation: .surface,
+            qnh: ISA.seaLevelPressure,
+            surfaceTemperature: ISA.seaLevelTemperature,
+            temperatureReferenceAltitudeAMSL: .init(feet: 10000),
+            temperatureAtReference: .init(celsius: -10),
+            lapseRate: nil // derive it from the surface/reference temperature pair above
+        )
+        let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: context)
+
+        let correctTemperature = context.temperature(at: altitude.amsl)
+        XCTAssertNotNil(correctTemperature, "Lapse rate should be derivable from the context above")
+
+        let speedContext = SpeedContext.at(altitude: altitude)
+        XCTAssertNotNil(speedContext.temperature)
+
+        if let correct = correctTemperature, let actual = speedContext.temperature {
+            XCTAssertEqual(actual.celsius, correct.celsius, accuracy: 0.1)
+        }
+    }
+
+    func testValidatedSpeedContext_AtQNHAltitude_DoesNotThrow() throws {
+        // Uses .standardISA, which is a *complete* AltitudeContext (ground
+        // elevation, QNH, sea-level temperature, surface temperature and lapse
+        // rate all present), so that ValidatedAltitude's own (unrelated,
+        // fatalError-based) completeness check does not fire and mask H1.
+        let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: .standardISA)
+        let validatedAltitude = ValidatedAltitude(altitude)
+
+        XCTAssertNoThrow(try ValidatedSpeedContext(at: validatedAltitude))
+    }
+
+    func testAtAltitude_AboveTropopause_MatchesISA() throws {
+        for feet in [39_000.0, 45_000] {
+            let altitude = Altitude(feet: feet, reference: .pressureAltitude, context: .standardISA)
+            let isa = ISA(altitudeFeet: feet)
+
+            let speedContext = SpeedContext.at(altitude: altitude)
+
+            XCTAssertEqual(
+                try XCTUnwrap(speedContext.temperature).kelvin, isa.temperature.kelvin, accuracy: 0.01,
+                "Temperature at PA \(feet) ft"
+            )
+            XCTAssertEqual(
+                try XCTUnwrap(speedContext.relativePressure),
+                isa.pressure.pascals / ISA.seaLevelPressure.pascals,
+                accuracy: 1e-5,
+                "Relative pressure at PA \(feet) ft"
+            )
+        }
+    }
+
+    func testAtAltitude_WithoutQNH_ReturnsContextWithoutPressure() {
+        let context = AltitudeContext(
+            groundElevation: .surface,
+            seaLevelTemperature: .init(celsius: 15),
+            lapseRate: ISA.troposphereLapseRate
+        )
+
+        let speedContext = SpeedContext.at(altitude: Altitude(feet: 5000, reference: .amsl, context: context))
+
+        XCTAssertNil(speedContext.relativePressure)
+        XCTAssertNotNil(speedContext.temperature)
+    }
 }

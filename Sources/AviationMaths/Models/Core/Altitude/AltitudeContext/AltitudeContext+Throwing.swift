@@ -29,13 +29,13 @@ extension AltitudeContext {
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
     /// - Returns: Sea level temperature
     public func seaLevelTemperatureThrowing() throws -> Measurement<UnitTemperature> {
-        if let explicitTemp = _seaLevelTemperature {
-            return explicitTemp
-        }
-
+        // Surface temperature takes precedence when it can be extrapolated down (see `init`)
         guard let surfaceTemp = _surfaceTemperature,
               let elevation = groundElevation,
               let lapse = lapseRate else {
+            if let explicitTemp = _seaLevelTemperature {
+                return explicitTemp
+            }
             throw ContextCalculationError.insufficientData(
                 calculation: "seaLevelTemperature",
                 missing: missingForSeaLevelTemp()

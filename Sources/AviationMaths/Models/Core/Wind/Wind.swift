@@ -35,7 +35,7 @@ public struct Wind: Equatable, Sendable {
 public extension Wind {
     init(feet: Double, knots: Double, fromDirection: Double) {
         self.altitude = .init(feet: feet)
-        self.fromDirection = .init(degrees: fromDirection)
+        self.fromDirection = Measurement(value: fromDirection, unit: .degrees).normalized
         self.speed = .init(knots: knots)
     }
 }
@@ -53,8 +53,24 @@ extension Wind: Codable {
         let s = try c.decode(Scalar.self, forKey: .speed)
         let d = try c.decode(Scalar.self, forKey: .direction)
 
-        altitude = (a.unit == "ft") ? .init(feet: a.value) : .init(meters: a.value)
-        speed    = (s.unit == "kn") ? .init(knots: s.value) : .init(mps: s.value)
+        switch a.unit {
+        case "ft": altitude = .init(feet: a.value)
+        case "m": altitude = .init(meters: a.value)
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .altitude, in: c, debugDescription: "Unknown altitude unit: \(a.unit)"
+            )
+        }
+
+        switch s.unit {
+        case "kn": speed = .init(knots: s.value)
+        case "m/s": speed = .init(mps: s.value)
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .speed, in: c, debugDescription: "Unknown speed unit: \(s.unit)"
+            )
+        }
+
         fromDirection = .init(degrees: d.value).normalized
     }
 

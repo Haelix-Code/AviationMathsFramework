@@ -95,6 +95,15 @@ final class CartesianVectorTests: XCTestCase {
         XCTAssertEqual(angle.degrees, 180, accuracy: 1e-10)
     }
 
+    /// Previously unguarded: 0/0 produced NaN. Now returns 0, matching
+    /// `Vector.angle(to:)`'s and `PolarVector.angleBetween`'s convention.
+    func testAngleBetween_ZeroMagnitude() {
+        let zero = CartesianVector<UnitLength>.zero
+        let v = CartesianVector(x: .init(meters: 1), y: .init(meters: 0))
+        XCTAssertEqual(zero.angle(between: v).value, 0)
+        XCTAssertEqual(v.angle(between: zero).value, 0)
+    }
+
     func testSpeedVector() {
         let speedVector = SpeedCartesianVector(
             x: .init(knots: 30), // 30kt East component

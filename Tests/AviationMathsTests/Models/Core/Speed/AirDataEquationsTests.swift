@@ -96,6 +96,21 @@ final class AirDataEquationsTests: XCTestCase {
         XCTAssertEqual(tas.knots, 233, accuracy: 1.0)
     }
 
+    /// `density` must be converted to a known unit before use, not read via `.value`
+    /// (which reads whatever unit the Measurement happens to be in). The same physical
+    /// density expressed in a different `UnitConcentrationMass` unit must give the
+    /// same TAS.
+    func testEAStoTAS_DensityInDifferentUnit_MatchesGramsPerLiterResult() {
+        let eas = Measurement<UnitSpeed>(knots: 200)
+        let densityGPerL = Measurement<UnitConcentrationMass>(value: 0.9, unit: .gramsPerLiter)
+        let densityMgPerDl = densityGPerL.converted(to: .milligramsPerDeciliter)
+
+        let tasFromGPerL = AirDataEquations.trueAirspeed(fromEquivalentAirspeed: eas, density: densityGPerL)
+        let tasFromMgPerDl = AirDataEquations.trueAirspeed(fromEquivalentAirspeed: eas, density: densityMgPerDl)
+
+        XCTAssertEqual(tasFromMgPerDl.knots, tasFromGPerL.knots, accuracy: 1e-6)
+    }
+
     func testTAStoEAS_RoundTrip() {
         let originalEAS = Measurement<UnitSpeed>(knots: 200)
         let density = Measurement<UnitConcentrationMass>(value: 0.9, unit: .gramsPerLiter)
@@ -228,4 +243,26 @@ final class AirDataEquationsTests: XCTestCase {
     }
 
     private let seaLevelSpeedOfSound = ISA.seaLevelSpeedOfSound.mps
+
+    /// `impactPressureCoefficient(fromMach:)` always applies the subsonic pitot
+    /// relation, which is only valid for M < 1. At M ≥ 1 air crosses a shock
+    /// ahead of the probe and the correct relation is the Rayleigh supersonic
+    /// pitot formula:
+    ///   qc/p = [ (γ+1)²M² / (4γM² - 2(γ-1)) ]^(γ/(γ-1)) · [ (1-γ+2γM²) / (γ+1) ] - 1
+    /// computed here directly from the same γ the production code uses, so this
+    /// is the correct supersonic value, not a guess.
+    func testImpactPressureCoefficient_Supersonic_MatchesRayleighFormula() {
+        let gamma = ISA.ratioSpecificHeats
+        let mach = 1.2
+
+        let term1 = pow((gamma + 1) * (gamma + 1) * mach * mach /
+                         (4 * gamma * mach * mach - 2 * (gamma - 1)), gamma / (gamma - 1))
+        let term2 = (1 - gamma + 2 * gamma * mach * mach) / (gamma + 1)
+        let correctQc = term1 * term2 - 1
+
+        let actualQc = AirDataEquations.impactPressureCoefficient(fromMach: mach)
+
+        XCTAssertEqual(actualQc, correctQc, accuracy: 0.001,
+                      "Above Mach 1, impact pressure must use the Rayleigh (shock) relation, not the subsonic one")
+    }
 }
