@@ -1,7 +1,7 @@
-import GeodesySpherical
+import Vincenty
 
 extension Position2D {
-    public init(coordinate: Coordinate) {
+    public init(coordinate: GeodeticCoordinate) {
         // Geodesic math (e.g. a destination point computed right at a pole or across the
         // antimeridian) can overshoot the valid range by floating-point noise; clamp rather
         // than let the precondition in Latitude/Longitude's initializer trap on it.
