@@ -321,7 +321,7 @@ final class SpeedContextTests: XCTestCase {
     /// the temperature at 5,000ft. The correct temperature at 5,000ft, found by
     /// applying the context's own (lapse-rate-derived) temperature model via
     /// `AltitudeContext.temperature(at:)`, is +2.5°C.
-    func testAtAltitude_UsesLapseAdjustedTemperature_NotRawTemperatureAtReference() {
+    func testAtAltitude_UsesLapseAdjustedTemperature_NotRawTemperatureAtReference() throws {
         let context = AltitudeContext(
             groundElevation: .surface,
             qnh: ISA.seaLevelPressure,
@@ -332,7 +332,7 @@ final class SpeedContextTests: XCTestCase {
         )
         let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: context)
 
-        let correctTemperature = context.temperature(at: altitude.amsl)
+        let correctTemperature = context.temperature(at: try altitude.amsl)
         XCTAssertNotNil(correctTemperature, "Lapse rate should be derivable from the context above")
 
         let speedContext = SpeedContext.at(altitude: altitude)
@@ -349,7 +349,7 @@ final class SpeedContextTests: XCTestCase {
         // rate all present), so that ValidatedAltitude's own (unrelated,
         // fatalError-based) completeness check does not fire and mask H1.
         let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: .standardISA)
-        let validatedAltitude = ValidatedAltitude(altitude)
+        let validatedAltitude = try ValidatedAltitude(altitude)
 
         XCTAssertNoThrow(try ValidatedSpeedContext(at: validatedAltitude))
     }

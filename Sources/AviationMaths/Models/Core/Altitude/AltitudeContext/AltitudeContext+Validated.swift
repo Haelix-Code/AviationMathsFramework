@@ -9,21 +9,19 @@ public struct ValidatedAltitudeContext: Sendable, Equatable, Codable {
     public let seaLevelTemperature: Measurement<UnitTemperature>
     public let surfaceTemperature: Measurement<UnitTemperature>
 
-    public init(_ ctx: AltitudeContext) {
+    /// - Throws: `AltitudeConversionError` for the first thing `ctx` is missing: ground elevation,
+    ///   QNH, or a temperature profile (lapse rate, and a sea-level or surface temperature).
+    public init(_ ctx: AltitudeContext) throws(AltitudeConversionError) {
         guard let groundElevation = ctx.groundElevation else {
-            fatalError("AltitudeContext missing groundElevation")
+            throw .missingGroundElevation
         }
         guard let qnh = ctx.qnh else {
-            fatalError("AltitudeContext missing QNH")
+            throw .missingQNH
         }
-        guard let lapseRate = ctx.lapseRate else {
-            fatalError("AltitudeContext missing lapseRate")
-        }
-        guard let slt = ctx.seaLevelTemperature else {
-            fatalError("AltitudeContext missing sea-level temperature")
-        }
-        guard let sft = ctx.surfaceTemperature else {
-            fatalError("AltitudeContext missing surface temperature")
+        guard let lapseRate = ctx.lapseRate,
+              let slt = try? ctx.seaLevelTemperature,
+              let sft = try? ctx.surfaceTemperature else {
+            throw .missingTemperatureProfile
         }
 
         self.raw = ctx
@@ -33,19 +31,34 @@ public struct ValidatedAltitudeContext: Sendable, Equatable, Codable {
         self.seaLevelTemperature = slt
         self.surfaceTemperature = sft
     }
+
+    /// Decoding re-validates `raw`, so a decoded context keeps the guarantee that every
+    /// conversion succeeds.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let raw = try container.decode(AltitudeContext.self, forKey: .raw)
+        do {
+            try self.init(raw)
+        } catch {
+            throw DecodingError.dataCorruptedError(
+                forKey: .raw,
+                in: container,
+                debugDescription: "Context isn't complete: \(error)"
+            )
+        }
+    }
 }
 
 extension AltitudeContext {
     public var validated: ValidatedAltitudeContext? {
-        guard isComplete else { return nil }
-        return ValidatedAltitudeContext(self)
+        try? ValidatedAltitudeContext(self)
     }
 
     public var isComplete: Bool {
         groundElevation != nil &&
         qnh != nil &&
-        seaLevelTemperature != nil &&
-        surfaceTemperature != nil &&
+        (try? seaLevelTemperature) != nil &&
+        (try? surfaceTemperature) != nil &&
         lapseRate != nil
     }
 

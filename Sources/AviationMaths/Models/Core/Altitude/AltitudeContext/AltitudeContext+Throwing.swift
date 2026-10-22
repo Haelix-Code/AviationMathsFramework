@@ -2,48 +2,53 @@ import Foundation
 
 extension AltitudeContext {
 
-    // MARK: - Throwing Methods for Context Properties
+    // MARK: - Temperatures
 
-    /// Returns surface temperature, throwing an error if it cannot be calculated
+    /// Surface temperature (at ground elevation): the one given, or the sea-level temperature
+    /// carried up to ground elevation at the lapse rate. Use `try?` for an optional result.
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
-    /// - Returns: Surface temperature
-    public func surfaceTemperatureThrowing() throws -> Measurement<UnitTemperature> {
-        if let explicitTemp = _surfaceTemperature {
-            return explicitTemp
-        }
-
-        guard let seaLevelTemp = _seaLevelTemperature,
-              let elevation = groundElevation,
-              let lapse = lapseRate else {
-            throw ContextCalculationError.insufficientData(
-                calculation: "surfaceTemperature",
-                missing: missingForSurfaceTemp()
-            )
-        }
-
-        let surfaceTempKelvin = seaLevelTemp.kelvin - (lapse * elevation.meters)
-        return .init(kelvin: surfaceTempKelvin)
-    }
-
-    /// Returns sea level temperature, throwing an error if it cannot be calculated
-    /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
-    /// - Returns: Sea level temperature
-    public func seaLevelTemperatureThrowing() throws -> Measurement<UnitTemperature> {
-        // Surface temperature takes precedence when it can be extrapolated down (see `init`)
-        guard let surfaceTemp = _surfaceTemperature,
-              let elevation = groundElevation,
-              let lapse = lapseRate else {
-            if let explicitTemp = _seaLevelTemperature {
+    public var surfaceTemperature: Measurement<UnitTemperature> {
+        get throws(ContextCalculationError) {
+            if let explicitTemp = _surfaceTemperature {
                 return explicitTemp
             }
-            throw ContextCalculationError.insufficientData(
-                calculation: "seaLevelTemperature",
-                missing: missingForSeaLevelTemp()
-            )
-        }
 
-        let seaLevelTempKelvin = surfaceTemp.kelvin + (lapse * elevation.meters)
-        return .init(kelvin: seaLevelTempKelvin)
+            guard let seaLevelTemp = _seaLevelTemperature,
+                  let elevation = groundElevation,
+                  let lapse = lapseRate else {
+                throw ContextCalculationError.insufficientData(
+                    calculation: "surfaceTemperature",
+                    missing: missingForSurfaceTemp()
+                )
+            }
+
+            let surfaceTempKelvin = seaLevelTemp.kelvin - (lapse * elevation.meters)
+            return .init(kelvin: surfaceTempKelvin)
+        }
+    }
+
+    /// Sea level temperature (at height = 0). When a surface temperature is also given,
+    /// and it can be extrapolated down, it takes precedence (see `init`). Use `try?` for an
+    /// optional result.
+    /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
+    public var seaLevelTemperature: Measurement<UnitTemperature> {
+        get throws(ContextCalculationError) {
+            // Surface temperature takes precedence when it can be extrapolated down (see `init`)
+            guard let surfaceTemp = _surfaceTemperature,
+                  let elevation = groundElevation,
+                  let lapse = lapseRate else {
+                if let explicitTemp = _seaLevelTemperature {
+                    return explicitTemp
+                }
+                throw ContextCalculationError.insufficientData(
+                    calculation: "seaLevelTemperature",
+                    missing: missingForSeaLevelTemp()
+                )
+            }
+
+            let seaLevelTempKelvin = surfaceTemp.kelvin + (lapse * elevation.meters)
+            return .init(kelvin: seaLevelTempKelvin)
+        }
     }
 
     // MARK: - Private Helpers
