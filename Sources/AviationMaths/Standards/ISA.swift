@@ -30,8 +30,6 @@ public struct ISA {
         .init(value: 1.225, unit: .gramsPerLiter)
     public static let seaLevelSpeedOfSound: Measurement<UnitSpeed> =
         .init(value: 340.294, unit: .metersPerSecond)
-    internal static let molarMassDryAir: Double = 0.028964
-    internal static let idealGasConstant: Double = 8.3144598
 
     // MARK: - Atmospheric Layer Definitions
 

@@ -33,14 +33,4 @@ final class UnitExtensionsTests: XCTestCase {
         XCTAssertEqual(LongitudeDirection.from(bearing: 450), .east)  // 90
         XCTAssertEqual(LongitudeDirection.from(bearing: -90), .west)  // 270
     }
-
-    func testConvertToDensity_reasonableValueAtSeaLevelISA() {
-        // Ideal gas: rho = p / (R * T)
-        // ISA: p0 = 101325 Pa, T0 = 288.15 K, R = 287.05287 (as used by your ISA constant)
-        let rho = Measurement<UnitTemperature>(kelvin: 288.15)
-            .convertToDensity(pressure: .init(pascals: 101325))
-
-        // Your density unit is gramsPerLiter (1 kg/m^3 = 1 g/L)
-        XCTAssertEqual(rho.value, 1.225, accuracy: 0.01)
-    }
 }

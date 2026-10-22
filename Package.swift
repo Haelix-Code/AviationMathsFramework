@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "AviationMaths",
-    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v13), .macOS(.v11)],
     products: [
         .library(
             name: "AviationMaths",

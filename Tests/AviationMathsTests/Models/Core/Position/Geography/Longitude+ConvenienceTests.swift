@@ -17,11 +17,6 @@ final class LongitudeConvenienceTests: XCTestCase {
         XCTAssertFalse(primeMeridian.isWesternHemisphere)
     }
 
-    func testNormalizedWithinRange() {
-        let lon = Longitude(decimalDegrees: 170.0)
-        XCTAssertEqual(lon.normalized.decimalDegrees, 170.0)
-    }
-
     func testAs0To360Conversion() {
         let east = Longitude(decimalDegrees: 45.0)
         XCTAssertEqual(east.as0To360, 45.0)

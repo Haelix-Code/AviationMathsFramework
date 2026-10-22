@@ -1,6 +1,6 @@
 # AviationMaths
 
-A foundational aviation mathematics framework for iOS applications, providing production-ready implementations of industry-standard aviation calculations.
+A foundational aviation mathematics framework for iOS and macOS applications, providing production-ready implementations of industry-standard aviation calculations.
 
 ## Overview
 
@@ -60,7 +60,8 @@ This library uses **aviation convention** throughout, where bearings are measure
 ## Requirements
 
 - iOS 13.0+
-- Swift 5.0+
+- macOS 11.0+
+- Swift 6.2+ (Xcode 26+)
 
 ## Architecture
 

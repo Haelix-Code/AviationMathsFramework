@@ -176,18 +176,6 @@ public struct Speed: Sendable {
     }
 }
 
-private extension Measurement<UnitSpeed> {
-    func asCAS(context: SpeedContext) -> Measurement<UnitSpeed> {
-        let speed = Speed(value: self, reference: .equivalentAirspeed, context: context)
-        return speed.cas
-    }
-
-    func asEAS(context: SpeedContext) -> Measurement<UnitSpeed> {
-        let speed = Speed(value: self, reference: .trueAirspeed, context: context)
-        return speed.eas
-    }
-}
-
 extension Speed {
     public func `in`(_ newReference: SpeedReference) -> Speed {
         switch newReference {
