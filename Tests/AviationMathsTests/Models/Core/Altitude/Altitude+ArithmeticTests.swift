@@ -22,7 +22,7 @@ final class AltitudeArithmeticTests: XCTestCase {
 
         let mid = try lower.midpoint(to: upper, in: ref)
 
-        let midMeters = mid.value(in: ref).converted(to: .meters).value
+        let midMeters = try mid.value(in: ref).converted(to: .meters).value
         XCTAssertEqual(midMeters, 2000, accuracy: 0.0001,
                        "Midpoint should be the arithmetic mean of the two altitudes in meters")
     }
@@ -44,7 +44,7 @@ final class AltitudeArithmeticTests: XCTestCase {
 
         let result = try start.interpolated(to: end, fraction: 0.0, in: ref)
 
-        let resultMeters = result.value(in: ref).converted(to: .meters).value
+        let resultMeters = try result.value(in: ref).converted(to: .meters).value
         XCTAssertEqual(resultMeters, 1000, accuracy: 0.0001,
                        "t = 0 should yield the start altitude")
     }
@@ -55,7 +55,7 @@ final class AltitudeArithmeticTests: XCTestCase {
 
         let result = try start.interpolated(to: end, fraction: 1.0, in: ref)
 
-        let resultMeters = result.value(in: ref).converted(to: .meters).value
+        let resultMeters = try result.value(in: ref).converted(to: .meters).value
         XCTAssertEqual(resultMeters, 3000, accuracy: 0.0001,
                        "t = 1 should yield the end altitude")
     }
@@ -68,6 +68,18 @@ final class AltitudeArithmeticTests: XCTestCase {
             XCTAssertEqual(error as? AltitudeArithmeticError,
                            .mismatchedContext,
                            "Interpolated should throw AltitudeArithmeticError.mismatchedContext when contexts differ")
+        }
+    }
+
+    func testMidpointAndInterpolated_Throw_WhenTheReferenceCannotBeReached() {
+        let start = makeAltitude(meters: 1000, context: AltitudeContext())
+        let end = makeAltitude(meters: 3000, context: AltitudeContext())
+
+        XCTAssertThrowsError(try start.midpoint(to: end, in: .pressureAltitude)) { error in
+            XCTAssertEqual(error as? AltitudeConversionError, .missingQNH)
+        }
+        XCTAssertThrowsError(try start.interpolated(to: end, fraction: 0.5, in: .pressureAltitude)) { error in
+            XCTAssertEqual(error as? AltitudeConversionError, .missingQNH)
         }
     }
 }

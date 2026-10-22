@@ -25,7 +25,7 @@ public struct Altitude: Codable, Hashable, Sendable {
 
     /// Above ground level altitude
    /// - Warning: This computed property uses `try!` and will crash if context lacks ground elevation.
-   ///   For error handling use `valueThrowing(in: .agl)`, or use `aglIfPossible` for optional return.
+   ///   For error handling use `try value(in: .agl)`, or `try? value(in: .agl)` for optional return.
    public var agl: Measurement<UnitLength> {
        // swiftlint:disable:next force_try
        reference == .agl ? value : try! convertToAGLThrowing()
@@ -33,7 +33,7 @@ public struct Altitude: Codable, Hashable, Sendable {
 
    /// Above mean sea level altitude
    /// - Warning: This computed property uses `try!` and will crash if context is insufficient.
-   ///   For error handling use `valueThrowing(in: .amsl)`, or use `amslIfPossible` for optional return.
+   ///   For error handling use `try value(in: .amsl)`, or `try? value(in: .amsl)` for optional return.
    public var amsl: Measurement<UnitLength> {
        // swiftlint:disable:next force_try
        reference == .amsl ? value : try! convertToAMSLThrowing()
@@ -41,7 +41,7 @@ public struct Altitude: Codable, Hashable, Sendable {
 
    /// Pressure altitude
    /// - Warning: This computed property uses `try!` and will crash if context lacks QNH.
-   ///   For error handling use `valueThrowing(in: .pressureAltitude)`, or use `pressureAltitudeIfPossible`
+   ///   For error handling use `try value(in: .pressureAltitude)`, or `try? value(in: .pressureAltitude)`
    ///   for optional return.
    public var pressureAltitude: Measurement<UnitLength> {
        // swiftlint:disable:next force_try
@@ -50,7 +50,7 @@ public struct Altitude: Codable, Hashable, Sendable {
 
    /// True altitude
    /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
-   ///   For error handling use `valueThrowing(in: .trueAltitude)`, or use `trueAltitudeIfPossible` for optional return.
+   ///   For error handling use `try value(in: .trueAltitude)`, or `try? value(in: .trueAltitude)` for optional return.
    public var trueAltitude: Measurement<UnitLength> {
        // swiftlint:disable:next force_try
        reference == .trueAltitude ? value : try! convertToTrueAltitudeThrowing()
@@ -61,6 +61,7 @@ public struct Altitude: Codable, Hashable, Sendable {
    /// This is the altitude reference used internally by the ISA standard atmosphere.
    /// - Note: This conversion requires true altitude, which in turn requires a temperature profile.
    /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
+   ///   For error handling use `try value(in: .geopotential)`, or `try? value(in: .geopotential)` for optional return.
    public var geopotential: Measurement<UnitLength> {
        // swiftlint:disable:next force_try
        reference == .geopotential ? value : try! convertToGeopotentialThrowing()
@@ -107,15 +108,5 @@ extension Altitude {
             preconditionFailure("Cannot convert from \(reference) to \(newReference) with current context")
         }
         return result
-    }
-
-    func value(in ref: VerticalReference) -> Measurement<UnitLength> {
-        switch ref {
-        case .agl: return self.agl
-        case .amsl: return self.amsl
-        case .pressureAltitude: return self.pressureAltitude
-        case .trueAltitude: return self.trueAltitude
-        case .geopotential: return self.geopotential
-        }
     }
 }

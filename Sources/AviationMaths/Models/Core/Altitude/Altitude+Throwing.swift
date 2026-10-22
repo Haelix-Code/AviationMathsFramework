@@ -4,11 +4,12 @@ extension Altitude {
 
     // MARK: - Throwing Public Conversion Methods
 
-    /// Returns altitude in the specified reference frame, throwing an error if conversion fails
-    /// - Parameter newReference: The target altitude reference
+    /// Returns altitude in the specified reference frame, throwing an error if conversion fails.
+    /// Use `try?` for an optional result.
+    /// - Parameter ref: The target altitude reference
     /// - Throws: `AltitudeConversionError` if context lacks required data for conversion
     /// - Returns: Altitude value in the specified reference
-    public func valueThrowing(in ref: VerticalReference) throws -> Measurement<UnitLength> {
+    public func value(in ref: VerticalReference) throws -> Measurement<UnitLength> {
         switch ref {
         case .agl: return try convertToAGLThrowing()
         case .amsl: return try convertToAMSLThrowing()
@@ -18,12 +19,17 @@ extension Altitude {
         }
     }
 
+    @available(*, deprecated, renamed: "value(in:)")
+    public func valueThrowing(in ref: VerticalReference) throws -> Measurement<UnitLength> {
+        try value(in: ref)
+    }
+
     /// Creates a new Altitude in the specified reference frame, throwing an error if conversion fails
     /// - Parameter newReference: The target altitude reference
     /// - Throws: `AltitudeConversionError` if context lacks required data for conversion
     /// - Returns: Altitude in the new reference frame
     public func convertedThrowing(to newReference: VerticalReference) throws -> Altitude {
-        let newValue = try valueThrowing(in: newReference)
+        let newValue = try value(in: newReference)
         return Altitude(value: newValue, reference: newReference, context: context)
     }
 
