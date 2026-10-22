@@ -10,7 +10,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
 
-        XCTAssertThrowsError(try speed.converted(to: .trueAirspeed)) { error in
+        XCTAssertThrowsError(try speed.tas) { error in
             guard case ContextCalculationError.insufficientData(let calc, let missing) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -25,7 +25,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()
         let speed = Speed(knots: 250, reference: .trueAirspeed, context: context)
 
-        XCTAssertThrowsError(try speed.converted(to: .machNumber)) { error in
+        XCTAssertThrowsError(try speed.mach) { error in
             guard case ContextCalculationError.insufficientData(let calc, _) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -38,10 +38,10 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 200, reference: .calibratedAirspeed, context: context)
 
-        let cas = try speed.converted(to: .calibratedAirspeed).value
-        let eas = try speed.converted(to: .equivalentAirspeed).value
-        let tas = try speed.converted(to: .trueAirspeed).value
-        let mach = try speed.converted(to: .machNumber).mach
+        let cas = try speed.cas
+        let eas = try speed.eas
+        let tas = try speed.tas
+        let mach = try speed.mach
 
         XCTAssertEqual(cas.knots, 200, accuracy: 0.1)
         XCTAssertGreaterThan(eas.knots, 0)
@@ -109,7 +109,7 @@ final class ErrorHandlingTests: XCTestCase {
     func testSpeedContext_ThrowsErrorForDensity() {
         let context = SpeedContext()  // No altitude
 
-        XCTAssertThrowsError(try context.densityThrowing()) { error in
+        XCTAssertThrowsError(try context.density) { error in
             guard case ContextCalculationError.insufficientData(let calc, let missing) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -122,7 +122,7 @@ final class ErrorHandlingTests: XCTestCase {
     func testSpeedContext_ThrowsErrorForSpeedOfSound() {
         let context = SpeedContext()  // No altitude
 
-        XCTAssertThrowsError(try context.speedOfSoundThrowing()) { error in
+        XCTAssertThrowsError(try context.speedOfSound) { error in
             guard case ContextCalculationError.insufficientData(let calc, _) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -134,9 +134,9 @@ final class ErrorHandlingTests: XCTestCase {
     func testSpeedContext_SucceedsWithValidData() throws {
         let context = SpeedContext(pressureAltitude: .init(feet: 10000), deltaISA: .init(kelvin: 0))
 
-        let density = try context.densityThrowing()
-        let speedOfSound = try context.speedOfSoundThrowing()
-        let relativePressure = try context.relativePressureThrowing()
+        let density = try context.density
+        let speedOfSound = try context.speedOfSound
+        let relativePressure = try context.relativePressure
 
         XCTAssertGreaterThan(density.value, 0)
         XCTAssertGreaterThan(speedOfSound.mps, 0)

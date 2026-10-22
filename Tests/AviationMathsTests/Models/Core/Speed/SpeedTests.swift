@@ -6,10 +6,10 @@ final class SpeedTests: XCTestCase {
     func testFromCAS_Standard() {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 200, reference: .calibratedAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 0.302, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 0.302, accuracy: 0.001)
     }
 
     func testFromCAS_HotHigh() {
@@ -18,19 +18,19 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 200, reference: .calibratedAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 193.395, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 370.468, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 0.603, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 193.395, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 370.468, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 0.603, accuracy: 0.001)
     }
 
     func testFromEAS_Standard() {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 0.302, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 0.302, accuracy: 0.001)
     }
 
     func testFromEAS_HotHigh() {
@@ -39,19 +39,19 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 207.297, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 383.122, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 0.623, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 207.297, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 383.122, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 0.623, accuracy: 0.001)
     }
 
     func testFromTAS_Standard() {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 200, reference: .trueAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 0.302, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 0.302, accuracy: 0.001)
     }
 
     func testFromTAS_HotHigh() {
@@ -60,19 +60,19 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 200, reference: .trueAirspeed, context: context)
-        XCTAssertEqual(speed.cas.knots, 105.458, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 104.405, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 200.000, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 0.325, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 105.458, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 104.405, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 200.000, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 0.325, accuracy: 0.001)
     }
 
     func testFromMach_Standard() {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 1, reference: .machNumber, context: context)
-        XCTAssertEqual(speed.cas.knots, 661.479, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 661.479, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 661.479, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 1, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 661.479, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 661.479, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 661.479, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 1, accuracy: 0.001)
     }
 
     func testFromMach_HotHigh() {
@@ -81,13 +81,13 @@ final class SpeedTests: XCTestCase {
             deltaISA: .init(kelvin: 30)
         )
         let speed = Speed(knots: 1, reference: .machNumber, context: context)
-        XCTAssertEqual(speed.cas.knots, 350.025, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 320.872, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 614.666, accuracy: 0.001)
-        XCTAssertEqual(speed.mach, 1, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 350.025, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 320.872, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 614.666, accuracy: 0.001)
+        XCTAssertEqual(try speed.mach, 1, accuracy: 0.001)
     }
 
-    func testCASRoundTrip() {
+    func testCASRoundTrip() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 25000),
             deltaISA: .init(kelvin: 0)
@@ -96,12 +96,12 @@ final class SpeedTests: XCTestCase {
         let originalCAS = 250.0
         let speed = Speed(knots: originalCAS, reference: .calibratedAirspeed, context: context)
 
-        let eas = speed.eas
+        let eas = try speed.eas
         let speedFromEAS = Speed(value: eas, reference: .equivalentAirspeed, context: context)
-        XCTAssertEqual(speedFromEAS.cas.knots, originalCAS, accuracy: 0.001)
+        XCTAssertEqual(try speedFromEAS.cas.knots, originalCAS, accuracy: 0.001)
     }
 
-    func testEASRoundTrip() {
+    func testEASRoundTrip() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 25000),
             deltaISA: .init(kelvin: 0)
@@ -110,12 +110,12 @@ final class SpeedTests: XCTestCase {
         let originalEAS = 200.0
         let speed = Speed(knots: originalEAS, reference: .equivalentAirspeed, context: context)
 
-        let tas = speed.tas
+        let tas = try speed.tas
         let speedFromTAS = Speed(value: tas, reference: .trueAirspeed, context: context)
-        XCTAssertEqual(speedFromTAS.eas.knots, originalEAS, accuracy: 0.001)
+        XCTAssertEqual(try speedFromTAS.eas.knots, originalEAS, accuracy: 0.001)
     }
 
-    func testTASRoundTrip() {
+    func testTASRoundTrip() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 25000),
             deltaISA: .init(kelvin: 0)
@@ -124,12 +124,12 @@ final class SpeedTests: XCTestCase {
         let originalTAS = 300.0
         let speed = Speed(knots: originalTAS, reference: .trueAirspeed, context: context)
 
-        let mach = speed.mach
+        let mach = try speed.mach
         let speedFromMach = Speed(mach: mach, context: context)
-        XCTAssertEqual(speedFromMach.tas.knots, originalTAS, accuracy: 0.001)
+        XCTAssertEqual(try speedFromMach.tas.knots, originalTAS, accuracy: 0.001)
     }
 
-    func testFullChainRoundTrip() {
+    func testFullChainRoundTrip() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 25000),
             deltaISA: .init(kelvin: 5)
@@ -138,29 +138,29 @@ final class SpeedTests: XCTestCase {
         let originalCAS = 400.0
         let speed = Speed(knots: originalCAS, reference: .calibratedAirspeed, context: context)
 
-        let mach = speed.mach
+        let mach = try speed.mach
         let speedFromMach = Speed(mach: mach, context: context)
 
-        XCTAssertEqual(speedFromMach.cas.knots, originalCAS, accuracy: 0.001)
+        XCTAssertEqual(try speedFromMach.cas.knots, originalCAS, accuracy: 0.001)
     }
 
     func testSpeedUnits() {
         let context = SpeedContext.standardISA
         let speed = Speed(mps: 100, reference: .trueAirspeed, context: context)
 
-        XCTAssertEqual(speed.tas.mps, 100)
-        XCTAssertEqual(speed.tas.knots, 194.384, accuracy: 0.01)
-        XCTAssertEqual(speed.tas.fps, 328.084, accuracy: 0.01)
+        XCTAssertEqual(try speed.tas.mps, 100)
+        XCTAssertEqual(try speed.tas.knots, 194.384, accuracy: 0.01)
+        XCTAssertEqual(try speed.tas.fps, 328.084, accuracy: 0.01)
     }
 
     func testZeroSpeed() {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 0, reference: .calibratedAirspeed, context: context)
 
-        XCTAssertEqual(speed.cas.knots, 0)
-        XCTAssertEqual(speed.eas.knots, 0)
-        XCTAssertEqual(speed.tas.knots, 0)
-        XCTAssertEqual(speed.mach, 0)
+        XCTAssertEqual(try speed.cas.knots, 0)
+        XCTAssertEqual(try speed.eas.knots, 0)
+        XCTAssertEqual(try speed.tas.knots, 0)
+        XCTAssertEqual(try speed.mach, 0)
     }
 
     func testSupersonicSpeed() {
@@ -171,9 +171,9 @@ final class SpeedTests: XCTestCase {
 
         let speed = Speed(mach: 2.0, context: context)
 
-        XCTAssertEqual(speed.cas.knots, 717.027, accuracy: 0.01)
-        XCTAssertEqual(speed.eas.knots, 641.744, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 1152.838, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 717.027, accuracy: 0.01)
+        XCTAssertEqual(try speed.eas.knots, 641.744, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 1152.838, accuracy: 0.001)
     }
 
     func testStratospheric() {
@@ -184,22 +184,22 @@ final class SpeedTests: XCTestCase {
 
         let speed = Speed(mach: 0.89, context: context)
 
-        XCTAssertEqual(speed.cas.knots, 273.203, accuracy: 0.001)
-        XCTAssertEqual(speed.eas.knots, 253.276, accuracy: 0.001)
-        XCTAssertEqual(speed.tas.knots, 510.477, accuracy: 0.001)
+        XCTAssertEqual(try speed.cas.knots, 273.203, accuracy: 0.001)
+        XCTAssertEqual(try speed.eas.knots, 253.276, accuracy: 0.001)
+        XCTAssertEqual(try speed.tas.knots, 510.477, accuracy: 0.001)
     }
 
-    func testInMethod() {
+    func testInMethod() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 10000),
             deltaISA: .init(kelvin: 0)
         )
 
         let speed = Speed(knots: 250, reference: .calibratedAirspeed, context: context)
-        let tasSpeed = speed.in(.trueAirspeed)
+        let tasSpeed = try speed.converted(to: .trueAirspeed)
 
         XCTAssertEqual(tasSpeed.reference, .trueAirspeed)
-        XCTAssertEqual(tasSpeed.tas.knots, speed.tas.knots)
+        XCTAssertEqual(try tasSpeed.tas.knots, try speed.tas.knots)
     }
 
     func testConvertedTo_ReturnsTheSpeedInTheNewReference() throws {
@@ -210,8 +210,8 @@ final class SpeedTests: XCTestCase {
         let machSpeed = try speed.converted(to: .machNumber)
 
         XCTAssertEqual(tasSpeed.reference, .trueAirspeed)
-        XCTAssertEqual(tasSpeed.value.knots, speed.tas.knots)
-        XCTAssertEqual(machSpeed.mach, speed.mach)
+        XCTAssertEqual(tasSpeed.value.knots, try speed.tas.knots)
+        XCTAssertEqual(try machSpeed.mach, try speed.mach)
     }
 
     func testConvertedTo_Throws_WhenTheContextIsInsufficient() {
@@ -237,14 +237,14 @@ final class SpeedTests: XCTestCase {
         XCTAssertTrue(try speed1.isSameSpeed(as: speed2, tolerance: .init(mps: 1e-7)))
     }
 
-    func testSpeedComparison_DifferentReferences() {
+    func testSpeedComparison_DifferentReferences() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 15000),
             deltaISA: .init(kelvin: 0)
         )
 
         let speedTAS = Speed(knots: 350, reference: .trueAirspeed, context: context)
-        let speedCAS = Speed(knots: speedTAS.cas.knots, reference: .calibratedAirspeed, context: context)
+        let speedCAS = Speed(knots: try speedTAS.cas.knots, reference: .calibratedAirspeed, context: context)
 
         XCTAssertNotEqual(speedTAS, speedCAS, "Same physical speed, different stored reference")
         XCTAssertTrue(try speedTAS.isSameSpeed(as: speedCAS, tolerance: .init(mps: 1e-7)))
@@ -253,7 +253,7 @@ final class SpeedTests: XCTestCase {
     func testIsSameSpeedAndIsSlower_CompareTAS() throws {
         let context = SpeedContext(pressureAltitude: .init(feet: 15000), deltaISA: .init(kelvin: 0))
         let tas = Speed(knots: 350, reference: .trueAirspeed, context: context)
-        let mach = Speed(mach: tas.mach, context: context)
+        let mach = Speed(mach: try tas.mach, context: context)
         let faster = Speed(knots: 351, reference: .trueAirspeed, context: context)
 
         XCTAssertTrue(try tas.isSameSpeed(as: mach, tolerance: .init(mps: 1e-7)))
@@ -303,10 +303,10 @@ final class SpeedTests: XCTestCase {
 
         func ifPossibleIsNil(_ speed: Speed, _ target: SpeedReference) -> Bool {
             switch target {
-            case .calibratedAirspeed: return speed.casIfPossible == nil
-            case .equivalentAirspeed: return speed.easIfPossible == nil
-            case .trueAirspeed: return speed.tasIfPossible == nil
-            case .machNumber: return speed.machIfPossible == nil
+            case .calibratedAirspeed: return (try? speed.cas) == nil
+            case .equivalentAirspeed: return (try? speed.eas) == nil
+            case .trueAirspeed: return (try? speed.tas) == nil
+            case .machNumber: return (try? speed.mach) == nil
             }
         }
 
@@ -340,6 +340,28 @@ final class SpeedTests: XCTestCase {
             context: SpeedContext(measuredPressure: ISA.pressure(at: altitude))
         )
 
-        XCTAssertEqual(try XCTUnwrap(pressureOnly.machIfPossible), reference.mach, accuracy: 1e-6)
+        XCTAssertEqual(try XCTUnwrap((try? pressureOnly.mach)), try reference.mach, accuracy: 1e-6)
+    }
+
+    func testProperties_ThrowTheContextError_InsteadOfTrapping() {
+        let mach = Speed(mach: 0.8, context: SpeedContext())
+        let tas = Speed(knots: 300, reference: .trueAirspeed, context: SpeedContext())
+
+        XCTAssertThrowsError(try mach.tas) { XCTAssertTrue($0 is ContextCalculationError) }
+        XCTAssertThrowsError(try tas.cas) { XCTAssertTrue($0 is ContextCalculationError) }
+        XCTAssertThrowsError(try tas.eas) { XCTAssertTrue($0 is ContextCalculationError) }
+        XCTAssertThrowsError(try tas.mach) { XCTAssertTrue($0 is ContextCalculationError) }
+    }
+
+    func testTypedSpeedConversions_ThrowTheContextError_InsteadOfTrapping() {
+        XCTAssertThrowsError(try CAS(knots: 250).toEAS(context: SpeedContext())) {
+            XCTAssertTrue($0 is ContextCalculationError)
+        }
+        XCTAssertThrowsError(try CAS(knots: 250).toTAS(context: SpeedContext())) {
+            XCTAssertTrue($0 is ContextCalculationError)
+        }
+        XCTAssertThrowsError(try TAS(knots: 250).toCAS(context: SpeedContext())) {
+            XCTAssertTrue($0 is ContextCalculationError)
+        }
     }
 }

@@ -194,7 +194,7 @@ final class UnitAltitudeTests: XCTestCase {
         )
 
         // Should have valid surface temperature
-        XCTAssertNotNil(try context.surfaceTemperature)
+        XCTAssertNoThrow(try context.surfaceTemperature)
         XCTAssertEqual(try context.surfaceTemperature.celsius, 15, accuracy: 0.1)
     }
 
@@ -206,7 +206,7 @@ final class UnitAltitudeTests: XCTestCase {
             lapseRate: ISA.troposphereLapseRate
         )
 
-        XCTAssertNotNil(try context.seaLevelTemperature)
+        XCTAssertNoThrow(try context.seaLevelTemperature)
 
         let expectedSLTemp = 15 + (6.5/1000 * 800 * 0.3048)
         XCTAssertEqual(try context.seaLevelTemperature.celsius, expectedSLTemp, accuracy: 0.1)
