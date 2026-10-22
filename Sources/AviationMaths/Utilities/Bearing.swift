@@ -29,6 +29,8 @@ public struct Bearing: Hashable, Codable, Sendable {
     private static func normalize(_ degrees: Double) -> Double {
         var result = degrees.truncatingRemainder(dividingBy: 360)
         if result < 0 { result += 360 }
+        // For a tiny negative input (e.g. -1e-14), adding 360 can round to exactly 360.0.
+        if result >= 360 { result -= 360 }
         return result
     }
 
@@ -37,9 +39,9 @@ public struct Bearing: Hashable, Codable, Sendable {
         Bearing(degrees: _degrees + 180)
     }
 
-    /// Bearings perpendicular to this one
-    public var perpendiculars: (left: Bearing, right: Bearing) {
-        (Bearing(degrees: _degrees - 90), Bearing(degrees: _degrees + 90))
+    /// Bearings perpendicular to this one, in the same order as `Measurement<UnitAngle>.perpendiculars`
+    public var perpendiculars: (right: Bearing, left: Bearing) {
+        (Bearing(degrees: _degrees + 90), Bearing(degrees: _degrees - 90))
     }
 
     public var asMeasurement: Measurement<UnitAngle> {
@@ -69,6 +71,11 @@ extension Bearing: ExpressibleByIntegerLiteral {
 
 extension Bearing: CustomStringConvertible {
     public var description: String {
-        String(format: "%03.0f°", _degrees)
+        // Aviation convention shows north as 360, never 000 (FAA JO 7110.65 headings, ICAO
+        // runway designators). Round first (ties-to-even, as %.0f does) so anything that
+        // rounds to north, including 0 and -0, shows as 360°.
+        let rounded = _degrees.rounded(.toNearestOrEven)
+        let displayed: Double = rounded == 0 ? 360 : rounded
+        return String(format: "%03.0f°", displayed)
     }
 }

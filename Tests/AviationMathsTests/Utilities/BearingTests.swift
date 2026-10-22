@@ -35,9 +35,29 @@ final class BearingTests: XCTestCase {
 
         XCTAssertEqual(b.reciprocal.wrappedValue, 170, accuracy: 1e-12)
 
-        let (left, right) = b.perpendiculars
-        XCTAssertEqual(left.wrappedValue, 260, accuracy: 1e-12)  // 350 - 90
-        XCTAssertEqual(right.wrappedValue, 80, accuracy: 1e-12)  // 350 + 90 => 80
+        let perpendiculars = b.perpendiculars
+        XCTAssertEqual(perpendiculars.left.wrappedValue, 260, accuracy: 1e-12)  // 350 - 90
+        XCTAssertEqual(perpendiculars.right.wrappedValue, 80, accuracy: 1e-12)  // 350 + 90 => 80
+    }
+
+    func testPerpendiculars_SameOrderAsMeasurementPerpendiculars() {
+        for degrees in stride(from: 0.0, to: 360, by: 15) {
+            let bearing = Bearing(degrees: degrees).perpendiculars
+            let measurement = Measurement<UnitAngle>(degrees: degrees).perpendiculars
+
+            XCTAssertEqual(bearing.0.wrappedValue, measurement.0.degrees, accuracy: 1e-12, "\(degrees)°")
+            XCTAssertEqual(bearing.1.wrappedValue, measurement.1.degrees, accuracy: 1e-12, "\(degrees)°")
+        }
+    }
+
+    func testNormalize_TinyNegativeInput_StaysBelow360() {
+        let b = Bearing(degrees: -1e-14)
+        XCTAssertLessThan(b.wrappedValue, 360)
+        XCTAssertEqual(b.wrappedValue, 0)
+
+        var h = Holder(10)
+        h.bearing = -1e-14
+        XCTAssertLessThan(h.bearing, 360)
     }
 
     func testDifferenceTo_shortestSignedDifferenceAcrossWrap() {
@@ -61,9 +81,18 @@ final class BearingTests: XCTestCase {
     }
 
     func testCustomStringFormatting_zeroPads() {
-        XCTAssertEqual(String(describing: Bearing(degrees: 0)), "000°")
+        XCTAssertEqual(String(describing: Bearing(degrees: 0)), "360°")
         XCTAssertEqual(String(describing: Bearing(degrees: 5)), "005°")
         XCTAssertEqual(String(describing: Bearing(degrees: 45)), "045°")
-        XCTAssertEqual(String(describing: Bearing(degrees: 360)), "000°")
+        XCTAssertEqual(String(describing: Bearing(degrees: 360)), "360°")
+    }
+
+    func testCustomStringFormatting_North_DisplaysAs360() {
+        XCTAssertEqual(String(describing: Bearing(degrees: 359.4)), "359°")
+        XCTAssertEqual(String(describing: Bearing(degrees: 359.6)), "360°")
+        XCTAssertEqual(String(describing: Bearing(degrees: 359.99)), "360°")
+        XCTAssertEqual(String(describing: Bearing(degrees: 0.4)), "360°")
+        XCTAssertEqual(String(describing: Bearing(degrees: -0.0)), "360°")
+        XCTAssertEqual(String(describing: Bearing(degrees: 0.6)), "001°")
     }
 }
