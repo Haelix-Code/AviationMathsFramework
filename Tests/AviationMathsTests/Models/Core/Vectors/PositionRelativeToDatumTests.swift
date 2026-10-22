@@ -15,8 +15,14 @@ final class PositionRelativeToDatumTests: XCTestCase {
     private let accuracy = 0.000001
 
     private func assertIsBuninyong(_ position: Position2D, file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertEqual(position.latitude.decimalDegrees, buninyong.latitude.decimalDegrees, accuracy: accuracy, "latitude", file: file, line: line)
-        XCTAssertEqual(position.longitude.decimalDegrees, buninyong.longitude.decimalDegrees, accuracy: accuracy, "longitude", file: file, line: line)
+        XCTAssertEqual(
+            position.latitude.decimalDegrees, buninyong.latitude.decimalDegrees,
+            accuracy: accuracy, "latitude", file: file, line: line
+        )
+        XCTAssertEqual(
+            position.longitude.decimalDegrees, buninyong.longitude.decimalDegrees,
+            accuracy: accuracy, "longitude", file: file, line: line
+        )
     }
 
     func test_polarVector_followsEllipsoidalGeodesic() {

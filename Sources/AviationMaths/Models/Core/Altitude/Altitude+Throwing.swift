@@ -1,9 +1,9 @@
 import Foundation
 
 extension Altitude {
-    
+
     // MARK: - Throwing Public Conversion Methods
-    
+
     /// Returns altitude in the specified reference frame, throwing an error if conversion fails
     /// - Parameter newReference: The target altitude reference
     /// - Throws: `AltitudeConversionError` if context lacks required data for conversion
@@ -17,7 +17,7 @@ extension Altitude {
         case .geopotential: return try convertToGeopotentialThrowing()
         }
     }
-    
+
     /// Creates a new Altitude in the specified reference frame, throwing an error if conversion fails
     /// - Parameter newReference: The target altitude reference
     /// - Throws: `AltitudeConversionError` if context lacks required data for conversion
@@ -26,9 +26,9 @@ extension Altitude {
         let newValue = try valueThrowing(in: newReference)
         return Altitude(value: newValue, reference: newReference, context: context)
     }
-    
+
     // MARK: - Internal Throwing Conversion Methods
-    
+
     internal func convertToAGLThrowing() throws -> Measurement<UnitLength> {
         switch reference {
         case .agl:
@@ -67,7 +67,7 @@ extension Altitude {
             return .init(meters: amsl.meters - elevation.meters)
         }
     }
-    
+
     internal func convertToAMSLThrowing() throws -> Measurement<UnitLength> {
         switch reference {
         case .agl:
@@ -92,7 +92,7 @@ extension Altitude {
                 .convertToAMSLThrowing()
         }
     }
-    
+
     internal func convertToPressureAltitudeThrowing() throws -> Measurement<UnitLength> {
         switch reference {
         case .pressureAltitude:
@@ -113,7 +113,8 @@ extension Altitude {
                 .convertToPressureAltitudeThrowing()
         }
     }
-    
+
+    // swiftlint:disable:next function_body_length
     internal func convertToTrueAltitudeThrowing() throws -> Measurement<UnitLength> {
         switch reference {
         case .trueAltitude:
@@ -180,21 +181,21 @@ extension Altitude {
             )
         }
     }
-    
+
     // MARK: - Private Helper Methods
-    
+
     private func convertPressureAltitudeToAMSLThrowing() throws -> Measurement<UnitLength> {
         guard let qnh = context.qnh else {
             throw AltitudeConversionError.missingQNH
         }
-        
+
         let pressure = BarometricEquations.pressureFromAltitude(
             altitude: value,
             referencePressure: ISA.seaLevelPressure,
             temperature: ISA.seaLevelTemperature,
             lapseRate: ISA.troposphereLapseRate
         )
-        
+
         return BarometricEquations.altitudeFromPressure(
             pressure: pressure,
             referencePressure: qnh,
@@ -202,21 +203,21 @@ extension Altitude {
             lapseRate: ISA.troposphereLapseRate
         )
     }
-    
+
     private func convertAMSLToPressureAltitudeThrowing() throws -> Measurement<UnitLength> {
         let amslValue = reference == .agl ? try convertToAMSLThrowing() : value
-        
+
         guard let qnh = context.qnh else {
             throw AltitudeConversionError.missingQNH
         }
-        
+
         let pressure = BarometricEquations.pressureFromAltitude(
             altitude: amslValue,
             referencePressure: qnh,
             temperature: ISA.seaLevelTemperature,
             lapseRate: ISA.troposphereLapseRate
         )
-        
+
         return BarometricEquations.altitudeFromPressure(
             pressure: pressure,
             referencePressure: ISA.seaLevelPressure,
@@ -224,7 +225,7 @@ extension Altitude {
             lapseRate: ISA.troposphereLapseRate
         )
     }
-    
+
     private func convertTrueAltitudeToAMSLThrowing() throws -> Measurement<UnitLength> {
         guard let seaLevelTemp = context.seaLevelTemperature else {
             throw AltitudeConversionError.missingTemperatureProfile

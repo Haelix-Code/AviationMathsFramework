@@ -4,17 +4,17 @@ import Foundation
 
 /// A type-safe wrapper around `Altitude` that guarantees all conversions are safe.
 public struct ValidatedAltitude: Sendable, Equatable {
-    
+
     public let raw: Altitude
     public let validatedContext: ValidatedAltitudeContext
-    
+
     // MARK: - Initializers
-    
+
     public init(_ altitude: Altitude) {
         self.validatedContext = ValidatedAltitudeContext(altitude.context)
         self.raw = altitude
     }
-    
+
     public init(
         value: Measurement<UnitLength>,
         reference: VerticalReference,
@@ -23,7 +23,7 @@ public struct ValidatedAltitude: Sendable, Equatable {
         self.validatedContext = context
         self.raw = Altitude(value: value, reference: reference, context: context.raw)
     }
-    
+
     // MARK: - Safe Accessors (Guaranteed Non-Crashing)
 
     public var agl: Measurement<UnitLength> { raw.agl }
@@ -47,7 +47,7 @@ public struct ValidatedAltitude: Sendable, Equatable {
         case .geopotential: return raw.geopotential
         }
     }
-    
+
     public func converted(to reference: VerticalReference) -> ValidatedAltitude {
         ValidatedAltitude(
             value: value(in: reference),

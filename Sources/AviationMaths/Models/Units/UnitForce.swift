@@ -56,7 +56,7 @@ public final class UnitForce: Dimension, @unchecked Sendable {
 
     // MARK: - Base Unit
 
-    public override class func baseUnit() -> UnitForce {
+    public override static func baseUnit() -> UnitForce {
         return .newtons
     }
 }

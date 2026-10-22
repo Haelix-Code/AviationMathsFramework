@@ -9,7 +9,7 @@ public struct SpeedContext: Sendable, Hashable, Codable {
     private let measuredPressureOverride: Measurement<UnitPressure>?
 
     // MARK: - Optional Computed Properties
-    
+
     public var density: Measurement<UnitConcentrationMass>? {
         try? densityThrowing()
     }
@@ -23,7 +23,7 @@ public struct SpeedContext: Sendable, Hashable, Codable {
     }
 
     // MARK: - Throwing Computed Properties
-    
+
     /// Returns density, throwing an error if it cannot be calculated
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
     /// - Returns: Air density
@@ -73,7 +73,7 @@ public struct SpeedContext: Sendable, Hashable, Codable {
         let effectiveTemperature = resolveTemperature(at: altitude)
         return ISA.speedOfSoundFromTemperature(temperature: effectiveTemperature)
     }
-    
+
     /// Returns relative pressure, throwing an error if it cannot be calculated
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
     /// - Returns: Relative pressure (delta)
@@ -94,7 +94,7 @@ public struct SpeedContext: Sendable, Hashable, Codable {
     }
 
     // MARK: - Private Helpers
-    
+
     private func resolveTemperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature> {
         if let explicitTemp = temperature {
             return explicitTemp
@@ -105,7 +105,7 @@ public struct SpeedContext: Sendable, Hashable, Codable {
     }
 
     // MARK: - Initializers
-    
+
     public init(
         pressureAltitude: Measurement<UnitLength>? = nil,
         temperature: Measurement<UnitTemperature>? = nil,
@@ -127,4 +127,3 @@ public struct SpeedContext: Sendable, Hashable, Codable {
         density: ISA.seaLevelDensity
     )
 }
-

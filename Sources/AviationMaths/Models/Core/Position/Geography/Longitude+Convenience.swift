@@ -41,7 +41,8 @@ extension Longitude {
         guard Self.validRange.contains(value) else {
             throw DecodingError.dataCorruptedError(
                 in: container,
-                debugDescription: "Longitude must be between \(Self.validRange.lowerBound)° and \(Self.validRange.upperBound)°, got \(value)°"
+                debugDescription: "Longitude must be between \(Self.validRange.lowerBound)° and "
+                    + "\(Self.validRange.upperBound)°, got \(value)°"
             )
         }
         self.init(decimalDegrees: value)

@@ -202,8 +202,8 @@ final class AtmosphericLayerTests: XCTestCase {
         )
         let data = try JSONEncoder().encode(layer)
 
-        var json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
-        var altitude = json["altitude"] as! [String: Any]
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var altitude = try XCTUnwrap(json["altitude"] as? [String: Any])
         altitude["value"] = 2000
         json["altitude"] = altitude
 

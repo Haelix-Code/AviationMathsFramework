@@ -170,7 +170,7 @@ final class SpeedTests: XCTestCase {
         )
 
         let speed = Speed(mach: 2.0, context: context)
-        
+
         XCTAssertEqual(speed.cas.knots, 717.027, accuracy: 0.01)
         XCTAssertEqual(speed.eas.knots, 641.744, accuracy: 0.001)
         XCTAssertEqual(speed.tas.knots, 1152.838, accuracy: 0.001)
@@ -311,7 +311,11 @@ final class SpeedTests: XCTestCase {
 
     func testMach_FromCAS_NeedsOnlyPressureRatio() throws {
         let altitude = Measurement<UnitLength>(feet: 35000)
-        let reference = Speed(knots: 250, reference: .calibratedAirspeed, context: SpeedContext(pressureAltitude: altitude))
+        let reference = Speed(
+            knots: 250,
+            reference: .calibratedAirspeed,
+            context: SpeedContext(pressureAltitude: altitude)
+        )
         let pressureOnly = Speed(
             knots: 250,
             reference: .calibratedAirspeed,

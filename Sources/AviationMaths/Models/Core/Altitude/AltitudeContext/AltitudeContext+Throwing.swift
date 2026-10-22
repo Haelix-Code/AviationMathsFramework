@@ -1,9 +1,9 @@
 import Foundation
 
 extension AltitudeContext {
-    
+
     // MARK: - Throwing Methods for Context Properties
-    
+
     /// Returns surface temperature, throwing an error if it cannot be calculated
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
     /// - Returns: Surface temperature
@@ -24,7 +24,7 @@ extension AltitudeContext {
         let surfaceTempKelvin = seaLevelTemp.kelvin - (lapse * elevation.meters)
         return .init(kelvin: surfaceTempKelvin)
     }
-    
+
     /// Returns sea level temperature, throwing an error if it cannot be calculated
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
     /// - Returns: Sea level temperature
@@ -45,9 +45,9 @@ extension AltitudeContext {
         let seaLevelTempKelvin = surfaceTemp.kelvin + (lapse * elevation.meters)
         return .init(kelvin: seaLevelTempKelvin)
     }
-    
+
     // MARK: - Private Helpers
-    
+
     private func missingForSurfaceTemp() -> [String] {
         var missing: [String] = []
         if _seaLevelTemperature == nil { missing.append("seaLevelTemperature") }
@@ -55,7 +55,7 @@ extension AltitudeContext {
         if lapseRate == nil { missing.append("lapseRate") }
         return missing
     }
-    
+
     private func missingForSeaLevelTemp() -> [String] {
         var missing: [String] = []
         if _surfaceTemperature == nil { missing.append("surfaceTemperature") }

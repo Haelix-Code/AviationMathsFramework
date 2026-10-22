@@ -29,7 +29,8 @@ extension Latitude {
         guard Self.validRange.contains(value) else {
             throw DecodingError.dataCorruptedError(
                 in: container,
-                debugDescription: "Latitude must be between \(Self.validRange.lowerBound)° and \(Self.validRange.upperBound)°, got \(value)°"
+                debugDescription: "Latitude must be between \(Self.validRange.lowerBound)° and "
+                    + "\(Self.validRange.upperBound)°, got \(value)°"
             )
         }
         self.init(decimalDegrees: value)

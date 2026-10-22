@@ -117,7 +117,7 @@ final class UnitAltitudeTests: XCTestCase {
             seaLevelTemperature: context.seaLevelTemperature,
             lapseRate: context.lapseRate
         )
-        
+
         let thisAltitude = Altitude(
             feet: 15000,
             reference: .pressureAltitude,
@@ -267,11 +267,16 @@ final class UnitAltitudeTests: XCTestCase {
         let agl = Altitude(feet: 1000, reference: .agl, context: context)
         let tolerance = Measurement<UnitLength>(meters: 1e-6)
 
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1500, reference: .amsl, context: context), tolerance: tolerance))
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 700, reference: .agl, context: otherGround), tolerance: tolerance))
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1500, reference: .pressureAltitude, context: context), tolerance: tolerance))
-        XCTAssertFalse(try agl.isSameLevel(as: Altitude(feet: 1501, reference: .amsl, context: context), tolerance: tolerance))
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1501, reference: .amsl, context: context), tolerance: .init(feet: 2)))
+        let amsl = Altitude(feet: 1500, reference: .amsl, context: context)
+        let aglOverOtherGround = Altitude(feet: 700, reference: .agl, context: otherGround)
+        let pressureAltitude = Altitude(feet: 1500, reference: .pressureAltitude, context: context)
+        let oneFootHigher = Altitude(feet: 1501, reference: .amsl, context: context)
+
+        XCTAssertTrue(try agl.isSameLevel(as: amsl, tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: aglOverOtherGround, tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: pressureAltitude, tolerance: tolerance))
+        XCTAssertFalse(try agl.isSameLevel(as: oneFootHigher, tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: oneFootHigher, tolerance: .init(feet: 2)))
     }
 
     func testIsBelow_ComparesAMSL() throws {

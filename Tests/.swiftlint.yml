@@ -1,0 +1,4 @@
+# Test classes grow with coverage, so the size limits apply to Sources only.
+disabled_rules:
+  - type_body_length
+  - file_length

@@ -63,24 +63,28 @@ public struct Speed: Sendable {
     // CAS - will crash if context is insufficient
     /// - Warning: Use `casIfPossible` or `asCAS()` for safer alternatives
     public var cas: Measurement<UnitSpeed> {
+        // swiftlint:disable:next force_try
         reference == .calibratedAirspeed ? value : try! convertToCAS()
     }
 
     /// EAS - will crash if context is insufficient
     /// - Warning: Use `easIfPossible` or `asEAS()` for safer alternatives
     public var eas: Measurement<UnitSpeed> {
+        // swiftlint:disable:next force_try
         reference == .equivalentAirspeed ? value : try! convertToEAS()
     }
 
     /// TAS - will crash if context is insufficient
     /// - Warning: Use `tasIfPossible` or `asTAS()` for safer alternatives
     public var tas: Measurement<UnitSpeed> {
+        // swiftlint:disable:next force_try
         reference == .trueAirspeed ? value : try! convertToTAS()
     }
 
     /// Mach - will crash if context is insufficient
     /// - Warning: Use `machIfPossible` or `asMach()` for safer alternatives
     public var mach: Double {
+        // swiftlint:disable:next force_try
         reference == .machNumber ? machValue! : try! convertToMach()
     }
 

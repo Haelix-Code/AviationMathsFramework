@@ -5,13 +5,13 @@ public struct LineCircleIntersection: Sendable, Equatable {
     /// Parameter values where line intersects circle (0, 1, or 2 values).
     /// For line P(t) = origin + t × direction, these are the `t` values.
     public let parameters: [Double]
-    
+
     /// Whether the line is tangent to the circle (single intersection).
     public var isTangent: Bool { parameters.count == 1 }
-    
+
     /// Whether the line misses the circle entirely.
     public var misses: Bool { parameters.isEmpty }
-    
+
     /// Whether the line passes through the circle (two intersections).
     public var passesThrough: Bool { parameters.count == 2 }
 }
@@ -40,19 +40,19 @@ public enum LineCircle {
             x: lineOrigin.x - circleCentre.x,
             y: lineOrigin.y - circleCentre.y
         )
-        
+
         let d = lineDirection
         let R = radius.converted(to: .meters).value
-        
+
         // Quadratic coefficients: at² + bt + c = 0
         let a = d.x.meters * d.x.meters + d.y.meters * d.y.meters
         let b = 2.0 * (d.x.meters * f.x.meters + d.y.meters * f.y.meters)
         let c = f.x.meters * f.x.meters + f.y.meters * f.y.meters - R * R
-        
+
         let discriminant = b * b - 4.0 * a * c
-        
+
         let tolerance = 1e-10
-        
+
         if discriminant < -tolerance {
             // No intersection
             return LineCircleIntersection(parameters: [])

@@ -27,6 +27,7 @@ public struct Altitude: Codable, Hashable, Sendable {
    /// - Warning: This computed property uses `try!` and will crash if context lacks ground elevation.
    ///   For error handling use `valueThrowing(in: .agl)`, or use `aglIfPossible` for optional return.
    public var agl: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .agl ? value : try! convertToAGLThrowing()
    }
 
@@ -34,13 +35,16 @@ public struct Altitude: Codable, Hashable, Sendable {
    /// - Warning: This computed property uses `try!` and will crash if context is insufficient.
    ///   For error handling use `valueThrowing(in: .amsl)`, or use `amslIfPossible` for optional return.
    public var amsl: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .amsl ? value : try! convertToAMSLThrowing()
    }
 
    /// Pressure altitude
    /// - Warning: This computed property uses `try!` and will crash if context lacks QNH.
-   ///   For error handling use `valueThrowing(in: .pressureAltitude)`, or use `pressureAltitudeIfPossible` for optional return.
+   ///   For error handling use `valueThrowing(in: .pressureAltitude)`, or use `pressureAltitudeIfPossible`
+   ///   for optional return.
    public var pressureAltitude: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .pressureAltitude ? value : try! convertToPressureAltitudeThrowing()
    }
 
@@ -48,6 +52,7 @@ public struct Altitude: Codable, Hashable, Sendable {
    /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
    ///   For error handling use `valueThrowing(in: .trueAltitude)`, or use `trueAltitudeIfPossible` for optional return.
    public var trueAltitude: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .trueAltitude ? value : try! convertToTrueAltitudeThrowing()
    }
 
@@ -57,6 +62,7 @@ public struct Altitude: Codable, Hashable, Sendable {
    /// - Note: This conversion requires true altitude, which in turn requires a temperature profile.
    /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
    public var geopotential: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .geopotential ? value : try! convertToGeopotentialThrowing()
    }
 
