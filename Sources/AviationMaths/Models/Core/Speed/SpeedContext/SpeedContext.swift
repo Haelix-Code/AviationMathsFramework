@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SpeedContext: Sendable, Equatable, Codable {
+public struct SpeedContext: Sendable, Hashable, Codable {
     public let pressureAltitude: Measurement<UnitLength>?
     public let temperature: Measurement<UnitTemperature>?
     public let deltaISA: Measurement<UnitTemperature>?
@@ -11,43 +11,15 @@ public struct SpeedContext: Sendable, Equatable, Codable {
     // MARK: - Optional Computed Properties
     
     public var density: Measurement<UnitConcentrationMass>? {
-        if let density = _density {
-            return density
-        }
-
-        guard let altitude = pressureAltitude else {
-            return nil
-        }
-
-        let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
-        let effectiveTemperature = resolveTemperature(at: altitude)
-
-        return ISA.densityFromPressureAndTemperature(
-            pressure: pressure,
-            temperature: effectiveTemperature
-        )
+        try? densityThrowing()
     }
 
     public var speedOfSound: Measurement<UnitSpeed>? {
-        guard let altitude = pressureAltitude else {
-            return nil
-        }
-
-        let effectiveTemperature = resolveTemperature(at: altitude)
-        return ISA.speedOfSoundFromTemperature(temperature: effectiveTemperature)
+        try? speedOfSoundThrowing()
     }
 
     public var relativePressure: Double? {
-        if let measuredPressure = measuredPressureOverride {
-            return measuredPressure.pascals / ISA.seaLevelPressure.pascals
-        }
-
-        guard let altitude = pressureAltitude else {
-            return nil
-        }
-
-        let atmosphericPressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
-        return atmosphericPressure.pascals / ISA.seaLevelPressure.pascals
+        try? relativePressureThrowing()
     }
 
     // MARK: - Throwing Computed Properties
@@ -58,6 +30,13 @@ public struct SpeedContext: Sendable, Equatable, Codable {
     public func densityThrowing() throws -> Measurement<UnitConcentrationMass> {
         if let density = _density {
             return density
+        }
+
+        if let measuredPressure = measuredPressureOverride, let explicitTemp = temperature {
+            return ISA.densityFromPressureAndTemperature(
+                pressure: measuredPressure,
+                temperature: explicitTemp
+            )
         }
 
         guard let altitude = pressureAltitude else {
@@ -75,11 +54,15 @@ public struct SpeedContext: Sendable, Equatable, Codable {
             temperature: effectiveTemperature
         )
     }
-    
+
     /// Returns speed of sound, throwing an error if it cannot be calculated
     /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
     /// - Returns: Speed of sound
     public func speedOfSoundThrowing() throws -> Measurement<UnitSpeed> {
+        if let explicitTemp = temperature {
+            return ISA.speedOfSoundFromTemperature(temperature: explicitTemp)
+        }
+
         guard let altitude = pressureAltitude else {
             throw ContextCalculationError.insufficientData(
                 calculation: "speedOfSound",

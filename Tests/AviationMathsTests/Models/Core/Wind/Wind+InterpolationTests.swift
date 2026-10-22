@@ -66,14 +66,62 @@ final class WindInterpolationTests: XCTestCase {
     }
 
     func testInterpolated_acceptsUnsortedInput() {
+        let lower = Wind(feet: 0, knots: 10, fromDirection: 180)
+        let upper = Wind(feet: 10000, knots: 30, fromDirection: 200)
+        let winds = [upper, lower] // intentionally unsorted
+
+        let mid = winds.interpolated(at: .init(feet: 5000))
+        XCTAssertNotNil(mid)
+
+        // Component-wise (u/v) interpolation is the correct physical answer;
+        // these directions differ, so it is not the same as averaging speed
+        // and direction separately.
+        let expectedVector = (lower.vector + upper.vector) / 2
+        let expectedPolar = expectedVector.asPolar
+
+        XCTAssertEqual(mid!.speed.knots, expectedPolar.magnitude.knots, accuracy: 1e-10)
+        XCTAssertEqual(mid!.fromDirection.degrees, expectedPolar.bearing.reciprocal.degrees, accuracy: 1e-10)
+    }
+
+    /// 360/30 at the surface and 120/30 at 10,000ft are two winds of equal
+    /// speed but opposing-ish direction. Interpolating speed and direction
+    /// independently keeps the speed at 30kt for every midpoint (wrong — the
+    /// vectors partially cancel). Interpolating the u/v components and
+    /// converting back gives the correct midpoint: 060/15.
+    func testInterpolated_UsesComponentInterpolation_NotSeparateSpeedAndDirection() {
         let winds = [
-            Wind(feet: 10000, knots: 30, fromDirection: 200),
-            Wind(feet: 0, knots: 10, fromDirection: 180)
+            Wind(feet: 0, knots: 30, fromDirection: 360),
+            Wind(feet: 10000, knots: 30, fromDirection: 120)
         ]
 
         let mid = winds.interpolated(at: .init(feet: 5000))
         XCTAssertNotNil(mid)
-        XCTAssertEqual(mid!.speed.knots, 20, accuracy: 1e-10)
-        XCTAssertEqual(mid!.fromDirection.degrees, 190, accuracy: 1e-10)
+
+        // Correct: average the u/v (toDirection) components, not speed/direction separately.
+        let lowerVector = winds[0].vector
+        let upperVector = winds[1].vector
+        let expectedVector = (lowerVector + upperVector) / 2
+        let expectedWind = expectedVector.asPolar
+
+        XCTAssertEqual(mid!.speed.knots, expectedWind.magnitude.knots, accuracy: 0.1)
+        XCTAssertEqual(mid!.fromDirection.degrees, 60, accuracy: 0.1)
+        XCTAssertEqual(mid!.speed.knots, 15, accuracy: 0.1)
+    }
+
+    /// 270/20 and 090/20 are directly opposing winds of equal speed: their
+    /// vector sum is (near) zero, so the correct midpoint speed is ~0kt.
+    /// Interpolating speed and direction separately instead reports 20kt,
+    /// because it never notices the vectors cancel.
+    func testInterpolated_OpposingWinds_CancelToNearZeroSpeed() {
+        let winds = [
+            Wind(feet: 0, knots: 20, fromDirection: 270),
+            Wind(feet: 10000, knots: 20, fromDirection: 90)
+        ]
+
+        let mid = winds.interpolated(at: .init(feet: 5000))
+        XCTAssertNotNil(mid)
+
+        XCTAssertEqual(mid!.speed.knots, 0, accuracy: 0.5,
+                      "Directly opposing winds of equal speed must ~cancel, not stay at full speed")
     }
 }

@@ -193,6 +193,27 @@ final class AtmosphericLayerTests: XCTestCase {
         XCTAssertNil(layers.temperature(at: .init(feet: 3000)))
     }
 
+    func testDecode_AltitudeDisagreesWithWindAltitude_Throws() throws {
+        let layer = AtmosphericLayer(
+            altitude: .init(feet: 1000),
+            fromDirection: .init(degrees: 0),
+            speed: .init(knots: 10),
+            temperature: .init(celsius: 10)
+        )
+        let data = try JSONEncoder().encode(layer)
+
+        var json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        var altitude = json["altitude"] as! [String: Any]
+        altitude["value"] = 2000
+        json["altitude"] = altitude
+
+        let mutatedData = try JSONSerialization.data(withJSONObject: json)
+
+        XCTAssertThrowsError(try JSONDecoder().decode(AtmosphericLayer.self, from: mutatedData)) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
     func testAtmosphericLayerCodableRoundtrip() throws {
         let layer = AtmosphericLayer(
             altitude: .init(meters: 1000),
@@ -204,5 +225,25 @@ final class AtmosphericLayerTests: XCTestCase {
         let data = try JSONEncoder().encode(layer)
         let decoded = try JSONDecoder().decode(AtmosphericLayer.self, from: data)
         XCTAssertEqual(decoded, layer)
+    }
+
+    func testCodableRoundTrip_ArbitraryMetricAltitudes() throws {
+        var failures: [Double] = []
+
+        for i in 0..<500 {
+            let meters = Double(i) * 1.37 + 0.123
+            let layer = AtmosphericLayer(
+                altitude: .init(meters: meters),
+                fromDirection: .init(degrees: 270),
+                speed: .init(knots: 15),
+                temperature: .init(celsius: 5)
+            )
+            let data = try JSONEncoder().encode(layer)
+            if (try? JSONDecoder().decode(AtmosphericLayer.self, from: data)) == nil {
+                failures.append(meters)
+            }
+        }
+
+        XCTAssertEqual(failures, [], "\(failures.count) of 500 layers failed to decode their own encoding")
     }
 }

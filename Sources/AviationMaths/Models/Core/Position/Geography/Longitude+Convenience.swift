@@ -7,20 +7,6 @@ extension Longitude {
         decimalDegrees < 0
     }
 
-    public var normalized: Longitude {
-        var normalized = decimalDegrees
-
-        // Wrap to -180 to +180
-        while normalized > 180 {
-            normalized -= 360
-        }
-        while normalized < -180 {
-            normalized += 360
-        }
-
-        return Longitude(decimalDegrees: normalized)
-    }
-
     public var as0To360: Double {
         decimalDegrees < 0 ? decimalDegrees + 360 : decimalDegrees
     }
@@ -43,7 +29,7 @@ extension Longitude {
 extension Longitude: CustomStringConvertible {
     public var description: String {
         let ddm = degreesDecimalMinutes
-        return ddm.formatted(direction: direction.rawValue, isLongitude: false)
+        return ddm.formatted(direction: direction.rawValue, isLongitude: true)
     }
 }
 
@@ -52,6 +38,12 @@ extension Longitude {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(Double.self)
+        guard Self.validRange.contains(value) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Longitude must be between \(Self.validRange.lowerBound)° and \(Self.validRange.upperBound)°, got \(value)°"
+            )
+        }
         self.init(decimalDegrees: value)
     }
 

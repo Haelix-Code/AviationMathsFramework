@@ -157,24 +157,22 @@ public struct Speed: Sendable {
     }
 
     internal func convertToMach() throws -> Double {
+        switch reference {
+        case .machNumber:
+            return machValue!
+        case .calibratedAirspeed:
+            let delta = try context.relativePressureThrowing()
+            return AirDataEquations.machNumber(fromCalibratedAirspeed: value, relativePressure: delta)
+        case .equivalentAirspeed, .trueAirspeed:
+            break
+        }
+
         let speedOfSound = try context.speedOfSoundThrowing()
         let tasValue = reference == .trueAirspeed ? value : try convertToTAS()
         return AirDataEquations.machNumber(
             fromTrueAirspeed: tasValue,
             speedOfSound: speedOfSound
         )
-    }
-}
-
-private extension Measurement<UnitSpeed> {
-    func asCAS(context: SpeedContext) -> Measurement<UnitSpeed> {
-        let speed = Speed(value: self, reference: .equivalentAirspeed, context: context)
-        return speed.cas
-    }
-
-    func asEAS(context: SpeedContext) -> Measurement<UnitSpeed> {
-        let speed = Speed(value: self, reference: .trueAirspeed, context: context)
-        return speed.eas
     }
 }
 
@@ -193,20 +191,24 @@ extension Speed {
     }
 }
 
-extension Speed: Equatable {
-    public static func == (lhs: Speed, rhs: Speed) -> Bool {
-        return abs(lhs.tas.mps - rhs.tas.mps) < 0.0000001
-    }
-}
+// `==` and `hash(into:)` are synthesized: they compare the stored value, reference and
+// context, never convert, and so can't trap.
+extension Speed: Hashable {}
 
-extension Speed: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(tas.mps)
-    }
-}
+// MARK: - Speed Comparison
 
-extension Speed: Comparable {
-    public static func < (lhs: Speed, rhs: Speed) -> Bool {
-        return lhs.tas.mps < rhs.tas.mps
+// These compare the physical speed (TAS).
+extension Speed {
+    /// Whether both speeds are the same, compared as TAS within `tolerance`.
+    /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
+    public func isSameSpeed(as other: Speed, tolerance: Measurement<UnitSpeed>) throws -> Bool {
+        let difference = try asTAS().mps - other.asTAS().mps
+        return abs(difference) <= tolerance.mps
+    }
+
+    /// Whether this speed is slower than `other`, compared as TAS.
+    /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
+    public func isSlower(than other: Speed) throws -> Bool {
+        try asTAS().mps < other.asTAS().mps
     }
 }

@@ -8,17 +8,19 @@ public struct CodableSpeed: Codable, Equatable, Sendable {
     }
 
     private static let decodeMap: [String: UnitSpeed] = [
-        "kt": .knots, "kts": .knots, "knot": .knots, "knots": .knots,
+        "kt": .knots, "kts": .knots, "kn": .knots, "knot": .knots, "knots": .knots,
         "m/s": .metersPerSecond, "mps": .metersPerSecond,
         "km/h": .kilometersPerHour, "kph": .kilometersPerHour,
-        "fps": .feetPerSecond
+        "fps": .feetPerSecond,
+        "mph": .milesPerHour
     ]
 
     private static let encodeNames: [UnitSpeed: String] = [
         .knots: "knots",
         .metersPerSecond: "m/s",
         .kilometersPerHour: "km/h",
-        .feetPerSecond: "fps"
+        .feetPerSecond: "fps",
+        .milesPerHour: "mph"
     ]
 
     private enum CodingKeys: String, CodingKey {
@@ -45,9 +47,15 @@ public struct CodableSpeed: Codable, Equatable, Sendable {
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(raw.value, forKey: .value)
 
-        let name = Self.encodeNames[raw.unit] ?? raw.unit.symbol
+        // A unit decode wouldn't recognise is written in m/s instead, so every
+        // encoded value can be decoded back.
+        guard let name = Self.encodeNames[raw.unit] else {
+            try c.encode(raw.mps, forKey: .value)
+            try c.encode("m/s", forKey: .unit)
+            return
+        }
+        try c.encode(raw.value, forKey: .value)
         try c.encode(name, forKey: .unit)
     }
 }

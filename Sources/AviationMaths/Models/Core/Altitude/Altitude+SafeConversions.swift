@@ -13,8 +13,9 @@ extension Altitude {
         case .trueAltitude:
             return context.canCalculateTrueAltitude && context.canCalculateAGL
         case .geopotential:
-            // Geopotential → True (always possible) → AGL (needs ground elevation)
-            return context.canCalculateAGL
+            // Geopotential → True (always) → indicated AMSL (needs temp profile) → AGL
+            // (needs ground elevation), matching the .trueAltitude case above.
+            return context.canCalculateTrueAltitude && context.canCalculateAGL
         }
     }
 
@@ -96,28 +97,23 @@ extension Altitude {
     // MARK: - Safe Conversions (Return Optional)
 
     public var aglIfPossible: Measurement<UnitLength>? {
-        guard canConvertToAGL else { return nil }
-        return convertToAGL()
+        try? valueThrowing(in: .agl)
     }
 
     public var amslIfPossible: Measurement<UnitLength>? {
-        guard canConvertToAMSL else { return nil }
-        return convertToAMSL()
+        try? valueThrowing(in: .amsl)
     }
 
     public var pressureAltitudeIfPossible: Measurement<UnitLength>? {
-        guard canConvertToPressureAltitude else { return nil }
-        return convertToPressureAltitude()
+        try? valueThrowing(in: .pressureAltitude)
     }
 
     public var trueAltitudeIfPossible: Measurement<UnitLength>? {
-        guard canConvertToTrueAltitude else { return nil }
-        return convertToTrueAltitude()
+        try? valueThrowing(in: .trueAltitude)
     }
 
     public var geopotentialIfPossible: Measurement<UnitLength>? {
-        guard canConvertToGeopotential else { return nil }
-        return convertToGeopotential()
+        try? valueThrowing(in: .geopotential)
     }
 
 }

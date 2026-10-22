@@ -18,6 +18,9 @@ public extension Measurement<UnitAngle> {
         var degrees = self.converted(to: .degrees).value
         degrees = degrees.truncatingRemainder(dividingBy: 360)
         if degrees < 0 { degrees += 360 }
+        // For a tiny negative input (e.g. -1e-14, reachable from atan2 noise), adding 360
+        // can round to exactly 360.0 rather than just under it, violating the 0..<360 contract.
+        if degrees >= 360 { degrees -= 360 }
         return Measurement(value: degrees, unit: .degrees)
     }
 

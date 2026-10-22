@@ -26,6 +26,12 @@ extension Latitude {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(Double.self)
+        guard Self.validRange.contains(value) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Latitude must be between \(Self.validRange.lowerBound)° and \(Self.validRange.upperBound)°, got \(value)°"
+            )
+        }
         self.init(decimalDegrees: value)
     }
 
