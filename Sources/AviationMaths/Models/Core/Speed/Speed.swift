@@ -203,23 +203,24 @@ extension Speed {
     }
 }
 
-extension Speed: Equatable {
-    public static func == (lhs: Speed, rhs: Speed) -> Bool {
-        return abs(lhs.tas.mps - rhs.tas.mps) < 0.0000001
-    }
-}
+// `==` and `hash(into:)` are synthesized: they compare the stored value, reference and
+// context, never convert, and so can't trap.
+extension Speed: Hashable {}
 
-extension Speed: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        // Quantize at 1e-6, a decade coarser than =='s 1e-7 tolerance, so values
-        // within that tolerance land in the same bucket instead of hashing
-        // differently purely from floating-point noise.
-        hasher.combine((tas.mps * 1_000_000).rounded())
-    }
-}
+// MARK: - Speed Comparison
 
-extension Speed: Comparable {
-    public static func < (lhs: Speed, rhs: Speed) -> Bool {
-        return lhs.tas.mps < rhs.tas.mps
+// These compare the physical speed (TAS).
+extension Speed {
+    /// Whether both speeds are the same, compared as TAS within `tolerance`.
+    /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
+    public func isSameSpeed(as other: Speed, tolerance: Measurement<UnitSpeed>) throws -> Bool {
+        let difference = try asTAS().mps - other.asTAS().mps
+        return abs(difference) <= tolerance.mps
+    }
+
+    /// Whether this speed is slower than `other`, compared as TAS.
+    /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
+    public func isSlower(than other: Speed) throws -> Bool {
+        try asTAS().mps < other.asTAS().mps
     }
 }

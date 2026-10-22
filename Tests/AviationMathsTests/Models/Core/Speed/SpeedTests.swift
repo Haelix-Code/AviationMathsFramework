@@ -215,8 +215,8 @@ final class SpeedTests: XCTestCase {
         let speed1 = Speed(knots: 300, reference: .trueAirspeed, context: context1)
         let speed2 = Speed(knots: 300, reference: .trueAirspeed, context: context2)
 
-        XCTAssertEqual(speed1, speed2,
-                      "Same TAS should be equal regardless of context")
+        XCTAssertNotEqual(speed1, speed2, "Same TAS, different context")
+        XCTAssertTrue(try speed1.isSameSpeed(as: speed2, tolerance: .init(mps: 1e-7)))
     }
 
     func testSpeedComparison_DifferentReferences() {
@@ -228,21 +228,49 @@ final class SpeedTests: XCTestCase {
         let speedTAS = Speed(knots: 350, reference: .trueAirspeed, context: context)
         let speedCAS = Speed(knots: speedTAS.cas.knots, reference: .calibratedAirspeed, context: context)
 
-        XCTAssertEqual(speedTAS, speedCAS,
-                      "Same physical speed should be equal")
+        XCTAssertNotEqual(speedTAS, speedCAS, "Same physical speed, different stored reference")
+        XCTAssertTrue(try speedTAS.isSameSpeed(as: speedCAS, tolerance: .init(mps: 1e-7)))
     }
 
-    func testHashable_AgreesWithEquatable_ForValuesWithinEqualityTolerance() {
+    func testIsSameSpeedAndIsSlower_CompareTAS() throws {
+        let context = SpeedContext(pressureAltitude: .init(feet: 15000), deltaISA: .init(kelvin: 0))
+        let tas = Speed(knots: 350, reference: .trueAirspeed, context: context)
+        let mach = Speed(mach: tas.mach, context: context)
+        let faster = Speed(knots: 351, reference: .trueAirspeed, context: context)
+
+        XCTAssertTrue(try tas.isSameSpeed(as: mach, tolerance: .init(mps: 1e-7)))
+        XCTAssertFalse(try tas.isSameSpeed(as: faster, tolerance: .init(mps: 1e-7)))
+        XCTAssertTrue(try tas.isSameSpeed(as: faster, tolerance: .init(knots: 2)))
+
+        XCTAssertTrue(try tas.isSlower(than: faster))
+        XCTAssertFalse(try faster.isSlower(than: tas))
+        XCTAssertFalse(try tas.isSlower(than: tas))
+    }
+
+    func testIsSameSpeedAndIsSlower_Throw_WhenEitherSideCannotConvertToTAS() {
+        let tas = Speed(knots: 350, reference: .trueAirspeed, context: SpeedContext())
+        let mach = Speed(mach: 0.8, context: SpeedContext())
+        let tolerance = Measurement<UnitSpeed>(mps: 1)
+
+        XCTAssertThrowsError(try tas.isSameSpeed(as: mach, tolerance: tolerance))
+        XCTAssertThrowsError(try mach.isSameSpeed(as: tas, tolerance: tolerance))
+        XCTAssertThrowsError(try tas.isSlower(than: mach))
+        XCTAssertThrowsError(try mach.isSlower(than: tas))
+    }
+
+    func testSetMembership_AgreesWithEquality_AcrossAHashBucketBoundary() {
         let context = SpeedContext.standardISA
-        let a = Speed(mps: 100.0, reference: .trueAirspeed, context: context)
-        let b = Speed(mps: 100.0 + 5e-8, reference: .trueAirspeed, context: context)
+        let a = Speed(mps: 0.49e-6, reference: .trueAirspeed, context: context)
+        let b = Speed(mps: 0.51e-6, reference: .trueAirspeed, context: context)
 
-        XCTAssertEqual(a, b, "Within the 1e-7 equality tolerance, these must compare equal")
+        XCTAssertEqual(Set([a, b]).count, a == b ? 1 : 2)
+    }
 
-        XCTAssertEqual(
-            a.hashValue, b.hashValue,
-            "Equal speeds must hash equally, but hash(into:) has no tolerance while == does"
-        )
+    func testEqualityAndHashing_DoNotTrap_WhenTheContextCannotConvert() {
+        let mach = Speed(mach: 0.8, context: SpeedContext())
+
+        XCTAssertEqual(mach, mach)
+        XCTAssertEqual(Set([mach, mach]).count, 1)
     }
 
     func testCanConvertAndIfPossible_AgreeWithThrowingConversion_ForEveryReferenceAndContext() {
