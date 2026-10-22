@@ -379,4 +379,39 @@ final class UnitAltitudeTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(context.seaLevelTemperature).celsius, 6.5, accuracy: 1e-9)
         XCTAssertEqual(try context.seaLevelTemperatureThrowing().celsius, 6.5, accuracy: 1e-9)
     }
+
+    func testIfPossible_ReturnsExactlyTheThrowingResult_ForEveryReferenceAndContext() {
+        let nonStandard = AltitudeContext(
+            groundElevation: .init(feet: 800),
+            qnh: .init(hectopascals: 984.298),
+            surfaceTemperature: .init(celsius: 13.415),
+            lapseRate: ISA.troposphereLapseRate
+        )
+        let contexts = Self.conversionContexts + [("nonStandard", nonStandard)]
+
+        func ifPossible(_ altitude: Altitude, _ target: VerticalReference) -> Measurement<UnitLength>? {
+            switch target {
+            case .agl: return altitude.aglIfPossible
+            case .amsl: return altitude.amslIfPossible
+            case .pressureAltitude: return altitude.pressureAltitudeIfPossible
+            case .trueAltitude: return altitude.trueAltitudeIfPossible
+            case .geopotential: return altitude.geopotentialIfPossible
+            }
+        }
+
+        for (name, context) in contexts {
+            for source in VerticalReference.allCases {
+                let altitude = Altitude(feet: 5000, reference: source, context: context)
+
+                for target in VerticalReference.allCases {
+                    let label = "\(name): \(source.abbreviation) → \(target.abbreviation)"
+                    let thrown = try? altitude.valueThrowing(in: target)
+                    let optional = ifPossible(altitude, target)
+
+                    XCTAssertEqual(optional?.value, thrown?.value, label)
+                    XCTAssertEqual(optional?.unit.symbol, thrown?.unit.symbol, label)
+                }
+            }
+        }
+    }
 }
