@@ -15,40 +15,13 @@ public struct AltitudeContext: Sendable, Equatable, Codable {
 
     /// Surface temperature (at ground elevation)
     public var surfaceTemperature: Measurement<UnitTemperature>? {
-        if let explicitTemp = _surfaceTemperature {
-            return explicitTemp
-        }
-
-        return calculateSurfaceFromSeaLevel()
-    }
-
-    private func calculateSurfaceFromSeaLevel() -> Measurement<UnitTemperature>? {
-        guard let seaLevelTemp = _seaLevelTemperature,
-              let elevation = groundElevation,
-              let lapse = lapseRate else {
-            return nil
-        }
-
-        let surfaceTempKelvin = seaLevelTemp.kelvin - (lapse * elevation.meters)
-        return .init(kelvin: surfaceTempKelvin)
+        try? surfaceTemperatureThrowing()
     }
 
     /// Sea level temperature (at height = 0). When a surface temperature is also given,
     /// and it can be extrapolated down, it takes precedence (see `init`).
     public var seaLevelTemperature: Measurement<UnitTemperature>? {
-        calculateSeaLevelFromSurface() ?? _seaLevelTemperature
-    }
-
-    private func calculateSeaLevelFromSurface() -> Measurement<UnitTemperature>? {
-        guard let surfaceTemp = _surfaceTemperature,
-              let elevation = groundElevation,
-              let lapse = lapseRate else {
-            return nil
-        }
-
-        // Temperature increases going down: T_sl = T_surface + (lapse_rate × elevation)
-        let seaLevelTempKelvin = surfaceTemp.kelvin + (lapse * elevation.meters)
-        return .init(kelvin: seaLevelTempKelvin)
+        try? seaLevelTemperatureThrowing()
     }
 
     /// Whether this context has sufficient data for true altitude calculations: a
