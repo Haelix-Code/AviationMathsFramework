@@ -7,20 +7,6 @@ extension Longitude {
         decimalDegrees < 0
     }
 
-    public var normalized: Longitude {
-        var normalized = decimalDegrees
-
-        // Wrap to -180 to +180
-        while normalized > 180 {
-            normalized -= 360
-        }
-        while normalized < -180 {
-            normalized += 360
-        }
-
-        return Longitude(decimalDegrees: normalized)
-    }
-
     public var as0To360: Double {
         decimalDegrees < 0 ? decimalDegrees + 360 : decimalDegrees
     }
