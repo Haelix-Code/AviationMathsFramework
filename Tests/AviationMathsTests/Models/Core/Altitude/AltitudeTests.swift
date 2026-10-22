@@ -236,7 +236,7 @@ final class UnitAltitudeTests: XCTestCase {
         )
     }
 
-    func testHashable_AgreesWithEquatable_WhenOnlyOneSideHasGroundElevation() {
+    func testEquality_DistinguishesContexts_WhenOnlyOneSideHasGroundElevation() {
         let withGround = Altitude(
             value: .init(meters: 1500),
             reference: .amsl,
@@ -248,13 +248,66 @@ final class UnitAltitudeTests: XCTestCase {
             context: .init() // no ground elevation
         )
 
-        // Equatable falls back to AMSL since `withoutGround` has none: 1500 == 1500.
-        XCTAssertEqual(withGround, withoutGround)
+        XCTAssertNotEqual(withGround, withoutGround)
+        XCTAssertEqual(Set([withGround, withoutGround]).count, 2)
+    }
 
-        XCTAssertEqual(
-            withGround.hashValue, withoutGround.hashValue,
-            "Equal altitudes must hash equally, but hash(into:) picks AGL vs AMSL per-side instead of matching =="
-        )
+    func testEquality_ComparesTheStoredReference_NotTheConvertedLevel() {
+        let context = AltitudeContext.qnhOnly(hectopascals: 1013.25, groundElevation: .init(feet: 500))
+        let agl = Altitude(feet: 1000, reference: .agl, context: context)
+        let amsl = Altitude(value: agl.amsl, reference: .amsl, context: context)
+
+        XCTAssertEqual(agl.amsl, amsl.amsl, "Same level")
+        XCTAssertNotEqual(agl, amsl, "Different stored reference")
+    }
+
+    func testIsSameLevel_AcrossReferencesAndContexts() throws {
+        let context = AltitudeContext.qnhOnly(hectopascals: 1013.25, groundElevation: .init(feet: 500))
+        let otherGround = AltitudeContext.qnhOnly(hectopascals: 1013.25, groundElevation: .init(feet: 800))
+        let agl = Altitude(feet: 1000, reference: .agl, context: context)
+        let tolerance = Measurement<UnitLength>(meters: 1e-6)
+
+        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1500, reference: .amsl, context: context), tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 700, reference: .agl, context: otherGround), tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1500, reference: .pressureAltitude, context: context), tolerance: tolerance))
+        XCTAssertFalse(try agl.isSameLevel(as: Altitude(feet: 1501, reference: .amsl, context: context), tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1501, reference: .amsl, context: context), tolerance: .init(feet: 2)))
+    }
+
+    func testIsBelow_ComparesAMSL() throws {
+        let context = AltitudeContext.qnhOnly(hectopascals: 1013.25, groundElevation: .init(feet: 500))
+        let agl = Altitude(feet: 1000, reference: .agl, context: context)
+
+        XCTAssertTrue(try agl.isBelow(Altitude(feet: 1501, reference: .amsl, context: context)))
+        XCTAssertFalse(try agl.isBelow(Altitude(feet: 1500, reference: .amsl, context: context)))
+        XCTAssertFalse(try agl.isBelow(Altitude(feet: 1499, reference: .amsl, context: context)))
+    }
+
+    func testIsSameLevelAndIsBelow_Throw_WhenEitherSideCannotConvertToAMSL() {
+        let convertible = Altitude(feet: 1000, reference: .amsl, context: AltitudeContext())
+        let pressureAltitude = Altitude(feet: 1000, reference: .pressureAltitude, context: AltitudeContext())
+        let tolerance = Measurement<UnitLength>(meters: 1)
+
+        XCTAssertThrowsError(try convertible.isSameLevel(as: pressureAltitude, tolerance: tolerance))
+        XCTAssertThrowsError(try pressureAltitude.isSameLevel(as: convertible, tolerance: tolerance))
+        XCTAssertThrowsError(try convertible.isBelow(pressureAltitude))
+        XCTAssertThrowsError(try pressureAltitude.isBelow(convertible))
+    }
+
+    func testEquality_SameStoredValueInDifferentUnits_IsEqualAndHashesEqually() {
+        let context = AltitudeContext.qnhOnly(hectopascals: 1013.25, groundElevation: .surface)
+        let feet = Altitude(feet: 1000, reference: .amsl, context: context)
+        let meters = Altitude(meters: 304.8, reference: .amsl, context: context)
+
+        XCTAssertEqual(feet, meters)
+        XCTAssertEqual(feet.hashValue, meters.hashValue)
+    }
+
+    func testEqualityAndHashing_DoNotTrap_WhenTheContextCannotConvert() {
+        let pressureAltitude = Altitude(feet: 5000, reference: .pressureAltitude, context: AltitudeContext())
+
+        XCTAssertEqual(pressureAltitude, pressureAltitude)
+        XCTAssertEqual(Set([pressureAltitude, pressureAltitude]).count, 1)
     }
 
     func testConvertToAGL_FromGeopotential_MatchesTheEquivalentTrueAltitudeConversion() {

@@ -110,7 +110,7 @@ final class ValidatedAltitudeTests: XCTestCase {
         XCTAssertEqual(asAMSL.reference, .amsl)
     }
     
-    func test_comparable_ordersCorrectly() {
+    func test_isBelow_ordersCorrectly() {
         let low = ValidatedAltitude(
             value: .init(value: 5000, unit: .feet),
             reference: .amsl,
@@ -122,8 +122,25 @@ final class ValidatedAltitudeTests: XCTestCase {
             context: validatedContext
         )
         
-        XCTAssertTrue(low < high)
-        XCTAssertFalse(high < low)
+        XCTAssertTrue(low.isBelow(high))
+        XCTAssertFalse(high.isBelow(low))
+        XCTAssertFalse(low.isBelow(low))
+    }
+
+    func test_isSameLevel_acrossReferences() {
+        let pressureAltitude = ValidatedAltitude(
+            value: .init(value: 10000, unit: .feet),
+            reference: .pressureAltitude,
+            context: validatedContext
+        )
+        let asAMSL = pressureAltitude.converted(to: .amsl)
+
+        XCTAssertNotEqual(pressureAltitude, asAMSL)
+        XCTAssertTrue(pressureAltitude.isSameLevel(as: asAMSL, tolerance: .init(meters: 1e-6)))
+        XCTAssertFalse(pressureAltitude.isSameLevel(
+            as: ValidatedAltitude(value: .init(value: 10001, unit: .feet), reference: .pressureAltitude, context: validatedContext),
+            tolerance: .init(meters: 1e-6)
+        ))
     }
     
     func test_altitude_validated_returnsNilForIncompleteContext() {

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Context for altitude conversions, defining the atmospheric conditions.
-public struct AltitudeContext: Sendable, Equatable, Codable {
+public struct AltitudeContext: Sendable, Hashable, Codable {
     public let groundElevation: Measurement<UnitLength>?
     public let qnh: Measurement<UnitPressure>?
 

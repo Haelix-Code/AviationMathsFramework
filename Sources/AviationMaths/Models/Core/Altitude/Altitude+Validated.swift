@@ -57,11 +57,17 @@ public struct ValidatedAltitude: Sendable, Equatable {
     }
 }
 
-// MARK: - Comparable
+// MARK: - Level Comparison
 
-extension ValidatedAltitude: Comparable {
-    public static func < (lhs: ValidatedAltitude, rhs: ValidatedAltitude) -> Bool {
-        lhs.amsl.converted(to: .meters).value < rhs.amsl.converted(to: .meters).value
+extension ValidatedAltitude {
+    /// Whether both altitudes are at the same level, compared as AMSL within `tolerance`.
+    public func isSameLevel(as other: ValidatedAltitude, tolerance: Measurement<UnitLength>) -> Bool {
+        abs(amsl.meters - other.amsl.meters) <= tolerance.meters
+    }
+
+    /// Whether this altitude is below `other`, compared as AMSL.
+    public func isBelow(_ other: ValidatedAltitude) -> Bool {
+        amsl.meters < other.amsl.meters
     }
 }
 
