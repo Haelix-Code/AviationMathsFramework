@@ -12,20 +12,20 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/Haelix-Code/Vincenty", .upToNextMinor(from: "0.0.1"))
+        .package(url: "https://github.com/Haelix-Code/VincentySwift", .upToNextMinor(from: "0.0.1"))
     ],
     targets: [
         .target(
             name: "AviationMaths",
             dependencies: [
-               .product(name: "Vincenty", package: "Vincenty")
+               .product(name: "Vincenty", package: "VincentySwift")
            ]
         ),
         .testTarget(
             name: "AviationMathsTests",
             dependencies: [
                 "AviationMaths",
-                .product(name: "Vincenty", package: "Vincenty")
+                .product(name: "Vincenty", package: "VincentySwift")
             ]
         )
     ]
