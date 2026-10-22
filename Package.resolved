@@ -1,13 +1,13 @@
 {
-  "originHash" : "5951daa67b5241e1460d7b2fb1b12b4c19af0a6a729a36e712a85ce163d688f6",
+  "originHash" : "26b25b4b43c6cfe14619da0b8017e49c2ece583e3b439ffedc961f76b9edb03b",
   "pins" : [
     {
-      "identity" : "geodesy",
+      "identity" : "vincenty",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/florianreinhart/Geodesy",
+      "location" : "https://github.com/Haelix-Code/Vincenty",
       "state" : {
-        "revision" : "c72d7ea459c6eee4d041272c61f84df61d850091",
-        "version" : "0.2.2"
+        "revision" : "e029255ef3313dcf77cecb4faf64cf94a0812608",
+        "version" : "0.0.1"
       }
     }
   ],
