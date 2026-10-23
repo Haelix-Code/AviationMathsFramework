@@ -9,8 +9,8 @@ public extension SpeedContext {
     static func at(altitude: Altitude) -> SpeedContext {
         let ac = altitude.context
 
-        guard let amsl = try? altitude.valueThrowing(in: .amsl) else {
-            guard let pressureAltitude = try? altitude.valueThrowing(in: .pressureAltitude) else {
+        guard let amsl = try? altitude.value(in: .amsl) else {
+            guard let pressureAltitude = try? altitude.value(in: .pressureAltitude) else {
                 return SpeedContext(temperature: ac.temperatureAtReference)
             }
             return SpeedContext(
