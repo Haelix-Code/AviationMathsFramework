@@ -33,6 +33,10 @@ public extension Altitude {
     }
 }
 
-public enum AltitudeArithmeticError: Error {
+public enum AltitudeArithmeticError: Error, Equatable, Sendable, LocalizedError {
     case mismatchedContext
+
+    public var errorDescription: String? {
+        "Altitudes with different contexts can't be combined"
+    }
 }

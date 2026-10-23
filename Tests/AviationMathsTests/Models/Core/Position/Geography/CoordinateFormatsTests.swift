@@ -61,8 +61,8 @@ final class CoordinateFormatsTests: XCTestCase {
     }
 
     func testLatitudeAndLongitudeDescription_CarryMinutesIntoDegrees() {
-        XCTAssertEqual(Latitude(decimalDegrees: 51.99999).description, "52°00.00'N")
-        XCTAssertEqual(Longitude(decimalDegrees: -0.9999999).description, "001°00.00'W")
+        XCTAssertEqual(try Latitude(decimalDegrees: 51.99999).description, "52°00.00'N")
+        XCTAssertEqual(try Longitude(decimalDegrees: -0.9999999).description, "001°00.00'W")
     }
 
     func testDMSFormatted_CarriesSecondsAtDisplayedPrecision() {

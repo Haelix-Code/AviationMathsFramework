@@ -1,10 +1,12 @@
-public enum AltitudeConversionError: Error, Equatable {
+import Foundation
+
+public enum AltitudeConversionError: Error, Equatable, Sendable, LocalizedError {
     case missingGroundElevation
     case missingQNH
     case missingTemperatureProfile
     case insufficientContext(from: VerticalReference, to: VerticalReference)
 
-    public var localizedDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .missingGroundElevation:
             return "Ground elevation required for AGL conversions"

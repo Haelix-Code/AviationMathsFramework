@@ -6,13 +6,18 @@ import XCTest
 final class PositionRelativeToDatumTests: XCTestCase {
 
     // Geoscience Australia's Vincenty reference case: Flinders Peak → Buninyong.
-    private let flindersPeak = Position2D(latitude: -37.951033416666666, longitude: 144.42486788888888)
-    private let buninyong = Position2D(latitude: -37.65282113888889, longitude: 143.92649552777778)
+    private var flindersPeak: Position2D!
+    private var buninyong: Position2D!
     private let distance = Measurement<UnitLength>(meters: 54_972.271)
     private let bearing = Measurement<UnitAngle>(degrees: 306 + 52.0 / 60 + 5.37 / 3600)
 
     /// ~0.1 m. The published azimuth is to 0.01″, worth ~3 mm over this distance.
     private let accuracy = 0.000001
+
+    override func setUpWithError() throws {
+        flindersPeak = try Position2D(latitude: -37.951033416666666, longitude: 144.42486788888888)
+        buninyong = try Position2D(latitude: -37.65282113888889, longitude: 143.92649552777778)
+    }
 
     private func assertIsBuninyong(_ position: Position2D, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertEqual(

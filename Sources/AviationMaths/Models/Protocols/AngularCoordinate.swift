@@ -7,7 +7,7 @@ public protocol AngularCoordinate: Equatable, Hashable, Codable, Sendable {
 
     static var validRange: ClosedRange<Double> { get }
 
-    init(decimalDegrees: Double)
+    init(decimalDegrees: Double) throws(CoordinateError)
 
     var direction: DirectionType { get }
 }

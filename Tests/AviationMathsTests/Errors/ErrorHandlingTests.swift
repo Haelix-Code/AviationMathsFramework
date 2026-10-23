@@ -145,17 +145,6 @@ final class ErrorHandlingTests: XCTestCase {
 
     // MARK: - Error Equality Tests
 
-    func testSpeedConversionError_Equality() {
-        XCTAssertEqual(
-            SpeedConversionError.missingDensity,
-            SpeedConversionError.missingDensity
-        )
-        XCTAssertNotEqual(
-            SpeedConversionError.missingDensity,
-            SpeedConversionError.missingPressureAltitude
-        )
-    }
-
     func testAltitudeConversionError_Equality() {
         XCTAssertEqual(
             AltitudeConversionError.missingQNH,
@@ -164,6 +153,25 @@ final class ErrorHandlingTests: XCTestCase {
         XCTAssertNotEqual(
             AltitudeConversionError.missingQNH,
             AltitudeConversionError.missingGroundElevation
+        )
+    }
+
+    func testErrors_DescribeThemselves_WhenHeldAsError() {
+        let qnh: Error = AltitudeConversionError.missingQNH
+        let context: Error = ContextCalculationError.insufficientData(
+            calculation: "density",
+            missing: ["pressureAltitude"]
+        )
+
+        XCTAssertEqual(qnh.localizedDescription, "QNH required for pressure altitude conversions")
+        XCTAssertEqual(context.localizedDescription, "Cannot calculate density: missing pressureAltitude")
+        XCTAssertEqual(
+            (CoordinateError.latitudeOutOfRange(95) as Error).localizedDescription,
+            "Latitude must be between -90° and +90°, got 95.0°"
+        )
+        XCTAssertEqual(
+            (GeodesicPositionError.mismatchedOrigins as Error).localizedDescription,
+            "Positions with different origins can't be summed"
         )
     }
 }

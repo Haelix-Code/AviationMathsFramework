@@ -19,16 +19,16 @@ final class EdgeCaseTests: XCTestCase {
 
     // MARK: - Boundary Values
 
-    func testLatitude_AtBoundaries() {
-        let north = Latitude(decimalDegrees: 90)
-        let south = Latitude(decimalDegrees: -90)
+    func testLatitude_AtBoundaries() throws {
+        let north = try Latitude(decimalDegrees: 90)
+        let south = try Latitude(decimalDegrees: -90)
         XCTAssertEqual(north.decimalDegrees, 90)
         XCTAssertEqual(south.decimalDegrees, -90)
     }
 
-    func testLongitude_AtBoundaries() {
-        let east = Longitude(decimalDegrees: 180)
-        let west = Longitude(decimalDegrees: -180)
+    func testLongitude_AtBoundaries() throws {
+        let east = try Longitude(decimalDegrees: 180)
+        let west = try Longitude(decimalDegrees: -180)
         XCTAssertEqual(east.decimalDegrees, 180)
         XCTAssertEqual(west.decimalDegrees, -180)
     }
