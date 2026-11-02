@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  # No paths filter: a check that a PR never triggers stays pending and blocks the merge.
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift:
+    # Shared lint, test and iOS build: https://github.com/Haelix-Code/swift-ci
+    uses: Haelix-Code/swift-ci/.github/workflows/swift-package.yml@v1
+    with:
+      scheme: AviationMaths
