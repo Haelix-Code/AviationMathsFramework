@@ -1,4 +1,6 @@
-excluded:
-  - .build
+# Shared rules (excludes .build, allows short maths identifiers): https://github.com/Haelix-Code/swift-ci
+parent_config: https://raw.githubusercontent.com/Haelix-Code/swift-ci/v1/swiftlint/base.yml
+
+# Physics constants keep their textbook capitals (R, T0, L, H), which identifier_name rejects.
 disabled_rules:
-  identifier_name
+  - identifier_name
