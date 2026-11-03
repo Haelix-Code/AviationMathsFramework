@@ -10,7 +10,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
 
-        XCTAssertThrowsError(try speed.asTAS()) { error in
+        XCTAssertThrowsError(try speed.converted(to: .trueAirspeed)) { error in
             guard case ContextCalculationError.insufficientData(let calc, let missing) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -25,7 +25,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()
         let speed = Speed(knots: 250, reference: .trueAirspeed, context: context)
 
-        XCTAssertThrowsError(try speed.asMach()) { error in
+        XCTAssertThrowsError(try speed.converted(to: .machNumber)) { error in
             guard case ContextCalculationError.insufficientData(let calc, _) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -38,10 +38,10 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 200, reference: .calibratedAirspeed, context: context)
 
-        let cas = try speed.asCAS()
-        let eas = try speed.asEAS()
-        let tas = try speed.asTAS()
-        let mach = try speed.asMach()
+        let cas = try speed.converted(to: .calibratedAirspeed).value
+        let eas = try speed.converted(to: .equivalentAirspeed).value
+        let tas = try speed.converted(to: .trueAirspeed).value
+        let mach = try speed.converted(to: .machNumber).mach
 
         XCTAssertEqual(cas.knots, 200, accuracy: 0.1)
         XCTAssertGreaterThan(eas.knots, 0)
