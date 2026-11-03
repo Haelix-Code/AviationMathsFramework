@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [develop, main]
-  # PRs into develop/main only. No paths filter: a required check that a PR never triggers blocks the merge.
+  # PRs into develop/main only. No push trigger: both branches only change through PRs, which have
+  # already run this, so a push run after the merge would test the same code twice.
+  # No paths filter: a required check that a PR never triggers blocks the merge.
   pull_request:
     branches: [develop, main]
   workflow_dispatch:
