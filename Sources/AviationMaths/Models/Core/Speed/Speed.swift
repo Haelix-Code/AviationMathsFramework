@@ -60,29 +60,33 @@ public struct Speed: Sendable {
 
     // MARK: - Computed Properties for Each Reference
 
-    // CAS - will crash if context is insufficient
-    /// - Warning: Use `casIfPossible` or `asCAS()` for safer alternatives
+    /// CAS - will crash if context is insufficient
+    /// - Warning: Use `try converted(to: .calibratedAirspeed).value`, or `try?` for an optional result.
+    ///   From 0.4.0 this property throws instead of trapping.
     public var cas: Measurement<UnitSpeed> {
         // swiftlint:disable:next force_try
         reference == .calibratedAirspeed ? value : try! convertToCAS()
     }
 
     /// EAS - will crash if context is insufficient
-    /// - Warning: Use `easIfPossible` or `asEAS()` for safer alternatives
+    /// - Warning: Use `try converted(to: .equivalentAirspeed).value`, or `try?` for an optional result.
+    ///   From 0.4.0 this property throws instead of trapping.
     public var eas: Measurement<UnitSpeed> {
         // swiftlint:disable:next force_try
         reference == .equivalentAirspeed ? value : try! convertToEAS()
     }
 
     /// TAS - will crash if context is insufficient
-    /// - Warning: Use `tasIfPossible` or `asTAS()` for safer alternatives
+    /// - Warning: Use `try converted(to: .trueAirspeed).value`, or `try?` for an optional result.
+    ///   From 0.4.0 this property throws instead of trapping.
     public var tas: Measurement<UnitSpeed> {
         // swiftlint:disable:next force_try
         reference == .trueAirspeed ? value : try! convertToTAS()
     }
 
     /// Mach - will crash if context is insufficient
-    /// - Warning: Use `machIfPossible` or `asMach()` for safer alternatives
+    /// - Warning: Use `try converted(to: .machNumber).mach`, or `try?` for an optional result.
+    ///   From 0.4.0 this property throws instead of trapping.
     public var mach: Double {
         // swiftlint:disable:next force_try
         reference == .machNumber ? machValue! : try! convertToMach()
@@ -181,6 +185,8 @@ public struct Speed: Sendable {
 }
 
 extension Speed {
+    /// - Warning: Traps if the context lacks the data the conversion needs.
+    @available(*, deprecated, message: "Use `try converted(to:)`, which throws instead of trapping.")
     public func `in`(_ newReference: SpeedReference) -> Speed {
         switch newReference {
         case .calibratedAirspeed:
@@ -206,13 +212,13 @@ extension Speed {
     /// Whether both speeds are the same, compared as TAS within `tolerance`.
     /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
     public func isSameSpeed(as other: Speed, tolerance: Measurement<UnitSpeed>) throws -> Bool {
-        let difference = try asTAS().mps - other.asTAS().mps
+        let difference = try convertToTAS().mps - other.convertToTAS().mps
         return abs(difference) <= tolerance.mps
     }
 
     /// Whether this speed is slower than `other`, compared as TAS.
     /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
     public func isSlower(than other: Speed) throws -> Bool {
-        try asTAS().mps < other.asTAS().mps
+        try convertToTAS().mps < other.convertToTAS().mps
     }
 }
