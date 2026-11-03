@@ -62,6 +62,7 @@ public struct DegreesDecimalMinutes: Equatable, Hashable, Codable, Sendable {
     }
 }
 
+// swiftlint:disable large_tuple
 extension DegreesMinutesSeconds {
     /// The components to display at `precision` decimal places of a second: if the
     /// seconds would round to 60, they carry into the minute (and 60' into the degree).
@@ -71,6 +72,7 @@ extension DegreesMinutesSeconds {
         return minutes + 1 >= 60 ? (degrees + 1, 0, 0) : (degrees, minutes + 1, 0)
     }
 }
+// swiftlint:enable large_tuple
 
 extension DegreesDecimalMinutes {
     /// The components to display at `precision` decimal places of a minute: if the

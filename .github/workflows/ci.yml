@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  # PRs into develop/main only. No push trigger: both branches only change through PRs, which have
+  # already run this, so a push run after the merge would test the same code twice.
+  # No paths filter: a required check that a PR never triggers blocks the merge.
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift:
+    # Shared lint, test and iOS build: https://github.com/Haelix-Code/swift-ci
+    uses: Haelix-Code/swift-ci/.github/workflows/swift-package.yml@v1
+    with:
+      scheme: AviationMaths

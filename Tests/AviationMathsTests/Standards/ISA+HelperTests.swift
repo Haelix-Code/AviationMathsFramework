@@ -9,7 +9,7 @@ final class ISAHelperTests: XCTestCase {
         let density = ISA.densityFromPressureAndTemperature(pressure: pressure, temperature: temperature)
         XCTAssertEqual(density.value, 1.225, accuracy: 0.01)
     }
-    
+
     func testDensityFromPressureAndTemperature() {
         let pressure = Measurement(value: 26436, unit: UnitPressure.pascals)
         let temperature = Measurement(value: 233.15, unit: UnitTemperature.kelvin)

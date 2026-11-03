@@ -5,15 +5,15 @@ import Foundation
 /// A reference point for converting relative positions to geodetic coordinates.
 public final class GeodeticOrigin: @unchecked Sendable, Equatable, Hashable {
     public let position: Position2D
-    
+
     public init(_ position: Position2D) {
         self.position = position
     }
-    
+
     public static func == (lhs: GeodeticOrigin, rhs: GeodeticOrigin) -> Bool {
         lhs.position == rhs.position
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(position)
     }
@@ -25,12 +25,12 @@ public final class GeodeticOrigin: @unchecked Sendable, Equatable, Hashable {
 public struct GeodesicPosition: Sendable, Equatable {
     public let relative: RelativePosition
     public let origin: GeodeticOrigin
-    
+
     public init(relative: RelativePosition, origin: GeodeticOrigin) {
         self.relative = relative
         self.origin = origin
     }
-    
+
     public init(bearing: Measurement<UnitAngle>, range: Measurement<UnitLength>, origin: GeodeticOrigin) {
         self.relative = RelativePosition(bearing: bearing, range: range)
         self.origin = origin
@@ -39,7 +39,7 @@ public struct GeodesicPosition: Sendable, Equatable {
     public var geodetic: Position2D {
         relative.position(relativeTo: origin.position)
     }
-    
+
     public var bearing: Measurement<UnitAngle> { relative.bearing }
     public var range: Measurement<UnitLength> { relative.range }
     public var cartesianVector: CartesianVector<UnitLength> { relative.cartesianVector }
@@ -53,7 +53,7 @@ extension GeodesicPosition {
         self.relative = RelativePosition(summing: positions.map(\.relative))
         self.origin = first.origin
     }
-    
+
     public init(summing relatives: [RelativePosition], origin: GeodeticOrigin) {
         self.relative = RelativePosition(summing: relatives)
         self.origin = origin

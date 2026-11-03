@@ -100,7 +100,8 @@ final class WindTests: XCTestCase {
 
     func testDecode_UnknownAltitudeUnit_Throws() {
         let json = """
-        {"altitude": {"value": 1000, "unit": "yd"}, "speed": {"value": 10, "unit": "kn"}, "direction": {"value": 0, "unit": "°"}}
+        {"altitude": {"value": 1000, "unit": "yd"}, "speed": {"value": 10, "unit": "kn"},
+         "direction": {"value": 0, "unit": "°"}}
         """
         XCTAssertThrowsError(try JSONDecoder().decode(Wind.self, from: Data(json.utf8))) { error in
             XCTAssertTrue(error is DecodingError)
@@ -109,7 +110,8 @@ final class WindTests: XCTestCase {
 
     func testDecode_UnknownSpeedUnit_Throws() {
         let json = """
-        {"altitude": {"value": 1000, "unit": "ft"}, "speed": {"value": 10, "unit": "mph"}, "direction": {"value": 0, "unit": "°"}}
+        {"altitude": {"value": 1000, "unit": "ft"}, "speed": {"value": 10, "unit": "mph"},
+         "direction": {"value": 0, "unit": "°"}}
         """
         XCTAssertThrowsError(try JSONDecoder().decode(Wind.self, from: Data(json.utf8))) { error in
             XCTAssertTrue(error is DecodingError)

@@ -7,15 +7,15 @@ import Foundation
 /// This wrapper ensures the underlying `SpeedContext` has all required data
 /// for CAS ↔ EAS ↔ TAS ↔ Mach conversions.
 public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
-    
+
     public let raw: SpeedContext
     public let density: Measurement<UnitConcentrationMass>
     public let speedOfSound: Measurement<UnitSpeed>
     public let relativePressure: Double
     public let pressureAltitude: Measurement<UnitLength>
-    
+
     // MARK: - Initializers
-    
+
     /// Creates a validated speed context, throwing if data is incomplete.
     public init(_ context: SpeedContext) throws {
         guard let pa = context.pressureAltitude else {
@@ -30,7 +30,7 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
         guard let delta = context.relativePressure else {
             throw ValidationError.missingRelativePressure
         }
-        
+
         // Check for NaN/Infinity
         guard density.value.isFinite else {
             throw ValidationError.invalidValue("density", density.value)
@@ -41,14 +41,14 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
         guard delta.isFinite else {
             throw ValidationError.invalidValue("relativePressure", delta)
         }
-        
+
         self.raw = context
         self.pressureAltitude = pa
         self.density = density
         self.speedOfSound = sos
         self.relativePressure = delta
     }
-    
+
     /// Creates a validated context from a validated altitude.
     ///
     /// This is the recommended way to create a speed context in BallisticMaths.
@@ -56,15 +56,17 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
         let context = SpeedContext.at(altitude: altitude.raw)
         try self.init(context)
     }
-    
+
     // MARK: - Factory Methods
-    
+
     /// Standard ISA conditions at sea level - always valid.
     public static let standardISA: ValidatedSpeedContext = {
         // This cannot fail - standardISA is always complete
+        // standardISA has every field, so validation can't fail.
+        // swiftlint:disable:next force_try
         try! ValidatedSpeedContext(SpeedContext.standardISA)
     }()
-    
+
     /// Creates a validated context from QNH and AMSL with measured temperature.
     public static func fromQNHAndAMSL(
         qnh: Measurement<UnitPressure>,
@@ -78,16 +80,16 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
         )
         return try ValidatedSpeedContext(context)
     }
-    
+
     // MARK: - Errors
-    
+
     public enum ValidationError: Error, LocalizedError, Sendable {
         case missingPressureAltitude
         case missingDensity
         case missingSpeedOfSound
         case missingRelativePressure
         case invalidValue(String, Double)
-        
+
         public var errorDescription: String? {
             switch self {
             case .missingPressureAltitude:
@@ -110,7 +112,7 @@ extension SpeedContext {
     public var validated: ValidatedSpeedContext? {
         try? ValidatedSpeedContext(self)
     }
-    
+
     /// Creates a validated version, throwing on failure.
     public func asValidated() throws -> ValidatedSpeedContext {
         try ValidatedSpeedContext(self)

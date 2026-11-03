@@ -117,7 +117,7 @@ final class UnitAltitudeTests: XCTestCase {
             seaLevelTemperature: context.seaLevelTemperature,
             lapseRate: context.lapseRate
         )
-        
+
         let thisAltitude = Altitude(
             feet: 15000,
             reference: .pressureAltitude,
@@ -219,7 +219,7 @@ final class UnitAltitudeTests: XCTestCase {
         XCTAssertTrue(altitude.canConvertToTrueAltitude, "No profile is needed: it's already true altitude")
 
         XCTAssertNoThrow(
-            try altitude.valueThrowing(in: .trueAltitude),
+            try altitude.value(in: .trueAltitude),
             "canConvertToTrueAltitude promised this would succeed"
         )
     }
@@ -231,7 +231,7 @@ final class UnitAltitudeTests: XCTestCase {
         XCTAssertTrue(altitude.canConvertToTrueAltitude)
 
         XCTAssertNoThrow(
-            try altitude.valueThrowing(in: .trueAltitude),
+            try altitude.value(in: .trueAltitude),
             "canConvertToTrueAltitude promised this would succeed"
         )
     }
@@ -267,11 +267,16 @@ final class UnitAltitudeTests: XCTestCase {
         let agl = Altitude(feet: 1000, reference: .agl, context: context)
         let tolerance = Measurement<UnitLength>(meters: 1e-6)
 
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1500, reference: .amsl, context: context), tolerance: tolerance))
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 700, reference: .agl, context: otherGround), tolerance: tolerance))
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1500, reference: .pressureAltitude, context: context), tolerance: tolerance))
-        XCTAssertFalse(try agl.isSameLevel(as: Altitude(feet: 1501, reference: .amsl, context: context), tolerance: tolerance))
-        XCTAssertTrue(try agl.isSameLevel(as: Altitude(feet: 1501, reference: .amsl, context: context), tolerance: .init(feet: 2)))
+        let amsl = Altitude(feet: 1500, reference: .amsl, context: context)
+        let aglOverOtherGround = Altitude(feet: 700, reference: .agl, context: otherGround)
+        let pressureAltitude = Altitude(feet: 1500, reference: .pressureAltitude, context: context)
+        let oneFootHigher = Altitude(feet: 1501, reference: .amsl, context: context)
+
+        XCTAssertTrue(try agl.isSameLevel(as: amsl, tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: aglOverOtherGround, tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: pressureAltitude, tolerance: tolerance))
+        XCTAssertFalse(try agl.isSameLevel(as: oneFootHigher, tolerance: tolerance))
+        XCTAssertTrue(try agl.isSameLevel(as: oneFootHigher, tolerance: .init(feet: 2)))
     }
 
     func testIsBelow_ComparesAMSL() throws {
@@ -382,7 +387,7 @@ final class UnitAltitudeTests: XCTestCase {
                 for target in VerticalReference.allCases {
                     XCTAssertEqual(
                         altitude.canConvert(to: target),
-                        (try? altitude.valueThrowing(in: target)) != nil,
+                        (try? altitude.value(in: target)) != nil,
                         "\(name): \(source.abbreviation) → \(target.abbreviation)"
                     )
                 }
@@ -390,7 +395,7 @@ final class UnitAltitudeTests: XCTestCase {
         }
     }
 
-    func testTrueAltitudeIfPossible_WithoutQNH_IsNilLikeTheThrowingConversion() {
+    func testTrueAltitude_WithoutQNH_Throws() {
         let context = AltitudeContext(
             groundElevation: .init(feet: 500),
             seaLevelTemperature: .init(celsius: 15),
@@ -398,14 +403,14 @@ final class UnitAltitudeTests: XCTestCase {
         )
         let altitude = Altitude(feet: 5000, reference: .amsl, context: context)
 
-        XCTAssertThrowsError(try altitude.valueThrowing(in: .trueAltitude))
-        XCTAssertNil(altitude.trueAltitudeIfPossible)
+        XCTAssertThrowsError(try altitude.value(in: .trueAltitude))
+        XCTAssertNil(try? altitude.value(in: .trueAltitude))
     }
 
-    func testAGLIfPossible_AlreadyAGL_WithoutGroundElevation() {
+    func testAGL_AlreadyAGL_WithoutGroundElevation() throws {
         let altitude = Altitude(feet: 500, reference: .agl, context: AltitudeContext())
 
-        XCTAssertEqual(altitude.aglIfPossible?.feet, 500)
+        XCTAssertEqual(try altitude.value(in: .agl).feet, 500)
     }
 
     static let conversionContexts: [(name: String, context: AltitudeContext)] = [
@@ -458,11 +463,35 @@ final class UnitAltitudeTests: XCTestCase {
 
                 for target in VerticalReference.allCases {
                     let label = "\(name): \(source.abbreviation) → \(target.abbreviation)"
-                    let thrown = try? altitude.valueThrowing(in: target)
+                    let thrown = try? altitude.value(in: target)
                     let optional = ifPossible(altitude, target)
 
                     XCTAssertEqual(optional?.value, thrown?.value, label)
                     XCTAssertEqual(optional?.unit.symbol, thrown?.unit.symbol, label)
+                }
+            }
+        }
+    }
+
+    func testValueIn_ThrowsExactlyWhereValueThrowingThrows_AndOtherwiseReturnsTheSameValue() {
+        for (name, context) in Self.conversionContexts {
+            for source in VerticalReference.allCases {
+                let altitude = Altitude(feet: 5000, reference: source, context: context)
+
+                for target in VerticalReference.allCases {
+                    let label = "\(name): \(source.abbreviation) → \(target.abbreviation)"
+                    let expected = Result { try altitude.valueThrowing(in: target) }
+                    let actual = Result { try altitude.value(in: target) }
+
+                    switch (expected, actual) {
+                    case let (.success(e), .success(a)):
+                        XCTAssertEqual(a.value.bitPattern, e.value.bitPattern, label)
+                        XCTAssertEqual(a.unit, e.unit, label)
+                    case let (.failure(e), .failure(a)):
+                        XCTAssertEqual(a as? AltitudeConversionError, e as? AltitudeConversionError, label)
+                    default:
+                        XCTFail("\(label): value(in:) \(actual), valueThrowing(in:) \(expected)")
+                    }
                 }
             }
         }

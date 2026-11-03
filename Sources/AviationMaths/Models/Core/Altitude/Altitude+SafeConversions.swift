@@ -96,24 +96,29 @@ extension Altitude {
 
     // MARK: - Safe Conversions (Return Optional)
 
+    @available(*, deprecated, message: "Use `try? value(in: .agl)`.")
     public var aglIfPossible: Measurement<UnitLength>? {
-        try? valueThrowing(in: .agl)
+        try? value(in: .agl)
     }
 
+    @available(*, deprecated, message: "Use `try? value(in: .amsl)`.")
     public var amslIfPossible: Measurement<UnitLength>? {
-        try? valueThrowing(in: .amsl)
+        try? value(in: .amsl)
     }
 
+    @available(*, deprecated, message: "Use `try? value(in: .pressureAltitude)`.")
     public var pressureAltitudeIfPossible: Measurement<UnitLength>? {
-        try? valueThrowing(in: .pressureAltitude)
+        try? value(in: .pressureAltitude)
     }
 
+    @available(*, deprecated, message: "Use `try? value(in: .trueAltitude)`.")
     public var trueAltitudeIfPossible: Measurement<UnitLength>? {
-        try? valueThrowing(in: .trueAltitude)
+        try? value(in: .trueAltitude)
     }
 
+    @available(*, deprecated, message: "Use `try? value(in: .geopotential)`.")
     public var geopotentialIfPossible: Measurement<UnitLength>? {
-        try? valueThrowing(in: .geopotential)
+        try? value(in: .geopotential)
     }
 
 }

@@ -170,7 +170,7 @@ final class SpeedTests: XCTestCase {
         )
 
         let speed = Speed(mach: 2.0, context: context)
-        
+
         XCTAssertEqual(speed.cas.knots, 717.027, accuracy: 0.01)
         XCTAssertEqual(speed.eas.knots, 641.744, accuracy: 0.001)
         XCTAssertEqual(speed.tas.knots, 1152.838, accuracy: 0.001)
@@ -200,6 +200,24 @@ final class SpeedTests: XCTestCase {
 
         XCTAssertEqual(tasSpeed.reference, .trueAirspeed)
         XCTAssertEqual(tasSpeed.tas.knots, speed.tas.knots)
+    }
+
+    func testConvertedTo_ReturnsTheSpeedInTheNewReference() throws {
+        let context = SpeedContext(pressureAltitude: .init(feet: 10000), deltaISA: .init(kelvin: 0))
+        let speed = Speed(knots: 250, reference: .calibratedAirspeed, context: context)
+
+        let tasSpeed = try speed.converted(to: .trueAirspeed)
+        let machSpeed = try speed.converted(to: .machNumber)
+
+        XCTAssertEqual(tasSpeed.reference, .trueAirspeed)
+        XCTAssertEqual(tasSpeed.value.knots, speed.tas.knots)
+        XCTAssertEqual(machSpeed.mach, speed.mach)
+    }
+
+    func testConvertedTo_Throws_WhenTheContextIsInsufficient() {
+        let speed = Speed(knots: 250, reference: .calibratedAirspeed, context: SpeedContext())
+
+        XCTAssertThrowsError(try speed.converted(to: .trueAirspeed))
     }
 
     func testSpeedComparison_SamePhysicalSpeed() {
@@ -300,7 +318,7 @@ final class SpeedTests: XCTestCase {
 
                 for target in SpeedReference.allCases {
                     let label = "\(name): \(source.abbreviation) → \(target.abbreviation)"
-                    let succeeds = (try? speed.convertedThrowing(to: target)) != nil
+                    let succeeds = (try? speed.converted(to: target)) != nil
 
                     XCTAssertEqual(speed.canConvert(to: target), succeeds, "canConvert, \(label)")
                     XCTAssertEqual(ifPossibleIsNil(speed, target), !succeeds, "IfPossible, \(label)")
@@ -311,7 +329,11 @@ final class SpeedTests: XCTestCase {
 
     func testMach_FromCAS_NeedsOnlyPressureRatio() throws {
         let altitude = Measurement<UnitLength>(feet: 35000)
-        let reference = Speed(knots: 250, reference: .calibratedAirspeed, context: SpeedContext(pressureAltitude: altitude))
+        let reference = Speed(
+            knots: 250,
+            reference: .calibratedAirspeed,
+            context: SpeedContext(pressureAltitude: altitude)
+        )
         let pressureOnly = Speed(
             knots: 250,
             reference: .calibratedAirspeed,

@@ -40,7 +40,7 @@ extension AltitudeContext {
         guard isComplete else { return nil }
         return ValidatedAltitudeContext(self)
     }
-    
+
     public var isComplete: Bool {
         groundElevation != nil &&
         qnh != nil &&
@@ -48,5 +48,5 @@ extension AltitudeContext {
         surfaceTemperature != nil &&
         lapseRate != nil
     }
-        
+
 }

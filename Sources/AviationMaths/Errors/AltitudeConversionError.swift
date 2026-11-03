@@ -3,7 +3,7 @@ public enum AltitudeConversionError: Error, Equatable {
     case missingQNH
     case missingTemperatureProfile
     case insufficientContext(from: VerticalReference, to: VerticalReference)
-    
+
     public var localizedDescription: String {
         switch self {
         case .missingGroundElevation:

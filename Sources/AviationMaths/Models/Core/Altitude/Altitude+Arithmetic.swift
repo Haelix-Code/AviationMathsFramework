@@ -4,8 +4,8 @@ public extension Altitude {
     func midpoint(to other: Altitude, in ref: VerticalReference) throws -> Altitude {
         try requireSameContext(as: other)
 
-        let a = self.value(in: ref).converted(to: .meters).value
-        let b = other.value(in: ref).converted(to: .meters).value
+        let a = try self.value(in: ref).converted(to: .meters).value
+        let b = try other.value(in: ref).converted(to: .meters).value
         let mid = Measurement<UnitLength>(value: (a + b) / 2.0, unit: .meters)
 
         return Altitude(value: mid, reference: ref, context: self.context)
@@ -16,8 +16,8 @@ public extension Altitude {
 
         let u = max(0.0, min(1.0, t))
 
-        let a = self.value(in: ref).converted(to: .meters).value
-        let b = other.value(in: ref).converted(to: .meters).value
+        let a = try self.value(in: ref).converted(to: .meters).value
+        let b = try other.value(in: ref).converted(to: .meters).value
         let v = a + (b - a) * u
         let m = Measurement<UnitLength>(value: v, unit: .meters)
 

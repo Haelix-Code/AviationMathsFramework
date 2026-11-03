@@ -3,7 +3,7 @@ public enum SpeedConversionError: Error, Equatable {
     case missingDensity
     case missingTemperature
     case insufficientContext(conversion: String)
-    
+
     public var localizedDescription: String {
         switch self {
         case .missingPressureAltitude:

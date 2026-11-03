@@ -25,29 +25,38 @@ public struct Altitude: Codable, Hashable, Sendable {
 
     /// Above ground level altitude
    /// - Warning: This computed property uses `try!` and will crash if context lacks ground elevation.
-   ///   For error handling use `valueThrowing(in: .agl)`, or use `aglIfPossible` for optional return.
+   ///   For error handling use `try value(in: .agl)`, or `try? value(in: .agl)` for optional return.
+   ///   From 0.4.0 this property throws instead of trapping.
    public var agl: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .agl ? value : try! convertToAGLThrowing()
    }
 
    /// Above mean sea level altitude
    /// - Warning: This computed property uses `try!` and will crash if context is insufficient.
-   ///   For error handling use `valueThrowing(in: .amsl)`, or use `amslIfPossible` for optional return.
+   ///   For error handling use `try value(in: .amsl)`, or `try? value(in: .amsl)` for optional return.
+   ///   From 0.4.0 this property throws instead of trapping.
    public var amsl: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .amsl ? value : try! convertToAMSLThrowing()
    }
 
    /// Pressure altitude
    /// - Warning: This computed property uses `try!` and will crash if context lacks QNH.
-   ///   For error handling use `valueThrowing(in: .pressureAltitude)`, or use `pressureAltitudeIfPossible` for optional return.
+   ///   For error handling use `try value(in: .pressureAltitude)`, or `try? value(in: .pressureAltitude)`
+   ///   for optional return.
+   ///   From 0.4.0 this property throws instead of trapping.
    public var pressureAltitude: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .pressureAltitude ? value : try! convertToPressureAltitudeThrowing()
    }
 
    /// True altitude
    /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
-   ///   For error handling use `valueThrowing(in: .trueAltitude)`, or use `trueAltitudeIfPossible` for optional return.
+   ///   For error handling use `try value(in: .trueAltitude)`, or `try? value(in: .trueAltitude)` for optional return.
+   ///   From 0.4.0 this property throws instead of trapping.
    public var trueAltitude: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .trueAltitude ? value : try! convertToTrueAltitudeThrowing()
    }
 
@@ -56,7 +65,10 @@ public struct Altitude: Codable, Hashable, Sendable {
    /// This is the altitude reference used internally by the ISA standard atmosphere.
    /// - Note: This conversion requires true altitude, which in turn requires a temperature profile.
    /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
+   ///   For error handling use `try value(in: .geopotential)`, or `try? value(in: .geopotential)` for optional return.
+   ///   From 0.4.0 this property throws instead of trapping.
    public var geopotential: Measurement<UnitLength> {
+       // swiftlint:disable:next force_try
        reference == .geopotential ? value : try! convertToGeopotentialThrowing()
    }
 
@@ -96,20 +108,11 @@ extension Altitude {
 
     /// Create a new Altitude in a different reference frame.
     /// Crashes if the conversion is not possible.
+    /// - Note: From 0.4.0 this throws instead of trapping.
     public func converted(to newReference: VerticalReference) -> Altitude {
         guard let result = self.in(newReference) else {
             preconditionFailure("Cannot convert from \(reference) to \(newReference) with current context")
         }
         return result
-    }
-
-    func value(in ref: VerticalReference) -> Measurement<UnitLength> {
-        switch ref {
-        case .agl: return self.agl
-        case .amsl: return self.amsl
-        case .pressureAltitude: return self.pressureAltitude
-        case .trueAltitude: return self.trueAltitude
-        case .geopotential: return self.geopotential
-        }
     }
 }
