@@ -68,21 +68,25 @@ extension Speed {
     // MARK: - Safe Conversions (Return Optional)
 
     // CAS if conversion is possible, nil otherwise
+    @available(*, deprecated, message: "Use `try? converted(to: .calibratedAirspeed).value`.")
     public var casIfPossible: Measurement<UnitSpeed>? {
         reference == .calibratedAirspeed ? value : try? convertToCAS()
     }
 
     /// EAS if conversion is possible, nil otherwise
+    @available(*, deprecated, message: "Use `try? converted(to: .equivalentAirspeed).value`.")
     public var easIfPossible: Measurement<UnitSpeed>? {
         reference == .equivalentAirspeed ? value : try? convertToEAS()
     }
 
     /// TAS if conversion is possible, nil otherwise
+    @available(*, deprecated, message: "Use `try? converted(to: .trueAirspeed).value`.")
     public var tasIfPossible: Measurement<UnitSpeed>? {
         reference == .trueAirspeed ? value : try? convertToTAS()
     }
 
     /// Mach number if conversion is possible, nil otherwise
+    @available(*, deprecated, message: "Use `try? converted(to: .machNumber).mach`.")
     public var machIfPossible: Double? {
         reference == .machNumber ? machValue : try? convertToMach()
     }
