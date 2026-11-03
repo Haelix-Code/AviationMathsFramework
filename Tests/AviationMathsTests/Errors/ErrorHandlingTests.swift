@@ -10,7 +10,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
 
-        XCTAssertThrowsError(try speed.asTAS()) { error in
+        XCTAssertThrowsError(try speed.converted(to: .trueAirspeed)) { error in
             guard case ContextCalculationError.insufficientData(let calc, let missing) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -25,7 +25,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()
         let speed = Speed(knots: 250, reference: .trueAirspeed, context: context)
 
-        XCTAssertThrowsError(try speed.asMach()) { error in
+        XCTAssertThrowsError(try speed.converted(to: .machNumber)) { error in
             guard case ContextCalculationError.insufficientData(let calc, _) = error else {
                 XCTFail("Expected ContextCalculationError.insufficientData")
                 return
@@ -38,10 +38,10 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 200, reference: .calibratedAirspeed, context: context)
 
-        let cas = try speed.asCAS()
-        let eas = try speed.asEAS()
-        let tas = try speed.asTAS()
-        let mach = try speed.asMach()
+        let cas = try speed.converted(to: .calibratedAirspeed).value
+        let eas = try speed.converted(to: .equivalentAirspeed).value
+        let tas = try speed.converted(to: .trueAirspeed).value
+        let mach = try speed.converted(to: .machNumber).mach
 
         XCTAssertEqual(cas.knots, 200, accuracy: 0.1)
         XCTAssertGreaterThan(eas.knots, 0)
@@ -55,7 +55,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = AltitudeContext()  // No ground elevation
         let altitude = Altitude(feet: 1000, reference: .agl, context: context)
 
-        XCTAssertThrowsError(try altitude.valueThrowing(in: .amsl)) { error in
+        XCTAssertThrowsError(try altitude.value(in: .amsl)) { error in
             guard case AltitudeConversionError.missingGroundElevation = error else {
                 XCTFail("Expected AltitudeConversionError.missingGroundElevation")
                 return
@@ -67,7 +67,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = AltitudeContext(groundElevation: .init(feet: 500))  // No QNH
         let altitude = Altitude(feet: 5000, reference: .amsl, context: context)
 
-        XCTAssertThrowsError(try altitude.valueThrowing(in: .pressureAltitude)) { error in
+        XCTAssertThrowsError(try altitude.value(in: .pressureAltitude)) { error in
             guard case AltitudeConversionError.missingQNH = error else {
                 XCTFail("Expected AltitudeConversionError.missingQNH")
                 return
@@ -83,7 +83,7 @@ final class ErrorHandlingTests: XCTestCase {
         )
         let altitude = Altitude(feet: 5000, reference: .amsl, context: context)
 
-        XCTAssertThrowsError(try altitude.valueThrowing(in: .trueAltitude)) { error in
+        XCTAssertThrowsError(try altitude.value(in: .trueAltitude)) { error in
             guard case AltitudeConversionError.missingTemperatureProfile = error else {
                 XCTFail("Expected AltitudeConversionError.missingTemperatureProfile")
                 return
@@ -95,9 +95,9 @@ final class ErrorHandlingTests: XCTestCase {
         let context = AltitudeContext.standardISA
         let altitude = Altitude(feet: 5000, reference: .amsl, context: context)
 
-        let agl = try altitude.valueThrowing(in: .agl)
-        let amsl = try altitude.valueThrowing(in: .amsl)
-        let pa = try altitude.valueThrowing(in: .pressureAltitude)
+        let agl = try altitude.value(in: .agl)
+        let amsl = try altitude.value(in: .amsl)
+        let pa = try altitude.value(in: .pressureAltitude)
 
         XCTAssertEqual(agl.feet, 5000, accuracy: 0.1)
         XCTAssertEqual(amsl.feet, 5000, accuracy: 0.1)
