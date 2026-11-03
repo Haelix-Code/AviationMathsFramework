@@ -504,8 +504,32 @@ final class UnitAltitudeTests: XCTestCase {
     }
 
     func testContextTemperatures_Throw_WhenTheyCannotBeCalculated() {
-        XCTAssertThrowsError(try AltitudeContext().surfaceTemperature)
-        XCTAssertThrowsError(try AltitudeContext().seaLevelTemperature)
+        XCTAssertThrowsError(try AltitudeContext().surfaceTemperature) {
+            XCTAssertEqual($0 as? AltitudeConversionError, .missingTemperatureProfile)
+        }
+        XCTAssertThrowsError(try AltitudeContext().seaLevelTemperature) {
+            XCTAssertEqual($0 as? AltitudeConversionError, .missingTemperatureProfile)
+        }
+    }
+
+    func testContextTemperatures_ThrowMissingGroundElevation_WhenOnlyTheElevationIsMissing() {
+        let seaLevelProfile = AltitudeContext(seaLevelTemperature: .init(celsius: 15), lapseRate: 0.0065)
+        let surfaceProfile = AltitudeContext(surfaceTemperature: .init(celsius: 10), lapseRate: 0.0065)
+
+        XCTAssertThrowsError(try seaLevelProfile.surfaceTemperature) {
+            XCTAssertEqual($0 as? AltitudeConversionError, .missingGroundElevation)
+        }
+        XCTAssertThrowsError(try surfaceProfile.seaLevelTemperature) {
+            XCTAssertEqual($0 as? AltitudeConversionError, .missingGroundElevation)
+        }
+    }
+
+    func testContextTemperatures_ThrowMissingTemperatureProfile_WithoutALapseRate() {
+        let context = AltitudeContext(groundElevation: .init(feet: 500), seaLevelTemperature: .init(celsius: 15))
+
+        XCTAssertThrowsError(try context.surfaceTemperature) {
+            XCTAssertEqual($0 as? AltitudeConversionError, .missingTemperatureProfile)
+        }
     }
 
     func testValidatedContext_ThrowsForAnIncompleteContext_InsteadOfTrapping() {

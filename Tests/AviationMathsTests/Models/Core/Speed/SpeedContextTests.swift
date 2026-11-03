@@ -388,9 +388,52 @@ final class SpeedContextTests: XCTestCase {
     }
 
     func testDerivedValues_Throw_WhenTheyCannotBeCalculated() {
-        XCTAssertThrowsError(try SpeedContext().density) { XCTAssertTrue($0 is ContextCalculationError) }
-        XCTAssertThrowsError(try SpeedContext().speedOfSound) { XCTAssertTrue($0 is ContextCalculationError) }
-        XCTAssertThrowsError(try SpeedContext().relativePressure) { XCTAssertTrue($0 is ContextCalculationError) }
+        XCTAssertThrowsError(try SpeedContext().density) {
+            XCTAssertEqual($0 as? SpeedConversionError, .missingDensity)
+        }
+        XCTAssertThrowsError(try SpeedContext().speedOfSound) {
+            XCTAssertEqual($0 as? SpeedConversionError, .missingSpeedOfSound)
+        }
+        XCTAssertThrowsError(try SpeedContext().relativePressure) {
+            XCTAssertEqual($0 as? SpeedConversionError, .missingRelativePressure)
+        }
+    }
+
+    func testValidatedSpeedContext_Throws_WithoutPressureAltitude() {
+        let context = SpeedContext(
+            temperature: .init(celsius: 15),
+            density: ISA.seaLevelDensity,
+            measuredPressure: ISA.seaLevelPressure
+        )
+
+        XCTAssertThrowsError(try ValidatedSpeedContext(context)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .missingPressureAltitude)
+        }
+    }
+
+    func testValidatedSpeedContext_Throws_ForEachNonFiniteDerivedValue() {
+        let nanAltitude = SpeedContext(pressureAltitude: .init(meters: .nan))
+        let infiniteTemperature = SpeedContext(
+            pressureAltitude: .init(feet: 10000),
+            temperature: .init(kelvin: .infinity),
+            density: ISA.seaLevelDensity
+        )
+        let infinitePressure = SpeedContext(
+            pressureAltitude: .init(feet: 10000),
+            temperature: .init(celsius: 15),
+            density: ISA.seaLevelDensity,
+            measuredPressure: .init(hectopascals: .infinity)
+        )
+
+        XCTAssertThrowsError(try ValidatedSpeedContext(nanAltitude)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .nonFinite(.density))
+        }
+        XCTAssertThrowsError(try ValidatedSpeedContext(infiniteTemperature)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .nonFinite(.speedOfSound))
+        }
+        XCTAssertThrowsError(try ValidatedSpeedContext(infinitePressure)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .nonFinite(.relativePressure))
+        }
     }
 
     func testValidatedSpeedContext_DecodingAnIncompleteContext_Throws() throws {

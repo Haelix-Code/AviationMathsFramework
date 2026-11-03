@@ -31,19 +31,19 @@ public typealias EAS = TypedSpeed<EASType>
 public typealias TAS = TypedSpeed<TASType>
 
 extension TypedSpeed where Reference == CASType {
-    public func toEAS(context: SpeedContext) throws(ContextCalculationError) -> EAS {
+    public func toEAS(context: SpeedContext) throws(SpeedConversionError) -> EAS {
         let speed = Speed(value: value, reference: .calibratedAirspeed, context: context)
         return EAS(try speed.eas)
     }
 
-    public func toTAS(context: SpeedContext) throws(ContextCalculationError) -> TAS {
+    public func toTAS(context: SpeedContext) throws(SpeedConversionError) -> TAS {
         let speed = Speed(value: value, reference: .calibratedAirspeed, context: context)
         return TAS(try speed.tas)
     }
 }
 
 extension TypedSpeed where Reference == TASType {
-    public func toCAS(context: SpeedContext) throws(ContextCalculationError) -> CAS {
+    public func toCAS(context: SpeedContext) throws(SpeedConversionError) -> CAS {
         let speed = Speed(value: value, reference: .trueAirspeed, context: context)
         return CAS(try speed.cas)
     }

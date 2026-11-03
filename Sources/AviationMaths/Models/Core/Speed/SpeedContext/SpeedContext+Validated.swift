@@ -18,29 +18,18 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
 
     /// Creates a validated speed context, throwing if data is incomplete.
     public init(_ context: SpeedContext) throws(ValidationError) {
-        guard let pa = context.pressureAltitude else {
-            throw ValidationError.missingPressureAltitude
-        }
-        guard let density = try? context.density else {
-            throw ValidationError.missingDensity
-        }
-        guard let sos = try? context.speedOfSound else {
-            throw ValidationError.missingSpeedOfSound
-        }
-        guard let delta = try? context.relativePressure else {
-            throw ValidationError.missingRelativePressure
+        // The pressure altitude is every derived value's fallback, so with it none of them can
+        // be missing.
+        guard let pa = context.pressureAltitude,
+              let density = try? context.density,
+              let sos = try? context.speedOfSound,
+              let delta = try? context.relativePressure else {
+            throw .missingPressureAltitude
         }
 
-        // Check for NaN/Infinity
-        guard density.value.isFinite else {
-            throw ValidationError.invalidValue("density", density.value)
-        }
-        guard sos.value.isFinite else {
-            throw ValidationError.invalidValue("speedOfSound", sos.value)
-        }
-        guard delta.isFinite else {
-            throw ValidationError.invalidValue("relativePressure", delta)
-        }
+        guard density.value.isFinite else { throw .nonFinite(.density) }
+        guard sos.value.isFinite else { throw .nonFinite(.speedOfSound) }
+        guard delta.isFinite else { throw .nonFinite(.relativePressure) }
 
         self.raw = context
         self.pressureAltitude = pa
@@ -101,25 +90,24 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
 
     // MARK: - Errors
 
-    public enum ValidationError: Error, LocalizedError, Sendable {
+    /// A value validation derives from the context.
+    public enum Quantity: Equatable, Sendable {
+        case density
+        case speedOfSound
+        case relativePressure
+    }
+
+    public enum ValidationError: Error, Equatable, Sendable, LocalizedError {
         case missingPressureAltitude
-        case missingDensity
-        case missingSpeedOfSound
-        case missingRelativePressure
-        case invalidValue(String, Double)
+        /// A derived value is NaN or infinite, e.g. from a NaN pressure altitude.
+        case nonFinite(Quantity)
 
         public var errorDescription: String? {
             switch self {
             case .missingPressureAltitude:
                 return "SpeedContext missing pressure altitude"
-            case .missingDensity:
-                return "SpeedContext missing density (requires pressure altitude)"
-            case .missingSpeedOfSound:
-                return "SpeedContext missing speed of sound (requires temperature)"
-            case .missingRelativePressure:
-                return "SpeedContext missing relative pressure"
-            case .invalidValue(let name, let value):
-                return "SpeedContext has invalid \(name): \(value)"
+            case .nonFinite(let quantity):
+                return "SpeedContext's \(quantity) isn't a finite number"
             }
         }
     }

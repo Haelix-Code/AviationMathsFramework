@@ -11,9 +11,9 @@ public struct SpeedContext: Sendable, Hashable, Codable {
     // MARK: - Derived Values (use `try?` for an optional result)
 
     /// Air density: the one given, or from pressure and temperature
-    /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
+    /// - Throws: `SpeedConversionError.missingDensity` if the context can't supply it
     public var density: Measurement<UnitConcentrationMass> {
-        get throws(ContextCalculationError) {
+        get throws(SpeedConversionError) {
             if let density = _density {
                 return density
             }
@@ -26,10 +26,7 @@ public struct SpeedContext: Sendable, Hashable, Codable {
             }
 
             guard let altitude = pressureAltitude else {
-                throw ContextCalculationError.insufficientData(
-                    calculation: "density",
-                    missing: ["pressureAltitude"]
-                )
+                throw .missingDensity
             }
 
             let pressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))
@@ -43,18 +40,15 @@ public struct SpeedContext: Sendable, Hashable, Codable {
     }
 
     /// Speed of sound: from the temperature given, or the ISA temperature at the pressure altitude
-    /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
+    /// - Throws: `SpeedConversionError.missingSpeedOfSound` if the context can't supply it
     public var speedOfSound: Measurement<UnitSpeed> {
-        get throws(ContextCalculationError) {
+        get throws(SpeedConversionError) {
             if let explicitTemp = temperature {
                 return ISA.speedOfSoundFromTemperature(temperature: explicitTemp)
             }
 
             guard let altitude = pressureAltitude else {
-                throw ContextCalculationError.insufficientData(
-                    calculation: "speedOfSound",
-                    missing: ["pressureAltitude"]
-                )
+                throw .missingSpeedOfSound
             }
 
             let effectiveTemperature = resolveTemperature(at: altitude)
@@ -63,18 +57,15 @@ public struct SpeedContext: Sendable, Hashable, Codable {
     }
 
     /// Relative pressure δ = p/p₀: from the pressure given, or ISA pressure at the pressure altitude
-    /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
+    /// - Throws: `SpeedConversionError.missingRelativePressure` if the context can't supply it
     public var relativePressure: Double {
-        get throws(ContextCalculationError) {
+        get throws(SpeedConversionError) {
             if let measuredPressure = measuredPressureOverride {
                 return measuredPressure.pascals / ISA.seaLevelPressure.pascals
             }
 
             guard let altitude = pressureAltitude else {
-                throw ContextCalculationError.insufficientData(
-                    calculation: "relativePressure",
-                    missing: ["pressureAltitude"]
-                )
+                throw .missingRelativePressure
             }
 
             let atmosphericPressure = ISA.pressure(at: altitude, deltaISA: .init(kelvin: 0))

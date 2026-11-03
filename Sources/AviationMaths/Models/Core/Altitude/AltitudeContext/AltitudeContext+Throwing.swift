@@ -6,9 +6,10 @@ extension AltitudeContext {
 
     /// Surface temperature (at ground elevation): the one given, or the sea-level temperature
     /// carried up to ground elevation at the lapse rate. Use `try?` for an optional result.
-    /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
+    /// - Throws: `AltitudeConversionError.missingGroundElevation` if only the ground elevation is
+    ///   missing, otherwise `.missingTemperatureProfile`.
     public var surfaceTemperature: Measurement<UnitTemperature> {
-        get throws(ContextCalculationError) {
+        get throws(AltitudeConversionError) {
             if let explicitTemp = _surfaceTemperature {
                 return explicitTemp
             }
@@ -16,10 +17,7 @@ extension AltitudeContext {
             guard let seaLevelTemp = _seaLevelTemperature,
                   let elevation = groundElevation,
                   let lapse = lapseRate else {
-                throw ContextCalculationError.insufficientData(
-                    calculation: "surfaceTemperature",
-                    missing: missingForSurfaceTemp()
-                )
+                throw missingDataToMove(_seaLevelTemperature)
             }
 
             let surfaceTempKelvin = seaLevelTemp.kelvin - (lapse * elevation.meters)
@@ -30,9 +28,10 @@ extension AltitudeContext {
     /// Sea level temperature (at height = 0). When a surface temperature is also given,
     /// and it can be extrapolated down, it takes precedence (see `init`). Use `try?` for an
     /// optional result.
-    /// - Throws: `ContextCalculationError.insufficientData` if required data is missing
+    /// - Throws: `AltitudeConversionError.missingGroundElevation` if only the ground elevation is
+    ///   missing, otherwise `.missingTemperatureProfile`.
     public var seaLevelTemperature: Measurement<UnitTemperature> {
-        get throws(ContextCalculationError) {
+        get throws(AltitudeConversionError) {
             // Surface temperature takes precedence when it can be extrapolated down (see `init`)
             guard let surfaceTemp = _surfaceTemperature,
                   let elevation = groundElevation,
@@ -40,10 +39,7 @@ extension AltitudeContext {
                 if let explicitTemp = _seaLevelTemperature {
                     return explicitTemp
                 }
-                throw ContextCalculationError.insufficientData(
-                    calculation: "seaLevelTemperature",
-                    missing: missingForSeaLevelTemp()
-                )
+                throw missingDataToMove(_surfaceTemperature)
             }
 
             let seaLevelTempKelvin = surfaceTemp.kelvin + (lapse * elevation.meters)
@@ -53,19 +49,9 @@ extension AltitudeContext {
 
     // MARK: - Private Helpers
 
-    private func missingForSurfaceTemp() -> [String] {
-        var missing: [String] = []
-        if _seaLevelTemperature == nil { missing.append("seaLevelTemperature") }
-        if groundElevation == nil { missing.append("groundElevation") }
-        if lapseRate == nil { missing.append("lapseRate") }
-        return missing
-    }
-
-    private func missingForSeaLevelTemp() -> [String] {
-        var missing: [String] = []
-        if _surfaceTemperature == nil { missing.append("surfaceTemperature") }
-        if groundElevation == nil { missing.append("groundElevation") }
-        if lapseRate == nil { missing.append("lapseRate") }
-        return missing
+    /// Why `source` couldn't be carried between sea level and ground elevation: just the
+    /// elevation when there's a temperature and lapse rate to carry, otherwise the profile.
+    private func missingDataToMove(_ source: Measurement<UnitTemperature>?) -> AltitudeConversionError {
+        source != nil && lapseRate != nil ? .missingGroundElevation : .missingTemperatureProfile
     }
 }

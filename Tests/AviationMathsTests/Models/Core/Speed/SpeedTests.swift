@@ -347,21 +347,21 @@ final class SpeedTests: XCTestCase {
         let mach = Speed(mach: 0.8, context: SpeedContext())
         let tas = Speed(knots: 300, reference: .trueAirspeed, context: SpeedContext())
 
-        XCTAssertThrowsError(try mach.tas) { XCTAssertTrue($0 is ContextCalculationError) }
-        XCTAssertThrowsError(try tas.cas) { XCTAssertTrue($0 is ContextCalculationError) }
-        XCTAssertThrowsError(try tas.eas) { XCTAssertTrue($0 is ContextCalculationError) }
-        XCTAssertThrowsError(try tas.mach) { XCTAssertTrue($0 is ContextCalculationError) }
+        XCTAssertThrowsError(try mach.tas) { XCTAssertEqual($0 as? SpeedConversionError, .missingSpeedOfSound) }
+        XCTAssertThrowsError(try tas.cas) { XCTAssertEqual($0 as? SpeedConversionError, .missingDensity) }
+        XCTAssertThrowsError(try tas.eas) { XCTAssertEqual($0 as? SpeedConversionError, .missingDensity) }
+        XCTAssertThrowsError(try tas.mach) { XCTAssertEqual($0 as? SpeedConversionError, .missingSpeedOfSound) }
     }
 
     func testTypedSpeedConversions_ThrowTheContextError_InsteadOfTrapping() {
         XCTAssertThrowsError(try CAS(knots: 250).toEAS(context: SpeedContext())) {
-            XCTAssertTrue($0 is ContextCalculationError)
+            XCTAssertEqual($0 as? SpeedConversionError, .missingRelativePressure)
         }
         XCTAssertThrowsError(try CAS(knots: 250).toTAS(context: SpeedContext())) {
-            XCTAssertTrue($0 is ContextCalculationError)
+            XCTAssertEqual($0 as? SpeedConversionError, .missingDensity)
         }
         XCTAssertThrowsError(try TAS(knots: 250).toCAS(context: SpeedContext())) {
-            XCTAssertTrue($0 is ContextCalculationError)
+            XCTAssertEqual($0 as? SpeedConversionError, .missingDensity)
         }
     }
 }

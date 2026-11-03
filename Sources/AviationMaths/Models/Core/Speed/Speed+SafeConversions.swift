@@ -2,68 +2,18 @@ import Foundation
 
 extension Speed {
 
-    // Each mirrors the route the matching `convertTo…` takes, so they can't disagree.
+    // Each tries the conversion itself, so a check can't disagree with its conversion.
 
-    public var canConvertToCAS: Bool {
-        switch reference {
-        case .calibratedAirspeed:
-            return true
-        case .equivalentAirspeed:
-            return (try? context.relativePressure) != nil
-        case .trueAirspeed:
-            return (try? context.density) != nil && (try? context.relativePressure) != nil
-        case .machNumber:
-            return (try? context.speedOfSound) != nil
-                && (try? context.density) != nil
-                && (try? context.relativePressure) != nil
-        }
-    }
+    public var canConvertToCAS: Bool { canConvert(to: .calibratedAirspeed) }
 
-    public var canConvertToEAS: Bool {
-        switch reference {
-        case .equivalentAirspeed:
-            return true
-        case .calibratedAirspeed:
-            return (try? context.relativePressure) != nil
-        case .trueAirspeed:
-            return (try? context.density) != nil
-        case .machNumber:
-            return (try? context.speedOfSound) != nil && (try? context.density) != nil
-        }
-    }
+    public var canConvertToEAS: Bool { canConvert(to: .equivalentAirspeed) }
 
-    public var canConvertToTAS: Bool {
-        switch reference {
-        case .trueAirspeed:
-            return true
-        case .calibratedAirspeed:
-            return (try? context.density) != nil && (try? context.relativePressure) != nil
-        case .equivalentAirspeed:
-            return (try? context.density) != nil
-        case .machNumber:
-            return (try? context.speedOfSound) != nil
-        }
-    }
+    public var canConvertToTAS: Bool { canConvert(to: .trueAirspeed) }
 
-    public var canConvertToMach: Bool {
-        switch reference {
-        case .machNumber:
-            return true
-        case .calibratedAirspeed:
-            return (try? context.relativePressure) != nil
-        case .equivalentAirspeed:
-            return (try? context.density) != nil && (try? context.speedOfSound) != nil
-        case .trueAirspeed:
-            return (try? context.speedOfSound) != nil
-        }
-    }
+    public var canConvertToMach: Bool { canConvert(to: .machNumber) }
 
+    /// Whether `converted(to: targetReference)` succeeds with this speed's context.
     public func canConvert(to targetReference: SpeedReference) -> Bool {
-        switch targetReference {
-        case .calibratedAirspeed: return canConvertToCAS
-        case .equivalentAirspeed: return canConvertToEAS
-        case .trueAirspeed: return canConvertToTAS
-        case .machNumber: return canConvertToMach
-        }
+        (try? converted(to: targetReference)) != nil
     }
 }

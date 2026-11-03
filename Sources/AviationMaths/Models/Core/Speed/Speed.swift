@@ -54,30 +54,30 @@ public struct Speed: Sendable {
     // MARK: - Computed Properties for Each Reference
 
     /// Calibrated airspeed. Use `try?` for an optional result.
-    /// - Throws: `ContextCalculationError` if the context lacks the data the conversion needs.
+    /// - Throws: `SpeedConversionError` if the context lacks the data the conversion needs.
     public var cas: Measurement<UnitSpeed> {
-        get throws(ContextCalculationError) { try convertToCAS() }
+        get throws(SpeedConversionError) { try convertToCAS() }
     }
 
     /// Equivalent airspeed. Use `try?` for an optional result.
-    /// - Throws: `ContextCalculationError` if the context lacks the data the conversion needs.
+    /// - Throws: `SpeedConversionError` if the context lacks the data the conversion needs.
     public var eas: Measurement<UnitSpeed> {
-        get throws(ContextCalculationError) { try convertToEAS() }
+        get throws(SpeedConversionError) { try convertToEAS() }
     }
 
     /// True airspeed. Use `try?` for an optional result.
-    /// - Throws: `ContextCalculationError` if the context lacks the data the conversion needs.
+    /// - Throws: `SpeedConversionError` if the context lacks the data the conversion needs.
     public var tas: Measurement<UnitSpeed> {
-        get throws(ContextCalculationError) { try convertToTAS() }
+        get throws(SpeedConversionError) { try convertToTAS() }
     }
 
     /// Mach number. Use `try?` for an optional result.
-    /// - Throws: `ContextCalculationError` if the context lacks the data the conversion needs.
+    /// - Throws: `SpeedConversionError` if the context lacks the data the conversion needs.
     public var mach: Double {
-        get throws(ContextCalculationError) { try convertToMach() }
+        get throws(SpeedConversionError) { try convertToMach() }
     }
 
-    internal func convertToCAS() throws(ContextCalculationError) -> Measurement<UnitSpeed> {
+    internal func convertToCAS() throws(SpeedConversionError) -> Measurement<UnitSpeed> {
         switch reference {
         case .calibratedAirspeed:
             return value
@@ -101,7 +101,7 @@ public struct Speed: Sendable {
         }
     }
 
-    internal func convertToEAS() throws(ContextCalculationError) -> Measurement<UnitSpeed> {
+    internal func convertToEAS() throws(SpeedConversionError) -> Measurement<UnitSpeed> {
         switch reference {
         case .calibratedAirspeed:
             let delta = try context.relativePressure
@@ -127,7 +127,7 @@ public struct Speed: Sendable {
         }
     }
 
-    internal func convertToTAS() throws(ContextCalculationError) -> Measurement<UnitSpeed> {
+    internal func convertToTAS() throws(SpeedConversionError) -> Measurement<UnitSpeed> {
         switch reference {
         case .calibratedAirspeed, .equivalentAirspeed:
             let density = try context.density
@@ -149,7 +149,7 @@ public struct Speed: Sendable {
         }
     }
 
-    internal func convertToMach() throws(ContextCalculationError) -> Double {
+    internal func convertToMach() throws(SpeedConversionError) -> Double {
         switch reference {
         case .machNumber:
             return machValue!
@@ -171,8 +171,8 @@ public struct Speed: Sendable {
 
 extension Speed {
     /// This speed in another reference, in the same context.
-    /// - Throws: `ContextCalculationError` if the context lacks the data the conversion needs.
-    public func converted(to newReference: SpeedReference) throws(ContextCalculationError) -> Speed {
+    /// - Throws: `SpeedConversionError` if the context lacks the data the conversion needs.
+    public func converted(to newReference: SpeedReference) throws(SpeedConversionError) -> Speed {
         switch newReference {
         case .calibratedAirspeed:
             return Speed(value: try cas, reference: .calibratedAirspeed, context: context)
@@ -195,18 +195,18 @@ extension Speed: Hashable {}
 // These compare the physical speed (TAS).
 extension Speed {
     /// Whether both speeds are the same, compared as TAS within `tolerance`.
-    /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
+    /// - Throws: `SpeedConversionError` if either speed can't be converted to TAS.
     public func isSameSpeed(
         as other: Speed,
         tolerance: Measurement<UnitSpeed>
-    ) throws(ContextCalculationError) -> Bool {
+    ) throws(SpeedConversionError) -> Bool {
         let difference = try tas.mps - other.tas.mps
         return abs(difference) <= tolerance.mps
     }
 
     /// Whether this speed is slower than `other`, compared as TAS.
-    /// - Throws: `ContextCalculationError` if either speed can't be converted to TAS.
-    public func isSlower(than other: Speed) throws(ContextCalculationError) -> Bool {
+    /// - Throws: `SpeedConversionError` if either speed can't be converted to TAS.
+    public func isSlower(than other: Speed) throws(SpeedConversionError) -> Bool {
         try tas.mps < other.tas.mps
     }
 }

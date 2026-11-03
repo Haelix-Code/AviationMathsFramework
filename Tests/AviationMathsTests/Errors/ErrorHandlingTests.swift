@@ -11,26 +11,17 @@ final class ErrorHandlingTests: XCTestCase {
         let speed = Speed(knots: 200, reference: .equivalentAirspeed, context: context)
 
         XCTAssertThrowsError(try speed.tas) { error in
-            guard case ContextCalculationError.insufficientData(let calc, let missing) = error else {
-                XCTFail("Expected ContextCalculationError.insufficientData")
-                return
-            }
-            XCTAssertEqual(calc, "density")
-            XCTAssertTrue(missing.contains("pressureAltitude"))
+            XCTAssertEqual(error as? SpeedConversionError, .missingDensity)
         }
     }
 
-    func testSpeedConversion_ThrowsMissingTemperature() {
+    func testSpeedConversion_ThrowsMissingSpeedOfSound() {
         // Context without pressure altitude = no speed of sound
         let context = SpeedContext()
         let speed = Speed(knots: 250, reference: .trueAirspeed, context: context)
 
         XCTAssertThrowsError(try speed.mach) { error in
-            guard case ContextCalculationError.insufficientData(let calc, _) = error else {
-                XCTFail("Expected ContextCalculationError.insufficientData")
-                return
-            }
-            XCTAssertEqual(calc, "speedOfSound")
+            XCTAssertEqual(error as? SpeedConversionError, .missingSpeedOfSound)
         }
     }
 
@@ -110,12 +101,7 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()  // No altitude
 
         XCTAssertThrowsError(try context.density) { error in
-            guard case ContextCalculationError.insufficientData(let calc, let missing) = error else {
-                XCTFail("Expected ContextCalculationError.insufficientData")
-                return
-            }
-            XCTAssertEqual(calc, "density")
-            XCTAssertTrue(missing.contains("pressureAltitude"))
+            XCTAssertEqual(error as? SpeedConversionError, .missingDensity)
         }
     }
 
@@ -123,11 +109,15 @@ final class ErrorHandlingTests: XCTestCase {
         let context = SpeedContext()  // No altitude
 
         XCTAssertThrowsError(try context.speedOfSound) { error in
-            guard case ContextCalculationError.insufficientData(let calc, _) = error else {
-                XCTFail("Expected ContextCalculationError.insufficientData")
-                return
-            }
-            XCTAssertEqual(calc, "speedOfSound")
+            XCTAssertEqual(error as? SpeedConversionError, .missingSpeedOfSound)
+        }
+    }
+
+    func testSpeedContext_ThrowsErrorForRelativePressure() {
+        let context = SpeedContext()  // No altitude
+
+        XCTAssertThrowsError(try context.relativePressure) { error in
+            XCTAssertEqual(error as? SpeedConversionError, .missingRelativePressure)
         }
     }
 
@@ -158,13 +148,13 @@ final class ErrorHandlingTests: XCTestCase {
 
     func testErrors_DescribeThemselves_WhenHeldAsError() {
         let qnh: Error = AltitudeConversionError.missingQNH
-        let context: Error = ContextCalculationError.insufficientData(
-            calculation: "density",
-            missing: ["pressureAltitude"]
-        )
+        let density: Error = SpeedConversionError.missingDensity
 
         XCTAssertEqual(qnh.localizedDescription, "QNH required for pressure altitude conversions")
-        XCTAssertEqual(context.localizedDescription, "Cannot calculate density: missing pressureAltitude")
+        XCTAssertEqual(
+            density.localizedDescription,
+            "Air density needs a density, a measured pressure and temperature, or a pressure altitude"
+        )
         XCTAssertEqual(
             (CoordinateError.latitudeOutOfRange(95) as Error).localizedDescription,
             "Latitude must be between -90° and +90°, got 95.0°"
