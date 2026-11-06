@@ -17,30 +17,19 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
     // MARK: - Initializers
 
     /// Creates a validated speed context, throwing if data is incomplete.
-    public init(_ context: SpeedContext) throws {
-        guard let pa = context.pressureAltitude else {
-            throw ValidationError.missingPressureAltitude
-        }
-        guard let density = context.density else {
-            throw ValidationError.missingDensity
-        }
-        guard let sos = context.speedOfSound else {
-            throw ValidationError.missingSpeedOfSound
-        }
-        guard let delta = context.relativePressure else {
-            throw ValidationError.missingRelativePressure
+    public init(_ context: SpeedContext) throws(ValidationError) {
+        // The pressure altitude is every derived value's fallback, so with it none of them can
+        // be missing.
+        guard let pa = context.pressureAltitude,
+              let density = try? context.density,
+              let sos = try? context.speedOfSound,
+              let delta = try? context.relativePressure else {
+            throw .missingPressureAltitude
         }
 
-        // Check for NaN/Infinity
-        guard density.value.isFinite else {
-            throw ValidationError.invalidValue("density", density.value)
-        }
-        guard sos.value.isFinite else {
-            throw ValidationError.invalidValue("speedOfSound", sos.value)
-        }
-        guard delta.isFinite else {
-            throw ValidationError.invalidValue("relativePressure", delta)
-        }
+        guard density.value.isFinite else { throw .nonFinite(.density) }
+        guard sos.value.isFinite else { throw .nonFinite(.speedOfSound) }
+        guard delta.isFinite else { throw .nonFinite(.relativePressure) }
 
         self.raw = context
         self.pressureAltitude = pa
@@ -52,7 +41,7 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
     /// Creates a validated context from a validated altitude.
     ///
     /// This is the recommended way to create a speed context in BallisticMaths.
-    public init(at altitude: ValidatedAltitude) throws {
+    public init(at altitude: ValidatedAltitude) throws(ValidationError) {
         let context = SpeedContext.at(altitude: altitude.raw)
         try self.init(context)
     }
@@ -61,18 +50,36 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
 
     /// Standard ISA conditions at sea level - always valid.
     public static let standardISA: ValidatedSpeedContext = {
-        // This cannot fail - standardISA is always complete
-        // standardISA has every field, so validation can't fail.
-        // swiftlint:disable:next force_try
-        try! ValidatedSpeedContext(SpeedContext.standardISA)
+        do {
+            return try ValidatedSpeedContext(SpeedContext.standardISA)
+        } catch {
+            // Unreachable: SpeedContext.standardISA has a pressure altitude, temperature and density.
+            preconditionFailure("SpeedContext.standardISA failed validation: \(error)")
+        }
     }()
+
+    /// Decoding re-validates `raw`, so a decoded context keeps the guarantee that every
+    /// conversion succeeds.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let raw = try container.decode(SpeedContext.self, forKey: .raw)
+        do {
+            try self.init(raw)
+        } catch {
+            throw DecodingError.dataCorruptedError(
+                forKey: .raw,
+                in: container,
+                debugDescription: "Context isn't complete: \(error)"
+            )
+        }
+    }
 
     /// Creates a validated context from QNH and AMSL with measured temperature.
     public static func fromQNHAndAMSL(
         qnh: Measurement<UnitPressure>,
         amsl: Measurement<UnitLength>,
         measuredTemperature: Measurement<UnitTemperature>
-    ) throws -> ValidatedSpeedContext {
+    ) throws(ValidationError) -> ValidatedSpeedContext {
         let context = SpeedContext.fromQNHAndAMSL(
             qnh: qnh,
             amsl: amsl,
@@ -83,25 +90,24 @@ public struct ValidatedSpeedContext: Sendable, Equatable, Codable {
 
     // MARK: - Errors
 
-    public enum ValidationError: Error, LocalizedError, Sendable {
+    /// A value validation derives from the context.
+    public enum Quantity: Equatable, Sendable {
+        case density
+        case speedOfSound
+        case relativePressure
+    }
+
+    public enum ValidationError: Error, Equatable, Sendable, LocalizedError {
         case missingPressureAltitude
-        case missingDensity
-        case missingSpeedOfSound
-        case missingRelativePressure
-        case invalidValue(String, Double)
+        /// A derived value is NaN or infinite, e.g. from a NaN pressure altitude.
+        case nonFinite(Quantity)
 
         public var errorDescription: String? {
             switch self {
             case .missingPressureAltitude:
                 return "SpeedContext missing pressure altitude"
-            case .missingDensity:
-                return "SpeedContext missing density (requires pressure altitude)"
-            case .missingSpeedOfSound:
-                return "SpeedContext missing speed of sound (requires temperature)"
-            case .missingRelativePressure:
-                return "SpeedContext missing relative pressure"
-            case .invalidValue(let name, let value):
-                return "SpeedContext has invalid \(name): \(value)"
+            case .nonFinite(let quantity):
+                return "SpeedContext's \(quantity) isn't a finite number"
             }
         }
     }
@@ -114,7 +120,7 @@ extension SpeedContext {
     }
 
     /// Creates a validated version, throwing on failure.
-    public func asValidated() throws -> ValidatedSpeedContext {
+    public func asValidated() throws(ValidatedSpeedContext.ValidationError) -> ValidatedSpeedContext {
         try ValidatedSpeedContext(self)
     }
 }

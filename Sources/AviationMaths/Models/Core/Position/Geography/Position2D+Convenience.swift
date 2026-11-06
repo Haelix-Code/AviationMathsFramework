@@ -1,12 +1,13 @@
 import Vincenty
 
 extension Position2D {
-    public init(coordinate: GeodeticCoordinate) {
+    /// - Throws: `CoordinateError` if a component isn't a finite number.
+    public init(coordinate: GeodeticCoordinate) throws(CoordinateError) {
         // Geodesic math (e.g. a destination point computed right at a pole or across the
-        // antimeridian) can overshoot the valid range by floating-point noise; clamp rather
-        // than let the precondition in Latitude/Longitude's initializer trap on it.
-        self.latitude = Latitude(decimalDegrees: coordinate.latitude.clamped(to: Latitude.validRange))
-        self.longitude = Longitude(decimalDegrees: coordinate.longitude.clamped(to: Longitude.validRange))
+        // antimeridian) can overshoot the valid range by floating-point noise; clamp that rather
+        // than reject it. NaN passes through clamping, so it still throws.
+        self.latitude = try Latitude(decimalDegrees: coordinate.latitude.clamped(to: Latitude.validRange))
+        self.longitude = try Longitude(decimalDegrees: coordinate.longitude.clamped(to: Longitude.validRange))
     }
 
     public var latitudeDecimalDegrees: Double {

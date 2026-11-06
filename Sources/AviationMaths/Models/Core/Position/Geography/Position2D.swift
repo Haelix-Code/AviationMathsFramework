@@ -9,9 +9,9 @@ public struct Position2D: Equatable, Hashable, Codable, Sendable {
         self.longitude = longitude
     }
 
-    public init(latitude: Double, longitude: Double) {
-        self.latitude = Latitude(decimalDegrees: latitude)
-        self.longitude = Longitude(decimalDegrees: longitude)
+    public init(latitude: Double, longitude: Double) throws(CoordinateError) {
+        self.latitude = try Latitude(decimalDegrees: latitude)
+        self.longitude = try Longitude(decimalDegrees: longitude)
     }
 
     public init(
@@ -19,9 +19,9 @@ public struct Position2D: Equatable, Hashable, Codable, Sendable {
         latitudeDirection: LatitudeDirection,
         longitudeDMS: DegreesMinutesSeconds,
         longitudeDirection: LongitudeDirection
-    ) {
-        self.latitude = Latitude(dms: latitudeDMS, direction: latitudeDirection)
-        self.longitude = Longitude(dms: longitudeDMS, direction: longitudeDirection)
+    ) throws(CoordinateError) {
+        self.latitude = try Latitude(dms: latitudeDMS, direction: latitudeDirection)
+        self.longitude = try Longitude(dms: longitudeDMS, direction: longitudeDirection)
     }
 
     public init(
@@ -29,9 +29,9 @@ public struct Position2D: Equatable, Hashable, Codable, Sendable {
         latitudeDirection: LatitudeDirection,
         longitudeDDM: DegreesDecimalMinutes,
         longitudeDirection: LongitudeDirection
-    ) {
-        self.latitude = Latitude(ddm: latitudeDDM, direction: latitudeDirection)
-        self.longitude = Longitude(ddm: longitudeDDM, direction: longitudeDirection)
+    ) throws(CoordinateError) {
+        self.latitude = try Latitude(ddm: latitudeDDM, direction: latitudeDirection)
+        self.longitude = try Longitude(ddm: longitudeDDM, direction: longitudeDirection)
     }
 
     public init(
@@ -43,14 +43,14 @@ public struct Position2D: Equatable, Hashable, Codable, Sendable {
         lonMinutes: Int,
         lonSeconds: Double,
         lonDirection: LongitudeDirection
-    ) {
-        self.latitude = Latitude(
+    ) throws(CoordinateError) {
+        self.latitude = try Latitude(
             degrees: latDegrees,
             minutes: latMinutes,
             seconds: latSeconds,
             direction: latDirection
         )
-        self.longitude = Longitude(
+        self.longitude = try Longitude(
             degrees: lonDegrees,
             minutes: lonMinutes,
             seconds: lonSeconds,

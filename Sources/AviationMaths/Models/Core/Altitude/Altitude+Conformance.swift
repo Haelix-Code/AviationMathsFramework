@@ -8,14 +8,17 @@ import Foundation
 extension Altitude {
     /// Whether both altitudes are at the same level, compared as AMSL within `tolerance`.
     /// - Throws: `AltitudeConversionError` if either altitude can't be converted to AMSL.
-    public func isSameLevel(as other: Altitude, tolerance: Measurement<UnitLength>) throws -> Bool {
+    public func isSameLevel(
+        as other: Altitude,
+        tolerance: Measurement<UnitLength>
+    ) throws(AltitudeConversionError) -> Bool {
         let difference = try value(in: .amsl).meters - other.value(in: .amsl).meters
         return abs(difference) <= tolerance.meters
     }
 
     /// Whether this altitude is below `other`, compared as AMSL.
     /// - Throws: `AltitudeConversionError` if either altitude can't be converted to AMSL.
-    public func isBelow(_ other: Altitude) throws -> Bool {
+    public func isBelow(_ other: Altitude) throws(AltitudeConversionError) -> Bool {
         try value(in: .amsl).meters < other.value(in: .amsl).meters
     }
 }

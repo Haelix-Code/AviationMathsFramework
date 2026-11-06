@@ -10,8 +10,10 @@ public struct ValidatedAltitude: Sendable, Equatable {
 
     // MARK: - Initializers
 
-    public init(_ altitude: Altitude) {
-        self.validatedContext = ValidatedAltitudeContext(altitude.context)
+    /// - Throws: `AltitudeConversionError` if the altitude's context is incomplete
+    ///   (see `ValidatedAltitudeContext.init(_:)`).
+    public init(_ altitude: Altitude) throws(AltitudeConversionError) {
+        self.validatedContext = try ValidatedAltitudeContext(altitude.context)
         self.raw = altitude
     }
 
@@ -24,13 +26,13 @@ public struct ValidatedAltitude: Sendable, Equatable {
         self.raw = Altitude(value: value, reference: reference, context: context.raw)
     }
 
-    // MARK: - Safe Accessors (Guaranteed Non-Crashing)
+    // MARK: - Accessors (No `try`: the validated context has everything a conversion needs)
 
-    public var agl: Measurement<UnitLength> { raw.agl }
-    public var amsl: Measurement<UnitLength> { raw.amsl }
-    public var pressureAltitude: Measurement<UnitLength> { raw.pressureAltitude }
-    public var trueAltitude: Measurement<UnitLength> { raw.trueAltitude }
-    public var geopotential: Measurement<UnitLength> { raw.geopotential }
+    public var agl: Measurement<UnitLength> { value(in: .agl) }
+    public var amsl: Measurement<UnitLength> { value(in: .amsl) }
+    public var pressureAltitude: Measurement<UnitLength> { value(in: .pressureAltitude) }
+    public var trueAltitude: Measurement<UnitLength> { value(in: .trueAltitude) }
+    public var geopotential: Measurement<UnitLength> { value(in: .geopotential) }
 
     public var reference: VerticalReference { raw.reference }
     public var value: Measurement<UnitLength> { raw.value }
@@ -39,12 +41,12 @@ public struct ValidatedAltitude: Sendable, Equatable {
     // MARK: - Conversion
 
     public func value(in reference: VerticalReference) -> Measurement<UnitLength> {
-        switch reference {
-        case .agl: return raw.agl
-        case .amsl: return raw.amsl
-        case .pressureAltitude: return raw.pressureAltitude
-        case .trueAltitude: return raw.trueAltitude
-        case .geopotential: return raw.geopotential
+        do {
+            return try raw.value(in: reference)
+        } catch {
+            // Unreachable: ValidatedAltitudeContext guarantees ground elevation, QNH and a
+            // temperature profile, which is everything any conversion needs.
+            preconditionFailure("Validated altitude couldn't convert to \(reference): \(error)")
         }
     }
 
@@ -75,7 +77,6 @@ extension ValidatedAltitude {
 
 extension Altitude {
     public var validated: ValidatedAltitude? {
-        guard context.isComplete else { return nil }
-        return ValidatedAltitude(self)
+        try? ValidatedAltitude(self)
     }
 }

@@ -19,16 +19,16 @@ final class EdgeCaseTests: XCTestCase {
 
     // MARK: - Boundary Values
 
-    func testLatitude_AtBoundaries() {
-        let north = Latitude(decimalDegrees: 90)
-        let south = Latitude(decimalDegrees: -90)
+    func testLatitude_AtBoundaries() throws {
+        let north = try Latitude(decimalDegrees: 90)
+        let south = try Latitude(decimalDegrees: -90)
         XCTAssertEqual(north.decimalDegrees, 90)
         XCTAssertEqual(south.decimalDegrees, -90)
     }
 
-    func testLongitude_AtBoundaries() {
-        let east = Longitude(decimalDegrees: 180)
-        let west = Longitude(decimalDegrees: -180)
+    func testLongitude_AtBoundaries() throws {
+        let east = try Longitude(decimalDegrees: 180)
+        let west = try Longitude(decimalDegrees: -180)
         XCTAssertEqual(east.decimalDegrees, 180)
         XCTAssertEqual(west.decimalDegrees, -180)
     }
@@ -46,9 +46,9 @@ final class EdgeCaseTests: XCTestCase {
         let context = SpeedContext.standardISA
         let speed = Speed(knots: 0, reference: .trueAirspeed, context: context)
 
-        XCTAssertEqual(speed.mach, 0)
-        XCTAssertEqual(speed.cas.knots, 0)
-        XCTAssertEqual(speed.eas.knots, 0)
+        XCTAssertEqual(try speed.mach, 0)
+        XCTAssertEqual(try speed.cas.knots, 0)
+        XCTAssertEqual(try speed.eas.knots, 0)
     }
 
     func testSpeed_VeryHighMach() {
@@ -60,8 +60,8 @@ final class EdgeCaseTests: XCTestCase {
 
         // Mach 2 should still produce valid numbers (even if not physically accurate for all equations)
         let speed = Speed(mach: 2.0, context: context)
-        XCTAssertGreaterThan(speed.tas.knots, 0)
-        XCTAssertFalse(speed.tas.knots.isNaN)
+        XCTAssertGreaterThan(try speed.tas.knots, 0)
+        XCTAssertFalse(try speed.tas.knots.isNaN)
     }
 
     // MARK: - ISA Boundary

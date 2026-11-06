@@ -11,41 +11,40 @@ public struct Longitude: AngularCoordinate {
         LongitudeDirection(decimalDegrees: decimalDegrees)
     }
 
-    public init(decimalDegrees: Double) {
-        precondition(
-            Self.validRange.contains(decimalDegrees),
-            "Longitude must be between -180° and +180°, got \(decimalDegrees)°"
-        )
+    /// - Throws: `CoordinateError.longitudeOutOfRange` unless `decimalDegrees` is within ±180° (so also for NaN).
+    public init(decimalDegrees: Double) throws(CoordinateError) {
+        guard Self.validRange.contains(decimalDegrees) else {
+            throw .longitudeOutOfRange(decimalDegrees)
+        }
         self.decimalDegrees = decimalDegrees
     }
 
-    public init(degrees: Double, direction: LongitudeDirection) {
+    public init(degrees: Double, direction: LongitudeDirection) throws(CoordinateError) {
         let value = abs(degrees) * direction.sign
-        self.init(decimalDegrees: value)
+        try self.init(decimalDegrees: value)
     }
 
-    public init(measurement: Measurement<UnitAngle>) {
-        self.init(decimalDegrees: measurement.converted(to: .degrees).value)
+    public init(measurement: Measurement<UnitAngle>) throws(CoordinateError) {
+        try self.init(decimalDegrees: measurement.converted(to: .degrees).value)
     }
 
-    public init(dms: DegreesMinutesSeconds, direction: LongitudeDirection) {
+    public init(dms: DegreesMinutesSeconds, direction: LongitudeDirection) throws(CoordinateError) {
         let decimal = dms.asDecimalDegrees
-        self.init(degrees: decimal, direction: direction)
+        try self.init(degrees: decimal, direction: direction)
     }
 
-    public init(ddm: DegreesDecimalMinutes, direction: LongitudeDirection) {
+    public init(ddm: DegreesDecimalMinutes, direction: LongitudeDirection) throws(CoordinateError) {
         let decimal = ddm.asDecimalDegrees
-        self.init(degrees: decimal, direction: direction)
+        try self.init(degrees: decimal, direction: direction)
     }
 
-    public init(degrees: Int, minutes: Int, seconds: Double, direction: LongitudeDirection) {
+    public init(degrees: Int, minutes: Int, seconds: Double, direction: LongitudeDirection) throws(CoordinateError) {
         let dms = DegreesMinutesSeconds(degrees: degrees, minutes: minutes, seconds: seconds)
-        self.init(dms: dms, direction: direction)
+        try self.init(dms: dms, direction: direction)
     }
 
-    public init(degrees: Int, minutes: Double, direction: LongitudeDirection) {
+    public init(degrees: Int, minutes: Double, direction: LongitudeDirection) throws(CoordinateError) {
         let ddm = DegreesDecimalMinutes(degrees: degrees, minutes: minutes)
-        self.init(ddm: ddm, direction: direction)
+        try self.init(ddm: ddm, direction: direction)
     }
-
 }

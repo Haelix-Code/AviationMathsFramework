@@ -23,54 +23,38 @@ public struct Altitude: Codable, Hashable, Sendable {
 
     // MARK: - Computed Properties for Each Reference
 
-    /// Above ground level altitude
-   /// - Warning: This computed property uses `try!` and will crash if context lacks ground elevation.
-   ///   For error handling use `try value(in: .agl)`, or `try? value(in: .agl)` for optional return.
-   ///   From 0.4.0 this property throws instead of trapping.
-   public var agl: Measurement<UnitLength> {
-       // swiftlint:disable:next force_try
-       reference == .agl ? value : try! convertToAGLThrowing()
-   }
+    /// Above ground level altitude.
+    /// - Throws: `AltitudeConversionError` if the context lacks the data the conversion needs.
+    public var agl: Measurement<UnitLength> {
+        get throws(AltitudeConversionError) { try value(in: .agl) }
+    }
 
-   /// Above mean sea level altitude
-   /// - Warning: This computed property uses `try!` and will crash if context is insufficient.
-   ///   For error handling use `try value(in: .amsl)`, or `try? value(in: .amsl)` for optional return.
-   ///   From 0.4.0 this property throws instead of trapping.
-   public var amsl: Measurement<UnitLength> {
-       // swiftlint:disable:next force_try
-       reference == .amsl ? value : try! convertToAMSLThrowing()
-   }
+    /// Above mean sea level altitude.
+    /// - Throws: `AltitudeConversionError` if the context lacks the data the conversion needs.
+    public var amsl: Measurement<UnitLength> {
+        get throws(AltitudeConversionError) { try value(in: .amsl) }
+    }
 
-   /// Pressure altitude
-   /// - Warning: This computed property uses `try!` and will crash if context lacks QNH.
-   ///   For error handling use `try value(in: .pressureAltitude)`, or `try? value(in: .pressureAltitude)`
-   ///   for optional return.
-   ///   From 0.4.0 this property throws instead of trapping.
-   public var pressureAltitude: Measurement<UnitLength> {
-       // swiftlint:disable:next force_try
-       reference == .pressureAltitude ? value : try! convertToPressureAltitudeThrowing()
-   }
+    /// Pressure altitude.
+    /// - Throws: `AltitudeConversionError` if the context lacks the data the conversion needs.
+    public var pressureAltitude: Measurement<UnitLength> {
+        get throws(AltitudeConversionError) { try value(in: .pressureAltitude) }
+    }
 
-   /// True altitude
-   /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
-   ///   For error handling use `try value(in: .trueAltitude)`, or `try? value(in: .trueAltitude)` for optional return.
-   ///   From 0.4.0 this property throws instead of trapping.
-   public var trueAltitude: Measurement<UnitLength> {
-       // swiftlint:disable:next force_try
-       reference == .trueAltitude ? value : try! convertToTrueAltitudeThrowing()
-   }
+    /// True altitude.
+    /// - Throws: `AltitudeConversionError` if the context lacks the data the conversion needs.
+    public var trueAltitude: Measurement<UnitLength> {
+        get throws(AltitudeConversionError) { try value(in: .trueAltitude) }
+    }
 
-   /// Geopotential altitude (accounting for gravity variation with height)
-   /// Geopotential altitude uses a constant gravity model (g₀ = 9.80665 m/s²).
-   /// This is the altitude reference used internally by the ISA standard atmosphere.
-   /// - Note: This conversion requires true altitude, which in turn requires a temperature profile.
-   /// - Warning: This computed property uses `try!` and will crash if context lacks temperature profile.
-   ///   For error handling use `try value(in: .geopotential)`, or `try? value(in: .geopotential)` for optional return.
-   ///   From 0.4.0 this property throws instead of trapping.
-   public var geopotential: Measurement<UnitLength> {
-       // swiftlint:disable:next force_try
-       reference == .geopotential ? value : try! convertToGeopotentialThrowing()
-   }
+    /// Geopotential altitude (accounting for gravity variation with height)
+    /// Geopotential altitude uses a constant gravity model (g₀ = 9.80665 m/s²).
+    /// This is the altitude reference used internally by the ISA standard atmosphere.
+    /// - Note: This conversion requires true altitude, which in turn requires a temperature profile.
+    /// - Throws: `AltitudeConversionError` if the context lacks the data the conversion needs.
+    public var geopotential: Measurement<UnitLength> {
+        get throws(AltitudeConversionError) { try value(in: .geopotential) }
+    }
 
     // MARK: - Geopotential Conversion
 
@@ -84,35 +68,5 @@ public struct Altitude: Codable, Hashable, Sendable {
         // h = (r × H) / (r - H)
         let h = (r * H) / (r - H)
         return .init(meters: h)
-    }
-}
-
-// MARK: - Convenience Properties
-
-extension Altitude {
-    /// Create a new Altitude in a different reference frame.
-    /// Returns nil if the conversion is not possible with the current context.
-    public func `in`(_ newReference: VerticalReference) -> Altitude? {
-        guard canConvert(to: newReference) else { return nil }
-
-        let newValue: Measurement<UnitLength>
-        switch newReference {
-        case .agl: newValue = agl
-        case .amsl: newValue = amsl
-        case .pressureAltitude: newValue = pressureAltitude
-        case .trueAltitude: newValue = trueAltitude
-        case .geopotential: newValue = geopotential
-        }
-        return Altitude(value: newValue, reference: newReference, context: context)
-    }
-
-    /// Create a new Altitude in a different reference frame.
-    /// Crashes if the conversion is not possible.
-    /// - Note: From 0.4.0 this throws instead of trapping.
-    public func converted(to newReference: VerticalReference) -> Altitude {
-        guard let result = self.in(newReference) else {
-            preconditionFailure("Cannot convert from \(reference) to \(newReference) with current context")
-        }
-        return result
     }
 }

@@ -13,21 +13,10 @@ public struct AltitudeContext: Sendable, Hashable, Codable {
 
     public let lapseRate: Double?
 
-    /// Surface temperature (at ground elevation)
-    public var surfaceTemperature: Measurement<UnitTemperature>? {
-        try? surfaceTemperatureThrowing()
-    }
-
-    /// Sea level temperature (at height = 0). When a surface temperature is also given,
-    /// and it can be extrapolated down, it takes precedence (see `init`).
-    public var seaLevelTemperature: Measurement<UnitTemperature>? {
-        try? seaLevelTemperatureThrowing()
-    }
-
     /// Whether this context has sufficient data for true altitude calculations: a
     /// temperature profile, and QNH to fix the pressure at sea level.
     public var canCalculateTrueAltitude: Bool {
-        seaLevelTemperature != nil && lapseRate != nil && qnh != nil
+        (try? seaLevelTemperature) != nil && lapseRate != nil && qnh != nil
     }
 
     /// Whether this context has sufficient data for AGL calculations
@@ -182,7 +171,7 @@ public struct AltitudeContext: Sendable, Hashable, Codable {
     /// Calculate temperature at any altitude using the temperature model: the lapse rate
     /// up to 11 km, then the ISA layers offset by the ΔISA reached at 11 km (ISA + ΔISA).
     public func temperature(at altitude: Measurement<UnitLength>) -> Measurement<UnitTemperature>? {
-        guard let slTemp = seaLevelTemperature,
+        guard let slTemp = try? seaLevelTemperature,
               let rate = lapseRate else {
             return nil
         }
