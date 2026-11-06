@@ -8,9 +8,9 @@ final class SpeedContextTests: XCTestCase {
 
         XCTAssertNotNil(context.pressureAltitude)
         XCTAssertEqual(context.pressureAltitude?.meters, 0)
-        XCTAssertNotNil(context.density)
-        XCTAssertNotNil(context.speedOfSound)
-        XCTAssertNotNil(context.relativePressure)
+        XCTAssertNoThrow(try context.density)
+        XCTAssertNoThrow(try context.speedOfSound)
+        XCTAssertNoThrow(try context.relativePressure)
     }
 
     func testCustomContext() {
@@ -20,15 +20,15 @@ final class SpeedContextTests: XCTestCase {
         )
 
         XCTAssertNotNil(context.pressureAltitude)
-        XCTAssertNotNil(context.density)
-        XCTAssertNotNil(context.speedOfSound)
-        XCTAssertNotNil(context.relativePressure)
+        XCTAssertNoThrow(try context.density)
+        XCTAssertNoThrow(try context.speedOfSound)
+        XCTAssertNoThrow(try context.relativePressure)
     }
 
-    func testDensityCalculation_SeaLevel() {
+    func testDensityCalculation_SeaLevel() throws {
         let context = SpeedContext.standardISA
 
-        guard let density = context.density else {
+        guard let density = try? context.density else {
             XCTFail("Density should be calculated")
             return
         }
@@ -36,13 +36,13 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertEqual(density.value, 1.225, accuracy: 0.001)
     }
 
-    func testDensityCalculation_10000ft() {
+    func testDensityCalculation_10000ft() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 10000),
             deltaISA: .init(kelvin: 0)
         )
 
-        guard let density = context.density else {
+        guard let density = try? context.density else {
             XCTFail("Density should be calculated")
             return
         }
@@ -57,13 +57,13 @@ final class SpeedContextTests: XCTestCase {
             density: directDensity
         )
 
-        XCTAssertEqual(context.density!.value, 0.85, accuracy: 0.001)
+        XCTAssertEqual((try context.density).value, 0.85, accuracy: 0.001)
     }
 
-    func testSpeedOfSound_SeaLevel() {
+    func testSpeedOfSound_SeaLevel() throws {
         let context = SpeedContext.standardISA
 
-        guard let speedOfSound = context.speedOfSound else {
+        guard let speedOfSound = try? context.speedOfSound else {
             XCTFail("Speed of sound should be calculated")
             return
         }
@@ -71,13 +71,13 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertEqual(speedOfSound.mps, 340.294, accuracy: 0.01)
     }
 
-    func testSpeedOfSound_10000ft() {
+    func testSpeedOfSound_10000ft() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 10000),
             deltaISA: .init(kelvin: 0)
         )
 
-        guard let speedOfSound = context.speedOfSound else {
+        guard let speedOfSound = try? context.speedOfSound else {
             XCTFail("Speed of sound should be calculated")
             return
         }
@@ -86,7 +86,7 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertEqual(speedOfSound.mps, 325, accuracy: 5)
     }
 
-    func testSpeedOfSound_HotDay() {
+    func testSpeedOfSound_HotDay() throws {
         let standardContext = SpeedContext(
             pressureAltitude: .init(feet: 10000),
             deltaISA: .init(kelvin: 0)
@@ -97,16 +97,16 @@ final class SpeedContextTests: XCTestCase {
             deltaISA: .init(kelvin: 20)
         )
 
-        let standardSpeed = standardContext.speedOfSound!.mps
-        let hotSpeed = hotContext.speedOfSound!.mps
+        let standardSpeed = try standardContext.speedOfSound.mps
+        let hotSpeed = try hotContext.speedOfSound.mps
 
         XCTAssertGreaterThan(hotSpeed, standardSpeed)
     }
 
-    func testRelativePressure_SeaLevel() {
+    func testRelativePressure_SeaLevel() throws {
         let context = SpeedContext.standardISA
 
-        guard let delta = context.relativePressure else {
+        guard let delta = try? context.relativePressure else {
             XCTFail("Relative pressure should be calculated")
             return
         }
@@ -114,13 +114,13 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertEqual(delta, 1.0, accuracy: 0.001)
     }
 
-    func testRelativePressure_10000ft() {
+    func testRelativePressure_10000ft() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 10000),
             deltaISA: .init(kelvin: 0)
         )
 
-        guard let delta = context.relativePressure else {
+        guard let delta = try? context.relativePressure else {
             XCTFail("Relative pressure should be calculated")
             return
         }
@@ -128,13 +128,13 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertEqual(delta, 0.687, accuracy: 0.01)
     }
 
-    func testRelativePressure_20000ft() {
+    func testRelativePressure_20000ft() throws {
         let context = SpeedContext(
             pressureAltitude: .init(feet: 20000),
             deltaISA: .init(kelvin: 0)
         )
 
-        guard let delta = context.relativePressure else {
+        guard let delta = try? context.relativePressure else {
             XCTFail("Relative pressure should be calculated")
             return
         }
@@ -142,7 +142,7 @@ final class SpeedContextTests: XCTestCase {
         XCTAssertEqual(delta, 0.460, accuracy: 0.01)
     }
 
-    func testDeltaISA_Effect_OnDensity() {
+    func testDeltaISA_Effect_OnDensity() throws {
         let standardContext = SpeedContext(
             pressureAltitude: .init(feet: 10000),
             deltaISA: .init(kelvin: 0)
@@ -153,13 +153,13 @@ final class SpeedContextTests: XCTestCase {
             deltaISA: .init(kelvin: 20)
         )
 
-        let standardDensity = standardContext.density!.value
-        let hotDensity = hotContext.density!.value
+        let standardDensity = try standardContext.density.value
+        let hotDensity = try hotContext.density.value
 
         XCTAssertLessThan(hotDensity, standardDensity)
     }
 
-    func testDeltaISA_Effect_OnSpeedOfSound() {
+    func testDeltaISA_Effect_OnSpeedOfSound() throws {
         let standardContext = SpeedContext(
             pressureAltitude: .init(feet: 10000),
             deltaISA: .init(kelvin: 0)
@@ -170,8 +170,8 @@ final class SpeedContextTests: XCTestCase {
             deltaISA: .init(kelvin: 20)
         )
 
-        let standardSpeed = standardContext.speedOfSound!.mps
-        let hotSpeed = hotContext.speedOfSound!.mps
+        let standardSpeed = try standardContext.speedOfSound.mps
+        let hotSpeed = try hotContext.speedOfSound.mps
 
         XCTAssertGreaterThan(hotSpeed, standardSpeed)
 
@@ -183,9 +183,9 @@ final class SpeedContextTests: XCTestCase {
         let context = SpeedContext()
 
         XCTAssertNil(context.pressureAltitude)
-        XCTAssertNil(context.density)
-        XCTAssertNil(context.speedOfSound)
-        XCTAssertNil(context.relativePressure)
+        XCTAssertThrowsError(try context.density)
+        XCTAssertThrowsError(try context.speedOfSound)
+        XCTAssertThrowsError(try context.relativePressure)
     }
 
     func testContextWithDensityButNoAltitude() {
@@ -194,14 +194,14 @@ final class SpeedContextTests: XCTestCase {
         )
 
         XCTAssertNil(context.pressureAltitude)
-        XCTAssertNotNil(context.density)
-        XCTAssertNil(context.speedOfSound)
-        XCTAssertNil(context.relativePressure)
+        XCTAssertNoThrow(try context.density)
+        XCTAssertThrowsError(try context.speedOfSound)
+        XCTAssertThrowsError(try context.relativePressure)
 
-        XCTAssertEqual(context.density?.value, 1.0)
+        XCTAssertEqual((try? context.density)?.value, 1.0)
     }
 
-    func testDensityDecreasesWithAltitude() {
+    func testDensityDecreasesWithAltitude() throws {
         let altitudes: [Double] = [0, 5000, 10000, 20000, 30000]
         var previousDensity = Double.infinity
 
@@ -211,14 +211,14 @@ final class SpeedContextTests: XCTestCase {
                 deltaISA: .init(kelvin: 0)
             )
 
-            let density = context.density!.value
+            let density = try context.density.value
 
             XCTAssertLessThan(density, previousDensity)
             previousDensity = density
         }
     }
 
-    func testPressureDecreasesWithAltitude() {
+    func testPressureDecreasesWithAltitude() throws {
         let altitudes: [Double] = [0, 5000, 10000, 20000, 30000]
         var previousDelta = Double.infinity
 
@@ -228,14 +228,14 @@ final class SpeedContextTests: XCTestCase {
                 deltaISA: .init(kelvin: 0)
             )
 
-            let delta = context.relativePressure!
+            let delta = (try context.relativePressure)
 
             XCTAssertLessThan(delta, previousDelta)
             previousDelta = delta
         }
     }
 
-    func testSpeedOfSoundDecreasesWithAltitude() {
+    func testSpeedOfSoundDecreasesWithAltitude() throws {
         let altitudes: [Double] = [0, 5000, 10000]
         var previousSpeed = Double.infinity
 
@@ -245,7 +245,7 @@ final class SpeedContextTests: XCTestCase {
                 deltaISA: .init(kelvin: 0)
             )
 
-            let speed = context.speedOfSound!.mps
+            let speed = try context.speedOfSound.mps
 
             XCTAssertLessThan(speed, previousSpeed)
             previousSpeed = speed
@@ -257,12 +257,12 @@ final class SpeedContextTests: XCTestCase {
             pressureAltitude: .init(feet: -282),
             deltaISA: .init(kelvin: 0)
         )
-        XCTAssertNotNil(context.density)
-        XCTAssertNotNil(context.speedOfSound)
-        XCTAssertNotNil(context.relativePressure)
-        XCTAssertGreaterThan(context.density!.value, 1.225)
+        XCTAssertNoThrow(try context.density)
+        XCTAssertNoThrow(try context.speedOfSound)
+        XCTAssertNoThrow(try context.relativePressure)
+        XCTAssertGreaterThan((try context.density).value, 1.225)
 
-        XCTAssertGreaterThan(context.relativePressure!, 1.0)
+        XCTAssertGreaterThan((try context.relativePressure), 1.0)
     }
 
     func testExtremeCold() {
@@ -271,10 +271,10 @@ final class SpeedContextTests: XCTestCase {
             deltaISA: .init(kelvin: -50)
         )
 
-        XCTAssertNotNil(context.density)
-        XCTAssertNotNil(context.speedOfSound)
+        XCTAssertNoThrow(try context.density)
+        XCTAssertNoThrow(try context.speedOfSound)
 
-        XCTAssertGreaterThan(context.density!.value, 1.0)
+        XCTAssertGreaterThan((try context.density).value, 1.0)
     }
 
     func testExtremeHeat() {
@@ -283,10 +283,10 @@ final class SpeedContextTests: XCTestCase {
             deltaISA: .init(kelvin: 50)
         )
 
-        XCTAssertNotNil(context.density)
-        XCTAssertNotNil(context.speedOfSound)
+        XCTAssertNoThrow(try context.density)
+        XCTAssertNoThrow(try context.speedOfSound)
 
-        XCTAssertEqual(context.density!.value, 1.04, accuracy: 0.01)
+        XCTAssertEqual((try context.density).value, 1.04, accuracy: 0.01)
     }
 
     /// `SpeedContext.at(altitude:)` routes a QNH-bearing altitude through
@@ -299,17 +299,17 @@ final class SpeedContextTests: XCTestCase {
     /// Correct: pressureAltitude should be derivable (QNH → ISA pressure →
     /// pressure altitude), and speedOfSound should be computable from the known
     /// temperature regardless.
-    func testAtAltitude_WithQNH_ProducesPressureAltitudeAndSpeedOfSound() {
+    func testAtAltitude_WithQNH_ProducesPressureAltitudeAndSpeedOfSound() throws {
         let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: .standardISA)
 
         let speedContext = SpeedContext.at(altitude: altitude)
 
         XCTAssertNotNil(speedContext.pressureAltitude, "QNH is known, so pressure altitude should be derivable")
-        XCTAssertNotNil(speedContext.speedOfSound, "Temperature is known, so speed of sound should be derivable")
+        XCTAssertNoThrow(try speedContext.speedOfSound, "Temperature is known, so speed of sound should be derivable")
         if let pa = speedContext.pressureAltitude {
             XCTAssertEqual(pa.feet, 5000, accuracy: 1)
         }
-        if let sos = speedContext.speedOfSound {
+        if let sos = try? speedContext.speedOfSound {
             XCTAssertEqual(sos.mps, ISA.speedOfSound(at: .init(feet: 5000)).mps, accuracy: 1)
         }
     }
@@ -321,7 +321,7 @@ final class SpeedContextTests: XCTestCase {
     /// the temperature at 5,000ft. The correct temperature at 5,000ft, found by
     /// applying the context's own (lapse-rate-derived) temperature model via
     /// `AltitudeContext.temperature(at:)`, is +2.5°C.
-    func testAtAltitude_UsesLapseAdjustedTemperature_NotRawTemperatureAtReference() {
+    func testAtAltitude_UsesLapseAdjustedTemperature_NotRawTemperatureAtReference() throws {
         let context = AltitudeContext(
             groundElevation: .surface,
             qnh: ISA.seaLevelPressure,
@@ -332,7 +332,7 @@ final class SpeedContextTests: XCTestCase {
         )
         let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: context)
 
-        let correctTemperature = context.temperature(at: altitude.amsl)
+        let correctTemperature = context.temperature(at: try altitude.amsl)
         XCTAssertNotNil(correctTemperature, "Lapse rate should be derivable from the context above")
 
         let speedContext = SpeedContext.at(altitude: altitude)
@@ -349,7 +349,7 @@ final class SpeedContextTests: XCTestCase {
         // rate all present), so that ValidatedAltitude's own (unrelated,
         // fatalError-based) completeness check does not fire and mask H1.
         let altitude = Altitude(value: .init(feet: 5000), reference: .amsl, context: .standardISA)
-        let validatedAltitude = ValidatedAltitude(altitude)
+        let validatedAltitude = try ValidatedAltitude(altitude)
 
         XCTAssertNoThrow(try ValidatedSpeedContext(at: validatedAltitude))
     }
@@ -383,7 +383,68 @@ final class SpeedContextTests: XCTestCase {
 
         let speedContext = SpeedContext.at(altitude: Altitude(feet: 5000, reference: .amsl, context: context))
 
-        XCTAssertNil(speedContext.relativePressure)
+        XCTAssertThrowsError(try speedContext.relativePressure)
         XCTAssertNotNil(speedContext.temperature)
+    }
+
+    func testDerivedValues_Throw_WhenTheyCannotBeCalculated() {
+        XCTAssertThrowsError(try SpeedContext().density) {
+            XCTAssertEqual($0 as? SpeedConversionError, .missingDensity)
+        }
+        XCTAssertThrowsError(try SpeedContext().speedOfSound) {
+            XCTAssertEqual($0 as? SpeedConversionError, .missingSpeedOfSound)
+        }
+        XCTAssertThrowsError(try SpeedContext().relativePressure) {
+            XCTAssertEqual($0 as? SpeedConversionError, .missingRelativePressure)
+        }
+    }
+
+    func testValidatedSpeedContext_Throws_WithoutPressureAltitude() {
+        let context = SpeedContext(
+            temperature: .init(celsius: 15),
+            density: ISA.seaLevelDensity,
+            measuredPressure: ISA.seaLevelPressure
+        )
+
+        XCTAssertThrowsError(try ValidatedSpeedContext(context)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .missingPressureAltitude)
+        }
+    }
+
+    func testValidatedSpeedContext_Throws_ForEachNonFiniteDerivedValue() {
+        let nanAltitude = SpeedContext(pressureAltitude: .init(meters: .nan))
+        let infiniteTemperature = SpeedContext(
+            pressureAltitude: .init(feet: 10000),
+            temperature: .init(kelvin: .infinity),
+            density: ISA.seaLevelDensity
+        )
+        let infinitePressure = SpeedContext(
+            pressureAltitude: .init(feet: 10000),
+            temperature: .init(celsius: 15),
+            density: ISA.seaLevelDensity,
+            measuredPressure: .init(hectopascals: .infinity)
+        )
+
+        XCTAssertThrowsError(try ValidatedSpeedContext(nanAltitude)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .nonFinite(.density))
+        }
+        XCTAssertThrowsError(try ValidatedSpeedContext(infiniteTemperature)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .nonFinite(.speedOfSound))
+        }
+        XCTAssertThrowsError(try ValidatedSpeedContext(infinitePressure)) {
+            XCTAssertEqual($0 as? ValidatedSpeedContext.ValidationError, .nonFinite(.relativePressure))
+        }
+    }
+
+    func testValidatedSpeedContext_DecodingAnIncompleteContext_Throws() throws {
+        let data = try JSONEncoder().encode(ValidatedSpeedContext(SpeedContext(pressureAltitude: .init(feet: 10000))))
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var raw = try XCTUnwrap(json["raw"] as? [String: Any])
+        raw.removeValue(forKey: "pressureAltitude")
+        json["raw"] = raw
+
+        let tampered = try JSONSerialization.data(withJSONObject: json)
+
+        XCTAssertThrowsError(try JSONDecoder().decode(ValidatedSpeedContext.self, from: tampered))
     }
 }

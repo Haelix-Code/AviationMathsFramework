@@ -3,51 +3,51 @@ import XCTest
 
 final class LongitudeConvenienceTests: XCTestCase {
 
-    func testHemisphereProperties() {
-        let east = Longitude(decimalDegrees: 45.0)
+    func testHemisphereProperties() throws {
+        let east = try Longitude(decimalDegrees: 45.0)
         XCTAssertTrue(east.isEasternHemisphere)
         XCTAssertFalse(east.isWesternHemisphere)
 
-        let west = Longitude(decimalDegrees: -30.0)
+        let west = try Longitude(decimalDegrees: -30.0)
         XCTAssertTrue(west.isWesternHemisphere)
         XCTAssertFalse(west.isEasternHemisphere)
 
-        let primeMeridian = Longitude(decimalDegrees: 0.0)
+        let primeMeridian = try Longitude(decimalDegrees: 0.0)
         XCTAssertFalse(primeMeridian.isEasternHemisphere)
         XCTAssertFalse(primeMeridian.isWesternHemisphere)
     }
 
-    func testAs0To360Conversion() {
-        let east = Longitude(decimalDegrees: 45.0)
+    func testAs0To360Conversion() throws {
+        let east = try Longitude(decimalDegrees: 45.0)
         XCTAssertEqual(east.as0To360, 45.0)
 
-        let west = Longitude(decimalDegrees: -30.0)
+        let west = try Longitude(decimalDegrees: -30.0)
         XCTAssertEqual(west.as0To360, 330.0)
     }
 
-    func testShortestDistanceSimple() {
-        let lon1 = Longitude(decimalDegrees: 10.0)
-        let lon2 = Longitude(decimalDegrees: 20.0)
+    func testShortestDistanceSimple() throws {
+        let lon1 = try Longitude(decimalDegrees: 10.0)
+        let lon2 = try Longitude(decimalDegrees: 20.0)
         XCTAssertEqual(lon1.shortestDistance(to: lon2), 10.0)
     }
 
-    func testShortestDistanceWrapAroundPositive() {
-        let lon1 = Longitude(decimalDegrees: 170.0)
-        let lon2 = Longitude(decimalDegrees: -170.0)
+    func testShortestDistanceWrapAroundPositive() throws {
+        let lon1 = try Longitude(decimalDegrees: 170.0)
+        let lon2 = try Longitude(decimalDegrees: -170.0)
         XCTAssertEqual(lon1.shortestDistance(to: lon2), 20.0)
     }
 
-    func testShortestDistanceWrapAroundNegative() {
-        let lon1 = Longitude(decimalDegrees: -170.0)
-        let lon2 = Longitude(decimalDegrees: 170.0)
+    func testShortestDistanceWrapAroundNegative() throws {
+        let lon1 = try Longitude(decimalDegrees: -170.0)
+        let lon2 = try Longitude(decimalDegrees: 170.0)
         XCTAssertEqual(lon1.shortestDistance(to: lon2), -20.0)
     }
 
     /// `Longitude.description` calls `formatted(direction:isLongitude: false)`,
     /// so a longitude like 5° prints as "05°" (2-digit, latitude-style padding)
     /// instead of the 3-digit "005°" that longitude requires.
-    func testDescription_PadsDegreesToThreeDigits() {
-        let lon = Longitude(decimalDegrees: 5.0)
+    func testDescription_PadsDegreesToThreeDigits() throws {
+        let lon = try Longitude(decimalDegrees: 5.0)
         XCTAssertTrue(
             lon.description.hasPrefix("005°"),
             "Longitude must pad to 3 degree digits, got: \(lon.description)"

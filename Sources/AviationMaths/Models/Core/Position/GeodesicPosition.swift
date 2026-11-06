@@ -46,9 +46,15 @@ public struct GeodesicPosition: Sendable, Equatable {
 }
 
 extension GeodesicPosition {
-    public init(summing positions: [GeodesicPosition]) {
+    /// The vector sum of positions that share an origin.
+    /// - Throws: `GeodesicPositionError.empty` for no positions, or `.mismatchedOrigins` when
+    ///   they don't all share the first one's origin (their vectors can't simply be added).
+    public init(summing positions: [GeodesicPosition]) throws(GeodesicPositionError) {
         guard let first = positions.first else {
-            fatalError("Cannot sum empty array of GeodesicPositions")
+            throw .empty
+        }
+        guard positions.allSatisfy({ $0.origin == first.origin }) else {
+            throw .mismatchedOrigins
         }
         self.relative = RelativePosition(summing: positions.map(\.relative))
         self.origin = first.origin
@@ -63,5 +69,17 @@ extension GeodesicPosition {
 extension RelativePosition {
     public func position(from origin: GeodeticOrigin) -> GeodesicPosition {
         GeodesicPosition(relative: self, origin: origin)
+    }
+}
+
+public enum GeodesicPositionError: Error, Equatable, Sendable, LocalizedError {
+    case empty
+    case mismatchedOrigins
+
+    public var errorDescription: String? {
+        switch self {
+        case .empty: return "There are no positions to sum"
+        case .mismatchedOrigins: return "Positions with different origins can't be summed"
+        }
     }
 }

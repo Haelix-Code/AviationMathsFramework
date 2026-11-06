@@ -3,7 +3,7 @@ import XCTest
 
 final class ValidatedAltitudeContextTests: XCTestCase {
 
-    func test_init_withCompleteContext_succeeds() {
+    func test_init_withCompleteContext_succeeds() throws {
         let ctx = AltitudeContext(
             groundElevation: .init(value: 500, unit: .feet),
             qnh: .init(value: 1013.25, unit: .hectopascals),
@@ -11,7 +11,7 @@ final class ValidatedAltitudeContextTests: XCTestCase {
             lapseRate: 0.0065
         )
 
-        let validated = ValidatedAltitudeContext(ctx)
+        let validated = try ValidatedAltitudeContext(ctx)
 
         XCTAssertEqual(validated.groundElevation.converted(to: .feet).value, 500, accuracy: 0.01)
         XCTAssertEqual(validated.qnh.converted(to: .hectopascals).value, 1013.25, accuracy: 0.01)
@@ -39,7 +39,7 @@ final class ValidatedAltitudeContextTests: XCTestCase {
         XCTAssertFalse(ctx.isComplete)
     }
 
-    func test_validated_returnsNilForIncompleteContext() {
+    func test_validated_returnsNilForIncompleteContext() throws {
         let ctx = AltitudeContext(
             groundElevation: .init(value: 500, unit: .feet),
             qnh: nil,
@@ -53,8 +53,10 @@ final class ValidatedAltitudeContextTests: XCTestCase {
 
 final class ValidatedAltitudeTests: XCTestCase {
 
-    private var validatedContext: ValidatedAltitudeContext {
-        ValidatedAltitudeContext(AltitudeContext(
+    private var validatedContext: ValidatedAltitudeContext!
+
+    override func setUpWithError() throws {
+        validatedContext = try ValidatedAltitudeContext(AltitudeContext(
             groundElevation: .init(value: 500, unit: .feet),
             qnh: .init(value: 1013.25, unit: .hectopascals),
             surfaceTemperature: .init(value: 12, unit: .celsius), seaLevelTemperature: .init(value: 15, unit: .celsius),

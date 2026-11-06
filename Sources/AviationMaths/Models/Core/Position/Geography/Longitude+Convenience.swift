@@ -38,14 +38,15 @@ extension Longitude {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(Double.self)
-        guard Self.validRange.contains(value) else {
+        do {
+            try self.init(decimalDegrees: value)
+        } catch {
             throw DecodingError.dataCorruptedError(
                 in: container,
                 debugDescription: "Longitude must be between \(Self.validRange.lowerBound)° and "
                     + "\(Self.validRange.upperBound)°, got \(value)°"
             )
         }
-        self.init(decimalDegrees: value)
     }
 
     public func encode(to encoder: Encoder) throws {

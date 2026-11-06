@@ -3,11 +3,10 @@ import XCTest
 
 final class GeodesicPositionTests: XCTestCase {
 
-    private var origin: GeodeticOrigin {
-        GeodeticOrigin(Position2D(
-            latitude: 51.0,
-            longitude: -1.0
-        ))
+    private var origin: GeodeticOrigin!
+
+    override func setUpWithError() throws {
+        origin = GeodeticOrigin(try Position2D(latitude: 51.0, longitude: -1.0))
     }
 
     func test_bearing_returnsRelativeBearing() {
@@ -64,7 +63,7 @@ final class GeodesicPositionTests: XCTestCase {
         XCTAssertEqual(geodesic.range.converted(to: .meters).value, 2000, accuracy: 0.01)
     }
 
-    func test_summing_combinesRelativePositions() {
+    func test_summing_combinesRelativePositions() throws {
         let pos1 = GeodesicPosition(
             bearing: .init(value: 0, unit: .degrees),
             range: .init(value: 1000, unit: .meters),
@@ -76,7 +75,7 @@ final class GeodesicPositionTests: XCTestCase {
             origin: origin
         )
 
-        let sum = GeodesicPosition(summing: [pos1, pos2])
+        let sum = try GeodesicPosition(summing: [pos1, pos2])
 
         XCTAssertEqual(sum.range.converted(to: .meters).value, 2000, accuracy: 1)
     }
@@ -169,37 +168,54 @@ final class GeodesicPositionTests: XCTestCase {
 
         XCTAssertNotEqual(pos1, pos2)
     }
+
+    func testSumming_EmptyArray_Throws_InsteadOfTrapping() {
+        XCTAssertThrowsError(try GeodesicPosition(summing: [GeodesicPosition]())) {
+            XCTAssertEqual($0 as? GeodesicPositionError, .empty)
+        }
+    }
+
+    func testSumming_PositionsFromDifferentOrigins_Throws() throws {
+        let north = GeodesicPosition(bearing: .init(degrees: 0), range: .init(meters: 100), origin: origin)
+        let elsewhere = GeodeticOrigin(try Position2D(latitude: 10, longitude: 10))
+        let east = GeodesicPosition(bearing: .init(degrees: 90), range: .init(meters: 100), origin: elsewhere)
+
+        XCTAssertThrowsError(try GeodesicPosition(summing: [north, east])) {
+            XCTAssertEqual($0 as? GeodesicPositionError, .mismatchedOrigins)
+        }
+    }
+
 }
 
 final class GeodeticOriginTests: XCTestCase {
 
-    func test_equality_samePosition_areEqual() {
-        let pos = Position2D(latitude: 51.5, longitude: -1.0)
+    func test_equality_samePosition_areEqual() throws {
+        let pos = try Position2D(latitude: 51.5, longitude: -1.0)
         let origin1 = GeodeticOrigin(pos)
         let origin2 = GeodeticOrigin(pos)
 
         XCTAssertEqual(origin1, origin2)
     }
 
-    func test_equality_differentPosition_areNotEqual() {
-        let origin1 = GeodeticOrigin(Position2D(latitude: 51.5, longitude: -1.0))
-        let origin2 = GeodeticOrigin(Position2D(latitude: 52.0, longitude: -1.0))
+    func test_equality_differentPosition_areNotEqual() throws {
+        let origin1 = GeodeticOrigin(try Position2D(latitude: 51.5, longitude: -1.0))
+        let origin2 = GeodeticOrigin(try Position2D(latitude: 52.0, longitude: -1.0))
 
         XCTAssertNotEqual(origin1, origin2)
     }
 
-    func test_hash_samePosition_produceSameHash() {
-        let pos = Position2D(latitude: 51.5, longitude: -1.0)
+    func test_hash_samePosition_produceSameHash() throws {
+        let pos = try Position2D(latitude: 51.5, longitude: -1.0)
         let origin1 = GeodeticOrigin(pos)
         let origin2 = GeodeticOrigin(pos)
 
         XCTAssertEqual(origin1.hashValue, origin2.hashValue)
     }
 
-    func test_hash_canBeUsedInSet() {
-        let origin1 = GeodeticOrigin(Position2D(latitude: 51.5, longitude: -1.0))
-        let origin2 = GeodeticOrigin(Position2D(latitude: 51.5, longitude: -1.0))
-        let origin3 = GeodeticOrigin(Position2D(latitude: 52.0, longitude: -1.0))
+    func test_hash_canBeUsedInSet() throws {
+        let origin1 = GeodeticOrigin(try Position2D(latitude: 51.5, longitude: -1.0))
+        let origin2 = GeodeticOrigin(try Position2D(latitude: 51.5, longitude: -1.0))
+        let origin3 = GeodeticOrigin(try Position2D(latitude: 52.0, longitude: -1.0))
 
         let set = Set([origin1, origin2, origin3])
 
@@ -207,8 +223,8 @@ final class GeodeticOriginTests: XCTestCase {
         XCTAssertEqual(set.count, 2)
     }
 
-    func test_position_returnsStoredPosition() {
-        let position = Position2D(latitude: 51.5, longitude: -1.0)
+    func test_position_returnsStoredPosition() throws {
+        let position = try Position2D(latitude: 51.5, longitude: -1.0)
         let origin = GeodeticOrigin(position)
 
         XCTAssertEqual(origin.position.latitude.decimalDegrees, 51.5, accuracy: 0.0001)

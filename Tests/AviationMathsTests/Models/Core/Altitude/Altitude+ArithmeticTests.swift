@@ -76,10 +76,10 @@ final class AltitudeArithmeticTests: XCTestCase {
         let end = makeAltitude(meters: 3000, context: AltitudeContext())
 
         XCTAssertThrowsError(try start.midpoint(to: end, in: .pressureAltitude)) { error in
-            XCTAssertEqual(error as? AltitudeConversionError, .missingQNH)
+            XCTAssertEqual(error as? AltitudeArithmeticError, .conversion(.missingQNH))
         }
         XCTAssertThrowsError(try start.interpolated(to: end, fraction: 0.5, in: .pressureAltitude)) { error in
-            XCTAssertEqual(error as? AltitudeConversionError, .missingQNH)
+            XCTAssertEqual(error as? AltitudeArithmeticError, .conversion(.missingQNH))
         }
     }
 }
